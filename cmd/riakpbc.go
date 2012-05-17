@@ -18,44 +18,67 @@ func main() {
 
 	if err != nil {
 		log.Print(err)
+	} else {
+		log.Printf("%s", pretty.Formatter(obj))
 	}
-
-	log.Printf("%s", pretty.Formatter(obj))
 
 	bux, err := riak.ListBuckets()
 
 	if err != nil {
 		log.Print(err)
+	} else {
+		log.Printf("%s", pretty.Formatter(bux))
 	}
 
-	log.Printf("%s", pretty.Formatter(bux))
-
 	info, err := riak.GetServerInfo()
-	log.Printf("%s", pretty.Formatter(info))
+
+	if err != nil {
+		log.Print(err)
+	} else {
+		log.Printf("%s", pretty.Formatter(info))
+	}
 
 	storeresp, _ := riak.StoreObject("bucket", "keyzles", "{'keyzle':'deyzle'}")
-	log.Printf("%s", pretty.Formatter(storeresp))
+	if err != nil {
+		log.Print(err)
+	} else {
+		log.Printf("%s", pretty.Formatter(storeresp))
+	}
 
 	nobj, err := riak.FetchObject("bucket", "keyzles")
-	log.Printf("%s", pretty.Formatter(nobj))
+
+	if err != nil {
+		log.Print(err)
+	} else {
+		log.Printf("%s", pretty.Formatter(nobj))
+	}
 
 	nval := uint32(1)
 	allowmult := false
 
 	nobj, err = riak.SetBucket("squadronsz", &nval, &allowmult)
-	log.Printf("%s", pretty.Formatter(nobj))
+
+	if err != nil {
+		log.Print(err)
+	} else {
+		log.Printf("%s", pretty.Formatter(nobj))
+	}
 
 	storeresp, err = riak.StoreObject("squadronsz", "nsymets", "{'zzzzlayers':['deyzle','freyzle','chezyle']}")
-	log.Printf("%s", pretty.Formatter(storeresp))
+
+	if err != nil {
+		log.Print(err)
+	} else {
+		log.Printf("%s", pretty.Formatter(storeresp))
+	}
 
 	obj, err = riak.FetchObject("squadronsz", "nsymets")
 
-  if err != nil {
+	if err != nil {
 		log.Print(err)
 	} else {
-    log.Printf("%s", pretty.Formatter(obj))
-  }  
-
+		log.Printf("%s", pretty.Formatter(obj))
+	}
 
 	riak.Close()
 }
