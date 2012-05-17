@@ -7,9 +7,10 @@ import (
 )
 
 func main() {
-	riak, err := riakpbc.Dial("127.0.0.1:8081")
+	riak, err := riakpbc.Dial("127.0.0.1:8087")
 
 	if err != nil {
+		log.Print(err)
 		return
 	}
 
@@ -29,26 +30,32 @@ func main() {
 
 	log.Printf("%s", pretty.Formatter(bux))
 
-	info, _ := riak.GetServerInfo()
+	info, err := riak.GetServerInfo()
 	log.Printf("%s", pretty.Formatter(info))
 
 	storeresp, _ := riak.StoreObject("bucket", "keyzles", "{'keyzle':'deyzle'}")
 	log.Printf("%s", pretty.Formatter(storeresp))
 
-	nobj, _ := riak.FetchObject("bucket", "keyzles")
+	nobj, err := riak.FetchObject("bucket", "keyzles")
 	log.Printf("%s", pretty.Formatter(nobj))
 
 	nval := uint32(1)
 	allowmult := false
 
-	nobj, _ = riak.SetBucket("squadronsz", &nval, &allowmult)
+	nobj, err = riak.SetBucket("squadronsz", &nval, &allowmult)
 	log.Printf("%s", pretty.Formatter(nobj))
 
-	storeresp, _ = riak.StoreObject("squadronsz", "nsymets", "{'zzzzlayers':['deyzle','freyzle','chezyle']}")
+	storeresp, err = riak.StoreObject("squadronsz", "nsymets", "{'zzzzlayers':['deyzle','freyzle','chezyle']}")
 	log.Printf("%s", pretty.Formatter(storeresp))
 
-	obj, _ = riak.FetchObject("squadrosz", "nsymets")
-	log.Printf("%s", pretty.Formatter(obj))
+	obj, err = riak.FetchObject("squadronsz", "nsymets")
+
+  if err != nil {
+		log.Print(err)
+	} else {
+    log.Printf("%s", pretty.Formatter(obj))
+  }  
+
 
 	riak.Close()
 }

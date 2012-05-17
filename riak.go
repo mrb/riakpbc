@@ -108,7 +108,7 @@ func (c *Conn) SetBucket(bucket string, nval *uint32, allowmult *bool) (response
 		Props:  propstruct,
 	}
 
-	err = c.Request(reqstruct, "RpbSetBucketRequ")
+	err = c.Request(reqstruct, "RpbSetBucketReq")
 	if err != nil {
 		return nil, err
 	}
