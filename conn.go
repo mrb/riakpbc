@@ -2,19 +2,30 @@ package riakpbc
 
 import (
 	"net"
+	"time"
 )
 
 type Conn struct {
 	addr string
-	conn net.Conn
+	conn *net.TCPConn
 }
 
 // Dial connects to a single riak server.
 func Dial(addr string) (*Conn, error) {
 	var c Conn
 	var err error
+
 	c.addr = addr
-	c.conn, err = net.Dial("tcp", addr)
+
+	tcpaddr, err := net.ResolveTCPAddr("tcp", c.addr)
+	if err != nil {
+		return nil, err
+	}
+
+	c.conn, err = net.DialTCP("tcp", nil, tcpaddr) //, time.Duration(500)*time.Millisecond)
+	timeoutime := time.Now().Add(time.Duration(1e9))
+	c.conn.SetReadDeadline(timeoutime)
+
 	if err != nil {
 		return nil, err
 	}

@@ -10,4 +10,6 @@ var (
 	ErrObjectNotFound = errors.New("object not found")
 	ErrNoSuchCommand  = errors.New("no such command")
 	ErrBucketExists   = errors.New("bucket exists")
+	ErrRiakError      = errors.New("riak error")
+	ErrNotDone        = errors.New("not done")
 )

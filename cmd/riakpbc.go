@@ -14,7 +14,7 @@ func main() {
 		return
 	}
 
-	obj, err := riak.FetchObject("buckest", "key")
+	obj, err := riak.FetchObject("bucket", "clamp")
 
 	if err != nil {
 		log.Print(err)
@@ -56,7 +56,7 @@ func main() {
 	nval := uint32(1)
 	allowmult := false
 
-	nobj, err = riak.SetBucket("squadronsz", &nval, &allowmult)
+	nobj, err = riak.SetBucket("bbbb", &nval, &allowmult)
 
 	if err != nil {
 		log.Print(err)
@@ -64,7 +64,7 @@ func main() {
 		log.Printf("%s", pretty.Formatter(nobj))
 	}
 
-	storeresp, err = riak.StoreObject("squadronsz", "nsymets", "{'zzzzlayers':['deyzle','freyzle','chezyle']}")
+	storeresp, err = riak.StoreObject("qddw", "qwd", "{}")
 
 	if err != nil {
 		log.Print(err)
@@ -72,12 +72,28 @@ func main() {
 		log.Printf("%s", pretty.Formatter(storeresp))
 	}
 
-	obj, err = riak.FetchObject("squadronsz", "nsymets")
+	nobj, err = riak.FetchObject("qddw", "qwd")
 
 	if err != nil {
 		log.Print(err)
 	} else {
-		log.Printf("%s", pretty.Formatter(obj))
+		log.Printf("%s", pretty.Formatter(nobj))
+	}
+
+	//obj, err = riak.FetchObject("bucket", "keyzles")
+
+	if err != nil {
+		//log.Print(err)
+	} else {
+		//log.Printf("%s", pretty.Formatter(storeresp))
+	}
+
+	mrobj, err := riak.MapReduce("{\"inputs\":[[\"bucket\",\"clamp\"]],\"query\":[{\"map\":{\"language\":\"javascript\",\"keep\":false,\"name\":\"Riak.mapValuesJson\"}},{\"reduce\":{\"language\":\"javascript\",\"keep\":true,\"name\":\"Riak.reduceMax\"}}]}")
+
+	if err != nil {
+		log.Print(err)
+	} else {
+		log.Printf("%s", pretty.Formatter(mrobj))
 	}
 
 	riak.Close()

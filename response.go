@@ -43,12 +43,10 @@ func (c *Conn) Response(respstruct interface{}, structname string) (response int
 		return nil, err
 	}
 
-	unmarshaledresp, err := unmarshalResponse(rawresp)
+	response, err = unmarshalResponse(rawresp)
 	if err != nil {
 		return nil, err
 	}
-
-	response = unmarshaledresp
 
 	return response, nil
 }
@@ -71,15 +69,15 @@ func validateResponseHeader(respraw []byte) (err error) {
 		return err
 	}
 
-	if resplength == 1 {
-		err = ErrObjectNotFound
-		return err
-	}
-
 	resptype := respraw[4]
 
 	if resptype < 0 || resptype > 24 {
 		err = ErrNoSuchCommand
+		return err
+	}
+
+	if resptype == 0 {
+		err = ErrRiakError
 		return err
 	}
 
@@ -90,8 +88,11 @@ func unmarshalResponse(respraw []byte) (respbuf interface{}, err error) {
 	resptype := respraw[4]
 	resplength := int(respraw[3])
 	structname := numToCommand[int(resptype)]
+	respbuf = respraw[5:]
 
-	respbuf = respraw[5 : resplength+3]
+	if resplength+3 > 5 {
+		respbuf = respraw[5 : resplength+4]
+	}
 
 	if structname == "RpbGetResp" {
 		respstruct := &RpbGetResp{}
@@ -119,6 +120,21 @@ func unmarshalResponse(respraw []byte) (respbuf interface{}, err error) {
 		respstruct := &RpbListKeysResp{}
 		err = proto.Unmarshal(respbuf.([]byte), respstruct)
 		respbuf = respstruct.Keys
+	}
+
+	if structname == "RpbPutResp" {
+		respstruct := &RpbPutResp{}
+		if resplength == 1 {
+			return []byte("Success"), nil
+		}
+		err = proto.Unmarshal(respbuf.([]byte), respstruct)
+		respbuf = respstruct.Content
+	}
+
+	if structname == "RpbMapRedResp" {
+		respstruct := &RpbMapRedResp{}
+		err = proto.Unmarshal(respbuf.([]byte), respstruct)
+		respbuf = respstruct
 	}
 
 	if structname == "RpbSetBucketResp" {
