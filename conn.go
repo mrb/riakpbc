@@ -22,7 +22,7 @@ func Dial(addr string) (*Conn, error) {
 		return nil, err
 	}
 
-	c.conn, err = net.DialTCP("tcp", nil, tcpaddr) //, time.Duration(500)*time.Millisecond)
+	c.conn, err = net.DialTCP("tcp", nil, tcpaddr)
 
 	if err != nil {
 		return nil, err
@@ -36,7 +36,16 @@ func (c *Conn) Close() {
 }
 
 func (c *Conn) Write(formattedRequest []byte) (err error) {
+	timeoutime := time.Now().Add(time.Duration(1e9))
+	c.conn.SetWriteDeadline(timeoutime)
+
 	_, err = c.conn.Write(formattedRequest)
+
+	if nerr, ok := err.(net.Error); ok && nerr.Timeout() {
+		err = ErrWriteTimeout
+		return err
+	}
+
 	return err
 }
 

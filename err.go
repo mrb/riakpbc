@@ -13,4 +13,5 @@ var (
 	ErrRiakError      = errors.New("riak error")
 	ErrNotDone        = errors.New("not done")
 	ErrReadTimeout    = errors.New("read timeout")
+	ErrWriteTimeout   = errors.New("write timeout")
 )

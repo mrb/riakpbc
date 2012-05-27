@@ -34,7 +34,7 @@ var numToCommand = map[int]string{
 }
 
 var (
-	maxRetries = 3
+	maxReadRetries = 3
 )
 
 func (c *Conn) Response(respstruct interface{}, structname string) (response interface{}, err error) {
@@ -43,14 +43,14 @@ func (c *Conn) Response(respstruct interface{}, structname string) (response int
 	rawresp, err = c.Read()
 
 	if err != nil {
-		if err == ErrReadTimeout && currentRetries < maxRetries {
-			for currentRetries < maxRetries {
-				log.Print(currentRetries, maxRetries, rawresp)
+		if err == ErrReadTimeout && currentRetries < maxReadRetries {
+			for currentRetries < maxReadRetries {
+				log.Print(currentRetries, maxReadRetries, rawresp)
 				rawresp, err = c.Read()
 				if err != nil {
 					currentRetries = currentRetries + 1
 				} else {
-					currentRetries = maxRetries + 1
+					currentRetries = maxReadRetries + 1
 				}
 			}
 		}
