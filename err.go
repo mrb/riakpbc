@@ -12,4 +12,5 @@ var (
 	ErrBucketExists   = errors.New("bucket exists")
 	ErrRiakError      = errors.New("riak error")
 	ErrNotDone        = errors.New("not done")
+	ErrReadTimeout    = errors.New("read timeout")
 )

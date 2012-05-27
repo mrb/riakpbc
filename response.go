@@ -2,6 +2,7 @@ package riakpbc
 
 import (
 	"code.google.com/p/goprotobuf/proto"
+	"log"
 )
 
 var numToCommand = map[int]string{
@@ -32,9 +33,28 @@ var numToCommand = map[int]string{
 	24: "RpbMapRedResp",
 }
 
+var (
+	maxRetries = 3
+)
+
 func (c *Conn) Response(respstruct interface{}, structname string) (response interface{}, err error) {
-	rawresp, err := c.Read()
+	currentRetries := 0
+	var rawresp []byte
+	rawresp, err = c.Read()
+
 	if err != nil {
+		if err == ErrReadTimeout && currentRetries < maxRetries {
+			for currentRetries < maxRetries {
+				log.Print(currentRetries, maxRetries, rawresp)
+				rawresp, err = c.Read()
+				if err != nil {
+					currentRetries = currentRetries + 1
+				} else {
+					currentRetries = maxRetries + 1
+				}
+			}
+		}
+		err = ErrReadTimeout
 		return nil, err
 	}
 

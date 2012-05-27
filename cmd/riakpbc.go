@@ -80,20 +80,28 @@ func main() {
 		log.Printf("%s", pretty.Formatter(nobj))
 	}
 
-	//obj, err = riak.FetchObject("bucket", "keyzles")
-
-	if err != nil {
-		//log.Print(err)
-	} else {
-		//log.Printf("%s", pretty.Formatter(storeresp))
-	}
-
 	mrobj, err := riak.MapReduce("{\"inputs\":[[\"bucket\",\"clamp\"]],\"query\":[{\"map\":{\"language\":\"javascript\",\"keep\":false,\"name\":\"Riak.mapValuesJson\"}},{\"reduce\":{\"language\":\"javascript\",\"keep\":true,\"name\":\"Riak.reduceMax\"}}]}")
 
 	if err != nil {
 		log.Print(err)
 	} else {
 		log.Printf("%s", pretty.Formatter(mrobj))
+	}
+
+	mrobj, err = riak.MapReduce("{\"inputs\":[[\"bucket\",\"clamp\"]],\"query\":[{\"map\":{\"language\":\"javascript\",\"keep\":false,\"name\":\"Riak.mapValuesJson\"}},{\"reduce\":{\"language\":\"javascript\",\"keep\":true,\"name\":\"Riak.reduceMax\"}}]}")
+
+	if err != nil {
+		log.Print(err)
+	} else {
+		log.Printf("%s", pretty.Formatter(mrobj))
+	}
+
+	nobj, err = riak.FetchObject("bucket", "keyzles")
+
+	if err != nil {
+		log.Print(err)
+	} else {
+		log.Printf("%s", pretty.Formatter(nobj))
 	}
 
 	riak.Close()
