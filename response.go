@@ -162,5 +162,12 @@ func unmarshalResponse(respraw []byte) (respbuf interface{}, err error) {
 		return respbuf, nil
 	}
 
+	if structname == "RpbDelResp" {
+		if resplength == 1 {
+			respbuf = []byte("Success")
+		}
+		return respbuf, nil
+	}
+
 	return respbuf, nil
 }

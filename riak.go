@@ -60,16 +60,37 @@ func (c *Conn) FetchObject(bucket string, key string) (response []byte, err erro
 	return response, nil
 }
 
-/*
 // List all keys from bucket
 func (c *Conn) ListKeys(bucket string) (response [][]byte, err error) {
-	reqstruct := &RpbListKeysReq{
-		Bucket: []byte(bucke,
+	//reqstruct := &RpbListKeysReq{}
+
+	return response, nil
+}
+
+// Delete an Object from a bucket
+func (c *Conn) DeleteObject(bucket string, key string) (response []byte, err error) {
+	reqstruct := &RpbDelReq{
+		Bucket: []byte(bucket),
+		Key:    []byte(key),
+	}
+
+	err = c.Request(reqstruct, "RpbDelReq")
+	if err != nil {
+		return nil, err
+	}
+
+	uncoercedresponse, err := c.Response(&RpbGetResp{}, "RpbDelResp")
+	if err != nil {
+		return nil, err
+	}
+
+	response = uncoercedresponse.([]byte)
+	if err != nil {
+		return nil, err
 	}
 
 	return response, nil
 }
-*/
 
 // Get server info
 func (c *Conn) GetServerInfo() (response []byte, err error) {
@@ -91,8 +112,25 @@ func (c *Conn) GetServerInfo() (response []byte, err error) {
 	return response, nil
 }
 
+// Ping the server
+func (c *Conn) Ping() (response []byte, err error) {
+	return response, nil
+}
+
 // Get bucket info
 func (c *Conn) GetBucket(bucket string) (response []byte, err error) {
+
+	return response, nil
+}
+
+// Get client ID
+func (c *Conn) GetClientID(bucket string) (response []byte, err error) {
+
+	return response, nil
+}
+
+// Set client ID
+func (c *Conn) SetClientID(bucket string) (response []byte, err error) {
 
 	return response, nil
 }

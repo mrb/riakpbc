@@ -96,6 +96,14 @@ func main() {
 		log.Printf("%s", pretty.Formatter(mrobj))
 	}
 
+	nobj, err = riak.DeleteObject("bucket", "keyzles")
+
+	if err != nil {
+		log.Print(err)
+	} else {
+		log.Printf("%s", pretty.Formatter(nobj))
+	}
+
 	nobj, err = riak.FetchObject("bucket", "keyzles")
 
 	if err != nil {
