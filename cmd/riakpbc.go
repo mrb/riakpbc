@@ -136,5 +136,13 @@ func main() {
 		log.Printf("%s", pretty.Formatter(info))
 	}
 
+	info, err = riak.GetBucket("bucket")
+
+	if err != nil {
+		log.Print(err)
+	} else {
+		log.Printf("%s", pretty.Formatter(info))
+	}
+
 	riak.Close()
 }

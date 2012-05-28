@@ -172,6 +172,24 @@ func (c *Conn) Ping() (response []byte, err error) {
 
 // Get bucket info
 func (c *Conn) GetBucket(bucket string) (response []byte, err error) {
+	reqstruct := &RpbGetBucketReq{
+		Bucket: []byte(bucket),
+	}
+
+	err = c.Request(reqstruct, "RpbGetBucketReq")
+	if err != nil {
+		return nil, err
+	}
+
+	uncoercedresponse, err := c.Response(&RpbGetBucketResp{})
+	if err != nil {
+		return nil, err
+	}
+
+	response = uncoercedresponse.([]byte)
+	if err != nil {
+		return nil, err
+	}
 
 	return response, nil
 }
@@ -190,7 +208,6 @@ func (c *Conn) SetClientID(bucket string) (response []byte, err error) {
 
 // MapReduce
 func (c *Conn) MapReduce(content string) (response [][]byte, err error) {
-
 	reqstruct := &RpbMapRedReq{
 		Request:     []byte(content),
 		ContentType: []byte("application/json"),

@@ -162,6 +162,24 @@ func unmarshalResponse(respraw []byte) (respbuf interface{}, err error) {
 		return respbuf, nil
 	}
 
+	if structname == "RpbGetBucketResp" {
+		if resplength == 1 {
+			err = ErrObjectNotFound
+			return nil, err
+		}
+
+		respstruct := &RpbGetBucketResp{}
+
+		err = proto.Unmarshal(respbuf.([]byte), respstruct)
+		if err != nil {
+			return nil, err
+		}
+
+		respbuf = []byte(respstruct.Props.String())
+
+		return respbuf, nil
+	}
+
 	if structname == "RpbDelResp" {
 		if resplength == 1 {
 			respbuf = []byte("Success")
