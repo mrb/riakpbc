@@ -22,7 +22,7 @@ func (c *Conn) StoreObject(bucket string, key string, content string) (response 
 		return nil, err
 	}
 
-	uncoercedresponse, err := c.Response(&RpbGetResp{}, "RpbPutResp")
+	uncoercedresponse, err := c.Response(&RpbGetResp{})
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func (c *Conn) FetchObject(bucket string, key string) (response []byte, err erro
 		return nil, err
 	}
 
-	uncoercedresponse, err := c.Response(&RpbGetResp{}, "RpbGetResp")
+	uncoercedresponse, err := c.Response(&RpbGetResp{})
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,46 @@ func (c *Conn) FetchObject(bucket string, key string) (response []byte, err erro
 
 // List all keys from bucket
 func (c *Conn) ListKeys(bucket string) (response [][]byte, err error) {
-	//reqstruct := &RpbListKeysReq{}
+	reqstruct := &RpbListKeysReq{
+		Bucket: []byte(bucket),
+	}
+
+	err = c.Request(reqstruct, "RpbListKeysReq")
+	if err != nil {
+		return nil, err
+	}
+
+	var rawresp interface{}
+	rawresp, err = c.Response(&RpbListKeysResp{})
+	if err != nil {
+		if err != ErrReadTimeout {
+			return nil, err
+		}
+	}
+
+	if rawresp == nil {
+		err = ErrNotDone
+		return nil, err
+	}
+
+	done := rawresp.(*RpbListKeysResp).Done
+	respresp := rawresp.(*RpbListKeysResp).Keys
+
+	response = append(response, respresp...)
+
+	for done == nil {
+		moreresp, moreerr := c.Response(&RpbListKeysResp{})
+		if moreerr != nil {
+			if moreerr == ErrReadTimeout {
+				continue
+			} else {
+				return nil, moreerr
+			}
+		}
+
+		done = moreresp.(*RpbListKeysResp).Done
+		response = append(response, moreresp.(*RpbListKeysResp).Keys...)
+	}
 
 	return response, nil
 }
@@ -79,7 +118,7 @@ func (c *Conn) DeleteObject(bucket string, key string) (response []byte, err err
 		return nil, err
 	}
 
-	uncoercedresponse, err := c.Response(&RpbGetResp{}, "RpbDelResp")
+	uncoercedresponse, err := c.Response(&RpbGetResp{})
 	if err != nil {
 		return nil, err
 	}
@@ -94,14 +133,14 @@ func (c *Conn) DeleteObject(bucket string, key string) (response []byte, err err
 
 // Get server info
 func (c *Conn) GetServerInfo() (response []byte, err error) {
-	reqdata := []byte{0, 0, 0, 1, 7}
+	reqdata := []byte{}
 
 	err = c.Request(reqdata, "RpbGetServerInfoReq")
 	if err != nil {
 		return nil, err
 	}
 
-	uncoercedresponse, err := c.Response(&RpbGetServerInfoResp{}, "RpbGetServerInfoResp")
+	uncoercedresponse, err := c.Response(&RpbGetServerInfoResp{})
 
 	if err != nil {
 		return nil, err
@@ -114,6 +153,20 @@ func (c *Conn) GetServerInfo() (response []byte, err error) {
 
 // Ping the server
 func (c *Conn) Ping() (response []byte, err error) {
+	reqdata := []byte{}
+
+	err = c.Request(reqdata, "RpbPingReq")
+	if err != nil {
+		return nil, err
+	}
+
+	uncoercedresponse, err := c.Response(&RpbPingResp{})
+
+	response = uncoercedresponse.([]byte)
+	if err != nil {
+		return nil, err
+	}
+
 	return response, nil
 }
 
@@ -149,7 +202,7 @@ func (c *Conn) MapReduce(content string) (response [][]byte, err error) {
 	}
 
 	var rawresp interface{}
-	rawresp, err = c.Response(&RpbMapRedResp{}, "RpbMapRedResp")
+	rawresp, err = c.Response(&RpbMapRedResp{})
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +213,7 @@ func (c *Conn) MapReduce(content string) (response [][]byte, err error) {
 	response = append(response, respresp)
 
 	for done == nil {
-		moreresp, moreerr := c.Response(&RpbMapRedResp{}, "RpbMapRedResp")
+		moreresp, moreerr := c.Response(&RpbMapRedResp{})
 		if moreerr != nil {
 			return nil, moreerr
 		}
@@ -189,7 +242,7 @@ func (c *Conn) SetBucket(bucket string, nval *uint32, allowmult *bool) (response
 		return nil, err
 	}
 
-	uncoercedresponse, err := c.Response(&RpbSetBucketResp{}, "RpbSetBucketResp")
+	uncoercedresponse, err := c.Response(&RpbSetBucketResp{})
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +264,7 @@ func (c *Conn) ListBuckets() (response [][]byte, err error) {
 		return nil, err
 	}
 
-	uncoercedresponse, err := c.Response(&RpbListBucketsResp{}, "RpbListBucketsResp")
+	uncoercedresponse, err := c.Response(&RpbListBucketsResp{})
 
 	response = uncoercedresponse.([][]byte)
 	if err != nil {

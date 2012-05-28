@@ -37,7 +37,7 @@ var (
 	maxReadRetries = 3
 )
 
-func (c *Conn) Response(respstruct interface{}, structname string) (response interface{}, err error) {
+func (c *Conn) Response(respstruct interface{}) (response interface{}, err error) {
 	currentRetries := 0
 	var rawresp []byte
 	rawresp, err = c.Read()
@@ -139,7 +139,7 @@ func unmarshalResponse(respraw []byte) (respbuf interface{}, err error) {
 	if structname == "RpbListKeysResp" {
 		respstruct := &RpbListKeysResp{}
 		err = proto.Unmarshal(respbuf.([]byte), respstruct)
-		respbuf = respstruct.Keys
+		respbuf = respstruct
 	}
 
 	if structname == "RpbPutResp" {
@@ -165,6 +165,13 @@ func unmarshalResponse(respraw []byte) (respbuf interface{}, err error) {
 	if structname == "RpbDelResp" {
 		if resplength == 1 {
 			respbuf = []byte("Success")
+		}
+		return respbuf, nil
+	}
+
+	if structname == "RpbPingResp" {
+		if resplength == 1 {
+			respbuf = []byte("Pong")
 		}
 		return respbuf, nil
 	}
