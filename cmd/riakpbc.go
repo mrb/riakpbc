@@ -144,5 +144,21 @@ func main() {
 		log.Printf("%s", pretty.Formatter(info))
 	}
 
+	info, err = riak.SetClientId("dude")
+
+	if err != nil {
+		log.Print(err)
+	} else {
+		log.Printf("%s", pretty.Formatter(info))
+	}
+
+	info, err = riak.GetClientId()
+
+	if err != nil {
+		log.Print(err)
+	} else {
+		log.Printf("%s", pretty.Formatter(info))
+	}
+
 	riak.Close()
 }

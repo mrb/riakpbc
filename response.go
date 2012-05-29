@@ -142,6 +142,20 @@ func unmarshalResponse(respraw []byte) (respbuf interface{}, err error) {
 		respbuf = respstruct
 	}
 
+	if structname == "RpbGetClientIdResp" {
+		respstruct := &RpbGetClientIdResp{}
+		err = proto.Unmarshal(respbuf.([]byte), respstruct)
+		respbuf = respstruct.ClientId
+	}
+
+	if structname == "RpbSetClientIdResp" {
+		if resplength == 1 {
+			return []byte("Success"), nil
+		}
+		err = ErrObjectNotFound
+		return nil, err
+	}
+
 	if structname == "RpbPutResp" {
 		respstruct := &RpbPutResp{}
 		if resplength == 1 {

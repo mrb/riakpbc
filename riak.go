@@ -195,13 +195,44 @@ func (c *Conn) GetBucket(bucket string) (response []byte, err error) {
 }
 
 // Get client ID
-func (c *Conn) GetClientID(bucket string) (response []byte, err error) {
+func (c *Conn) GetClientId() (response []byte, err error) {
+	reqdata := []byte{0, 0, 0, 1, 3}
+
+	err = c.Request(reqdata, "RpbGetClientIdReq")
+	if err != nil {
+		return nil, err
+	}
+
+	uncoercedresponse, err := c.Response(&RpbGetClientIdResp{})
+
+	response = uncoercedresponse.([]byte)
+	if err != nil {
+		return nil, err
+	}
 
 	return response, nil
 }
 
 // Set client ID
-func (c *Conn) SetClientID(bucket string) (response []byte, err error) {
+func (c *Conn) SetClientId(clientId string) (response []byte, err error) {
+	reqstruct := &RpbSetClientIdReq{
+		ClientId: []byte(clientId),
+	}
+
+	err = c.Request(reqstruct, "RpbSetClientIdReq")
+	if err != nil {
+		return nil, err
+	}
+
+	uncoercedresponse, err := c.Response(&RpbSetClientIdResp{})
+	if err != nil {
+		return nil, err
+	}
+
+	response = uncoercedresponse.([]byte)
+	if err != nil {
+		return nil, err
+	}
 
 	return response, nil
 }
