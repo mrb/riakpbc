@@ -31,6 +31,7 @@ func Dial(addr string) (*Conn, error) {
 	return &c, nil
 }
 
+// Close the connection
 func (c *Conn) Close() {
 	c.conn.Close()
 }

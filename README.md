@@ -29,6 +29,8 @@ func main() {
 }
 ```
 
+See `example/riakpbc.go` for more usage.
+
 The rest of the API:
 
 ```go
