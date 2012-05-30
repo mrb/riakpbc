@@ -110,6 +110,19 @@ func TestPing(t *testing.T) {
 	assert.T(t, err == nil)
 }
 
+func TestMapReduce(t *testing.T) {
+	riak := setupConnection(t)
+	setupData(t, riak)
+
+	twoLevelQuery := "{\"inputs\":[[\"riakpbctestbucket\",\"testkey\"]],\"query\":[{\"map\":{\"language\":\"javascript\",\"keep\":false,\"name\":\"Riak.mapValuesJson\"}},{\"reduce\":{\"language\":\"javascript\",\"keep\":true,\"name\":\"Riak.reduceMax\"}}]}"
+	reduced, err := riak.MapReduce(twoLevelQuery)
+	assert.T(t, err == nil)
+	assert.T(t, reduced != nil)
+	assert.T(t, len(reduced) == 2)
+
+	teardownData(t, riak)
+}
+
 func BenchmarkRead(b *testing.B) {
 	b.N = 1000
 	riak, err := riakpbc.Dial("127.0.0.1:8087")
