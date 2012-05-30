@@ -92,6 +92,9 @@ The following errors are defined:
 	ErrReadTimeout    = errors.New("read timeout")
 	ErrWriteTimeout   = errors.New("write timeout")
 ```
+### Testin'
+
+`go test`
 
 ### Benchmarkin'
 
