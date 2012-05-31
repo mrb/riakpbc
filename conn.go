@@ -8,14 +8,17 @@ import (
 type Conn struct {
 	addr string
 	conn *net.TCPConn
+  readTimeout *int
+  writeTimeout *int
+}
+
+// Returns a new Conn connection
+func New () (c *Conn, err error){
+  return err
 }
 
 // Dial connects to a single riak server.
-func Dial(addr string) (*Conn, error) {
-	var c Conn
-	var err error
-
-	c.addr = addr
+func (c *Conn) Dial () (err error) {
 
 	tcpaddr, err := net.ResolveTCPAddr("tcp", c.addr)
 	if err != nil {
@@ -37,7 +40,7 @@ func (c *Conn) Close() {
 }
 
 func (c *Conn) Write(formattedRequest []byte) (err error) {
-	timeoutime := time.Now().Add(time.Duration(1e9))
+	timeoutime := time.Now().Add(time.Duration(c.writeTimeout))
 	c.conn.SetWriteDeadline(timeoutime)
 
 	_, err = c.conn.Write(formattedRequest)
@@ -53,7 +56,7 @@ func (c *Conn) Write(formattedRequest []byte) (err error) {
 func (c *Conn) Read() (respraw []byte, err error) {
 	respraw = make([]byte, 512)
 
-	timeoutime := time.Now().Add(time.Duration(1e9))
+	timeoutime := time.Now().Add(time.Duration(c.readTimeout))
 	c.conn.SetReadDeadline(timeoutime)
 
 	_, err = c.conn.Read(respraw)
