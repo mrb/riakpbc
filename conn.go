@@ -41,6 +41,9 @@ func (c *Conn) Close() {
 }
 
 func (c *Conn) Write(formattedRequest []byte) (err error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	timeoutime := time.Now().Add(time.Duration(c.writeTimeout))
 	c.conn.SetWriteDeadline(timeoutime)
 
@@ -59,6 +62,9 @@ func (c *Conn) Write(formattedRequest []byte) (err error) {
 }
 
 func (c *Conn) Read() (respraw []byte, err error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	respraw = make([]byte, 512)
 
 	timeoutime := time.Now().Add(time.Duration(c.readTimeout))
