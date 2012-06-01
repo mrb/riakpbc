@@ -2,11 +2,12 @@ package riakpbc
 
 import (
 	"net"
-	//"sync"
+	"sync"
 	"time"
 )
 
 type Conn struct {
+	mu           sync.Mutex
 	conn         *net.TCPConn
 	addr         string
 	readTimeout  time.Duration
