@@ -2,36 +2,36 @@ package riakpbc
 
 import (
 	"net"
+	//"sync"
 	"time"
 )
 
 type Conn struct {
-	addr string
-	conn *net.TCPConn
-  readTimeout *int
-  writeTimeout *int
+	conn         *net.TCPConn
+	addr         string
+	readTimeout  time.Duration
+	writeTimeout time.Duration
 }
 
 // Returns a new Conn connection
-func New () (c *Conn, err error){
-  return err
+func New(addr string, readTimeout time.Duration, writeTimeout time.Duration) (*Conn, error) {
+	return &Conn{addr: addr, readTimeout: readTimeout, writeTimeout: writeTimeout}, nil
 }
 
 // Dial connects to a single riak server.
-func (c *Conn) Dial () (err error) {
-
+func (c *Conn) Dial() (err error) {
 	tcpaddr, err := net.ResolveTCPAddr("tcp", c.addr)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	c.conn, err = net.DialTCP("tcp", nil, tcpaddr)
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return &c, nil
+	return nil
 }
 
 // Close the connection
@@ -45,12 +45,16 @@ func (c *Conn) Write(formattedRequest []byte) (err error) {
 
 	_, err = c.conn.Write(formattedRequest)
 
-	if nerr, ok := err.(net.Error); ok && nerr.Timeout() {
-		err = ErrWriteTimeout
+	if err != nil {
+		if nerr, ok := err.(net.Error); ok && nerr.Timeout() {
+			err = ErrWriteTimeout
+			return err
+		}
+
 		return err
 	}
 
-	return err
+	return nil
 }
 
 func (c *Conn) Read() (respraw []byte, err error) {

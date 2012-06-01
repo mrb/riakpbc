@@ -11,11 +11,12 @@ import (
 )
 
 func setupConnection(t *testing.T) (conn *riakpbc.Conn) {
-	conn, err := riakpbc.Dial("127.0.0.1:8087")
+	conn, err := riakpbc.New("127.0.0.1:8087", 1e8, 1e8)
+	conn.Dial()
 	assert.T(t, err == nil)
 	assert.T(t, conn != nil)
 
-	return
+	return conn
 }
 
 func setupData(t *testing.T, conn *riakpbc.Conn) {
@@ -32,7 +33,6 @@ func teardownData(t *testing.T, conn *riakpbc.Conn) {
 
 func TestClientId(t *testing.T) {
 	riak := setupConnection(t)
-
 	ok, err := riak.SetClientId("riakpbctestclientid")
 	assert.T(t, err == nil)
 	assert.T(t, string(ok) == "Success")
@@ -125,7 +125,8 @@ func TestMapReduce(t *testing.T) {
 
 func BenchmarkRead(b *testing.B) {
 	b.N = 1000
-	riak, err := riakpbc.Dial("127.0.0.1:8087")
+	riak, err := riakpbc.New("127.0.0.1:8087", 1e8, 1e8)
+	riak.Dial()
 
 	if err != nil {
 		log.Print(err)
