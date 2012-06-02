@@ -21,6 +21,9 @@ func New(addr string, readTimeout time.Duration, writeTimeout time.Duration) (*C
 
 // Dial connects to a single riak server.
 func (c *Conn) Dial() (err error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	tcpaddr, err := net.ResolveTCPAddr("tcp", c.addr)
 	if err != nil {
 		return err
@@ -40,19 +43,13 @@ func (c *Conn) Close() {
 	c.conn.Close()
 }
 
+// Write data to the connection
 func (c *Conn) Write(formattedRequest []byte) (err error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	timeoutime := time.Now().Add(time.Duration(c.writeTimeout))
-	c.conn.SetWriteDeadline(timeoutime)
-
 	_, err = c.conn.Write(formattedRequest)
 
 	if err != nil {
 		if nerr, ok := err.(net.Error); ok && nerr.Timeout() {
 			err = ErrWriteTimeout
-			return err
 		}
 
 		return err
@@ -61,19 +58,16 @@ func (c *Conn) Write(formattedRequest []byte) (err error) {
 	return nil
 }
 
+// Read data from the connection
 func (c *Conn) Read() (respraw []byte, err error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
 	respraw = make([]byte, 512)
-
-	timeoutime := time.Now().Add(time.Duration(c.readTimeout))
-	c.conn.SetReadDeadline(timeoutime)
 
 	_, err = c.conn.Read(respraw)
 
-	if nerr, ok := err.(net.Error); ok && nerr.Timeout() {
-		err = ErrReadTimeout
+	if err != nil {
+		if nerr, ok := err.(net.Error); ok && nerr.Timeout() {
+			err = ErrReadTimeout
+		}
 		return nil, err
 	}
 

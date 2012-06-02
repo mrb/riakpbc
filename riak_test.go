@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/bmizerany/assert"
-	"log"
 	"mrb/riakpbc"
 	"strings"
 	"testing"
@@ -121,19 +120,4 @@ func TestMapReduce(t *testing.T) {
 	assert.T(t, len(reduced) == 2)
 
 	teardownData(t, riak)
-}
-
-func BenchmarkRead(b *testing.B) {
-	b.N = 1000
-	riak, err := riakpbc.New("127.0.0.1:8087", 1e8, 1e8)
-	riak.Dial()
-
-	if err != nil {
-		log.Print(err)
-		return
-	}
-
-	for i := 0; i < b.N; i++ {
-		_, _ = riak.FetchObject("bucket", "keyzles")
-	}
 }

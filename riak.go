@@ -37,6 +37,9 @@ func (c *Conn) StoreObject(bucket string, key string, content string) (response 
 
 // Fetch an object from a bucket
 func (c *Conn) FetchObject(bucket string, key string) (response []byte, err error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	reqstruct := &RpbGetReq{
 		Bucket: []byte(bucket),
 		Key:    []byte(key),
