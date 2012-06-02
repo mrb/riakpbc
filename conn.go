@@ -1,3 +1,4 @@
+// riakpbc is a Protocol Buffers based Riak client for Go
 package riakpbc
 
 import (

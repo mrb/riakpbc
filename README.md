@@ -109,6 +109,10 @@ The following errors are defined:
 	ErrReadTimeout    = errors.New("read timeout")
 	ErrWriteTimeout   = errors.New("write timeout")
 ```
+### Documentin'
+
+`http://go.pkgdoc.org/github.com/mrb/riakpbc` or `go doc`
+
 ### Testin'
 
 `go test`
