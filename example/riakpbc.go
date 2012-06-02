@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"mrb/riakpbc"
-  "time"
 )
 
 func main() {
@@ -31,32 +30,6 @@ func main() {
 
 	obj, err := riak.FetchObject("buckey", "bro")
 	log.Print(string(obj), " - ", err)
-
-	ch := make(chan []byte, 1)
-
-	log.Print("start async")
-
-	for i := 0; i < 10; i++ {
-		go func() {
-			data, _ := riak.FetchObject("buckey", "bro")
-			select {
-			case ch <- data:
-			default:
-			}
-		}()
-
-	}
-
-	for i := 0; i < 10; i++ {
-		_ = <-ch
-	}
-	log.Print("done async")
-
-	log.Print("start sync")
-	for i := 0; i < 1000; i++ {
-		_, _ = riak.FetchObject("buckey", "bro")
-	}
-	log.Print("done sync")
 
 	riak.Close()
 }

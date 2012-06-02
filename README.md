@@ -9,23 +9,37 @@ A simple `riakpbc` program:
 package main
 
 import (
-	"github.com/kr/pretty"
 	"log"
 	"mrb/riakpbc"
 )
 
 func main() {
-	// connect to the riak cluster
-	riak, err := riakpbc.Dial("127.0.0.1:8081")
+	riak, err := riakpbc.New("127.0.0.1:8087", 1e8, 1e8)
 
 	if err != nil {
 		log.Print(err)
 		return
 	}
 
-	// get the value of 'key' in the 'bucket' bucket and print it
-	obj, _ := riak.FetchObject("bucket", "key")
-	log.Printf("%s", pretty.Formatter(obj))
+	err = riak.Dial()
+	if err != nil {
+		log.Print(err)
+		return
+	}
+
+	ok, err := riak.StoreObject("buckey", "bro", "{'data':'rules'}")
+	log.Print(string(ok), " - ", err)
+
+	ok, err = riak.SetClientId("coolio")
+	log.Print(string(ok), " - ", err)
+
+	ok, err = riak.GetClientId()
+	log.Print(string(ok), " - ", err)
+
+	obj, err := riak.FetchObject("buckey", "bro")
+	log.Print(string(obj), " - ", err)
+
+  riak.Close()
 }
 ```
 
@@ -34,7 +48,10 @@ See `example/riakpbc.go` for more usage.
 The rest of the API:
 
 ```go
-func Dial(addr string) (*Conn, error)
+func New(addr string, readTimeout time.Duration, writeTimeout time.Duration) (*Conn, error)
+    //Returns a new Conn connection
+
+func (c *Conn) Dial() (err error)
     //Dial connects to a single riak server.
 
 func (c *Conn) Close()

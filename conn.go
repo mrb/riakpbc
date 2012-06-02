@@ -45,6 +45,9 @@ func (c *Conn) Close() {
 
 // Write data to the connection
 func (c *Conn) Write(formattedRequest []byte) (err error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	_, err = c.conn.Write(formattedRequest)
 
 	if err != nil {
@@ -60,6 +63,9 @@ func (c *Conn) Write(formattedRequest []byte) (err error) {
 
 // Read data from the connection
 func (c *Conn) Read() (respraw []byte, err error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	respraw = make([]byte, 512)
 
 	_, err = c.conn.Read(respraw)
