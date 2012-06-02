@@ -39,7 +39,7 @@ func main() {
 	obj, err := riak.FetchObject("buckey", "bro")
 	log.Print(string(obj), " - ", err)
 
-  riak.Close()
+	riak.Close()
 }
 ```
 
