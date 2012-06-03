@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/bmizerany/assert"
-	"mrb/riakpbc"
+	"github.com/mrb/riakpbc"
 	"strings"
 	"testing"
 )

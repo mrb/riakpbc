@@ -1,7 +1,7 @@
 package riakpbc
 
 import (
-	"mrb/riakpbc"
+	"github.com/mrb/riakpbc"
 	"testing"
 )
 
