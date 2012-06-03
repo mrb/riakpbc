@@ -2,7 +2,7 @@ package main
 
 import (
 	"log"
-	"mrb/riakpbc"
+	"github.com/mrb/riakpbc"
 )
 
 func main() {
