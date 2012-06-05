@@ -2,7 +2,6 @@ package riakpbc
 
 import (
 	"code.google.com/p/goprotobuf/proto"
-	"log"
 )
 
 var commandToNum = map[string]byte{
@@ -57,7 +56,6 @@ func (c *Conn) Request(reqstruct interface{}, structname string) (err error) {
 	if err != nil {
 		if err == ErrReadTimeout && currentRetries < maxReadRetries {
 			for currentRetries < maxReadRetries {
-				log.Print(currentRetries, maxReadRetries)
 				err = c.Write(formattedRequest)
 				if err != nil {
 					currentRetries = currentRetries + 1
