@@ -125,6 +125,10 @@ The following errors are defined:
 
 I am brand new to Go, and also to Riak, and also to Protocol Buffers for that matter. If I am doing something incredibly stupid or misguided here, please help me out with a pull request, an issue, or by hitting me up on IRC (mrb_bk on #freenode). Thanks!
 
+### Exemplifyin'
+
+There's an example app here: https://github.com/mrb/shoebox and an example in the `example` directory.
+
 ### Creditin'
 
 riakpbc is (c) Michael R. Bernstein, 2012
