@@ -78,7 +78,5 @@ func (c *Conn) Read() (respraw []byte, err error) {
 		return nil, err
 	}
 
-	_ = respraw[3]
-
 	return respraw, nil
 }
