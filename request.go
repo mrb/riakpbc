@@ -91,7 +91,6 @@ func prependRequestHeader(commandName string, marshaledReqData []byte) (formatte
 }
 
 func marshalRequest(reqstruct interface{}) (marshaledRequest []byte, err error) {
-	marshaledRequest, err = proto.Marshal(reqstruct)
-
+        marshaledRequest, err = proto.Marshal(reqstruct.(proto.Message))
 	return marshaledRequest, nil
 }
