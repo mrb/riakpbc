@@ -1,13 +1,12 @@
 package riakpbc
 
 import (
-	"github.com/mrb/riakpbc"
 	"testing"
 )
 
 func BenchmarkReadSync(b *testing.B) {
 	b.StopTimer()
-	conn, err := riakpbc.New("127.0.0.1:8087", 1e8, 1e8)
+	conn, err := New("127.0.0.1:8087", 1e8, 1e8)
 
 	if err != nil {
 		return
@@ -24,7 +23,7 @@ func BenchmarkReadSync(b *testing.B) {
 
 func BenchmarkReadAsync(b *testing.B) {
 	b.StopTimer()
-	conn, err := riakpbc.New("127.0.0.1:8087", 1e8, 1e8)
+	conn, err := New("127.0.0.1:8087", 1e8, 1e8)
 	if err != nil {
 		return
 	}
@@ -36,7 +35,7 @@ func BenchmarkReadAsync(b *testing.B) {
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
-		go func(c *riakpbc.Conn) {
+		go func(c *Conn) {
 			data, _ := c.FetchObject("bucket", "key")
 			select {
 			case ch <- data:

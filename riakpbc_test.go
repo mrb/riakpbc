@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/bmizerany/assert"
-	"github.com/mrb/riakpbc"
+//	"github.com/mrb/riakpbc"
 	"strings"
 	"testing"
 )
 
-func setupConnection(t *testing.T) (conn *riakpbc.Conn) {
-	conn, err := riakpbc.New("127.0.0.1:8087", 1e8, 1e8)
+func setupConnection(t *testing.T) (conn *Conn) {
+	conn, err := New("192.168.50.4:8087", 1e8, 1e8)
 	conn.Dial()
 	assert.T(t, err == nil)
 	assert.T(t, conn != nil)
@@ -18,13 +18,13 @@ func setupConnection(t *testing.T) (conn *riakpbc.Conn) {
 	return conn
 }
 
-func setupData(t *testing.T, conn *riakpbc.Conn) {
+func setupData(t *testing.T, conn *Conn) {
 	ok, err := conn.StoreObject("riakpbctestbucket", "testkey", "{\"data\":\"is awesome!\"}")
 	assert.T(t, err == nil)
 	assert.T(t, string(ok) == "Success")
 }
 
-func teardownData(t *testing.T, conn *riakpbc.Conn) {
+func teardownData(t *testing.T, conn *Conn) {
 	ok, err := conn.DeleteObject("riakpbctestbucket", "testkey")
 	assert.T(t, err == nil)
 	assert.T(t, string(ok) == "Success")

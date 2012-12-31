@@ -155,7 +155,7 @@ func (c *Conn) GetServerInfo() (response []byte, err error) {
 func (c *Conn) Ping() (response []byte, err error) {
 	reqdata := []byte{}
 
-	err = c.Request(reqdata, "RpbPingReq")
+	err = c.RawRequest(reqdata, "RpbPingReq")
 	if err != nil {
 		return nil, err
 	}
@@ -196,9 +196,9 @@ func (c *Conn) GetBucket(bucket string) (response []byte, err error) {
 
 // Get client ID
 func (c *Conn) GetClientId() (response []byte, err error) {
-	reqdata := []byte{0, 0, 0, 1, 3}
-
-	err = c.Request(reqdata, "RpbGetClientIdReq")
+	//reqdata := []byte{0, 0, 0, 1, 3}
+        reqdata := []byte{}
+	err = c.RawRequest(reqdata, "RpbGetClientIdReq")
 	if err != nil {
 		return nil, err
 	}
@@ -305,9 +305,10 @@ func (c *Conn) SetBucket(bucket string, nval *uint32, allowmult *bool) (response
 
 // List all buckets
 func (c *Conn) ListBuckets() (response [][]byte, err error) {
-	reqdata := []byte{0, 0, 0, 1, 15}
+	//reqdata := []byte{0, 0, 0, 1, 15}
+        reqdata := []byte{}
 
-	err = c.Request(reqdata, "RpbListBucketsReq")
+	err = c.RawRequest(reqdata, "RpbListBucketsReq")
 	if err != nil {
 		return nil, err
 	}

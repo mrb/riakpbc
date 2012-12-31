@@ -42,6 +42,10 @@ func (c *Conn) Request(reqstruct interface{}, structname string) (err error) {
 		return err
 	}
 
+        return c.RawRequest(marshaledRequest, structname)
+}
+
+func (c *Conn) RawRequest(marshaledRequest []byte, structname string) (err error) {
 	formattedRequest, err := prependRequestHeader(structname, marshaledRequest)
 	if err != nil {
 		return err
@@ -69,6 +73,7 @@ func (c *Conn) Request(reqstruct interface{}, structname string) (err error) {
 	}
 
 	return nil
+
 }
 
 func prependRequestHeader(commandName string, marshaledReqData []byte) (formattedData []byte, e error) {
