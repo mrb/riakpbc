@@ -1,18 +1,12 @@
 package riakpbc
 
-import (
-	"encoding/json"
-)
-
 // Store an object in riak
 func (c *Conn) StoreObject(bucket string, key string, content string) (response []byte, err error) {
-	jval, err := json.Marshal(content)
-
 	reqstruct := &RpbPutReq{
 		Bucket: []byte(bucket),
 		Key:    []byte(key),
 		Content: &RpbContent{
-			Value:       []byte(jval),
+			Value:       []byte(content),
 			ContentType: []byte("application/json"),
 		},
 	}
@@ -196,7 +190,6 @@ func (c *Conn) GetBucket(bucket string) (response []byte, err error) {
 
 // Get client ID
 func (c *Conn) GetClientId() (response []byte, err error) {
-	//reqdata := []byte{0, 0, 0, 1, 3}
         reqdata := []byte{}
 	err = c.RawRequest(reqdata, "RpbGetClientIdReq")
 	if err != nil {
@@ -305,7 +298,6 @@ func (c *Conn) SetBucket(bucket string, nval *uint32, allowmult *bool) (response
 
 // List all buckets
 func (c *Conn) ListBuckets() (response [][]byte, err error) {
-	//reqdata := []byte{0, 0, 0, 1, 15}
         reqdata := []byte{}
 
 	err = c.RawRequest(reqdata, "RpbListBucketsReq")

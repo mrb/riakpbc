@@ -1,10 +1,8 @@
 package riakpbc
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/bmizerany/assert"
-//	"github.com/mrb/riakpbc"
 	"strings"
 	"testing"
 )
@@ -63,9 +61,9 @@ func TestFetchObject(t *testing.T) {
 	assert.T(t, err == nil)
 	stringObject := string(object)
 
-	jsonD, err := json.Marshal("{\"data\":\"is awesome!\"}")
+        data := "{\"data\":\"is awesome!\"}"
 	assert.T(t, err == nil)
-	assert.T(t, stringObject == string(jsonD))
+	assert.T(t, stringObject == data)
 
 	teardownData(t, riak)
 }
