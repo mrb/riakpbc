@@ -42,7 +42,7 @@ func (c *Conn) Request(reqstruct interface{}, structname string) (err error) {
 		return err
 	}
 
-        return c.RawRequest(marshaledRequest, structname)
+	return c.RawRequest(marshaledRequest, structname)
 }
 
 func (c *Conn) RawRequest(marshaledRequest []byte, structname string) (err error) {
@@ -96,6 +96,6 @@ func prependRequestHeader(commandName string, marshaledReqData []byte) (formatte
 }
 
 func marshalRequest(reqstruct interface{}) (marshaledRequest []byte, err error) {
-        marshaledRequest, err = proto.Marshal(reqstruct.(proto.Message))
+	marshaledRequest, err = proto.Marshal(reqstruct.(proto.Message))
 	return marshaledRequest, nil
 }

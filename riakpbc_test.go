@@ -61,7 +61,7 @@ func TestFetchObject(t *testing.T) {
 	assert.T(t, err == nil)
 	stringObject := string(object)
 
-        data := "{\"data\":\"is awesome!\"}"
+	data := "{\"data\":\"is awesome!\"}"
 	assert.T(t, err == nil)
 	assert.T(t, stringObject == data)
 
