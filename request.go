@@ -2,6 +2,8 @@ package riakpbc
 
 import (
 	"code.google.com/p/goprotobuf/proto"
+        "bytes"
+        "encoding/binary"
 )
 
 var commandToNum = map[string]byte{
@@ -38,10 +40,15 @@ var (
 
 func (c *Conn) Request(reqstruct interface{}, structname string) (err error) {
 	marshaledRequest, err := marshalRequest(reqstruct)
+
 	if err != nil {
 		return err
 	}
 
+	return c.RawRequest(marshaledRequest, structname)
+}
+
+func (c *Conn) RawRequest(marshaledRequest []byte, structname string) (err error) {
 	formattedRequest, err := prependRequestHeader(structname, marshaledRequest)
 	if err != nil {
 		return err
@@ -69,21 +76,23 @@ func (c *Conn) Request(reqstruct interface{}, structname string) (err error) {
 	}
 
 	return nil
+
 }
 
 func prependRequestHeader(commandName string, marshaledReqData []byte) (formattedData []byte, e error) {
 	msgbuf := []byte{}
 	formattedData = []byte{}
 
-	mn := []byte{0, 0, 0}
 	comm := []byte{commandToNum[commandName]}
 
 	msgbuf = append(msgbuf, comm...)
 	msgbuf = append(msgbuf, marshaledReqData...)
 
-	length := []byte{byte(len(msgbuf))}
+        lenbuf := new(bytes.Buffer)
+        binary.Write(lenbuf, binary.BigEndian, int32(len(msgbuf)))
 
-	formattedData = append(formattedData, mn...)
+        length := lenbuf.Bytes()
+
 	formattedData = append(formattedData, length...)
 	formattedData = append(formattedData, msgbuf...)
 
@@ -91,7 +100,6 @@ func prependRequestHeader(commandName string, marshaledReqData []byte) (formatte
 }
 
 func marshalRequest(reqstruct interface{}) (marshaledRequest []byte, err error) {
-	marshaledRequest, err = proto.Marshal(reqstruct)
-
+	marshaledRequest, err = proto.Marshal(reqstruct.(proto.Message))
 	return marshaledRequest, nil
 }
