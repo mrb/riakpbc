@@ -1,6 +1,8 @@
 package riakpbc
 
 import (
+        "bytes"
+        "encoding/binary"
 	"code.google.com/p/goprotobuf/proto"
 )
 
@@ -75,14 +77,14 @@ func validateResponseHeader(respraw []byte) (err error) {
 		return err
 	}
 
-	resplength := int(respraw[3])
+        var resplength int32
+        resplength_buff := bytes.NewBuffer(respraw[0:4])
 
-	if resplength < 0 {
-		err = ErrLengthZero
-		return err
-	}
+        if err := binary.Read(resplength_buff, binary.BigEndian, &resplength); err != nil {
+          return err
+        }
 
-	if resplength == 0 {
+	if resplength <= 0 {
 		err = ErrLengthZero
 		return err
 	}
@@ -103,8 +105,14 @@ func validateResponseHeader(respraw []byte) (err error) {
 }
 
 func unmarshalResponse(respraw []byte) (respbuf interface{}, err error) {
+        var resplength int32
+        resplength_buff := bytes.NewBuffer(respraw[0:4])
+
+        if err := binary.Read(resplength_buff, binary.BigEndian, &resplength); err != nil {
+          return nil, err
+        }
+
 	resptype := respraw[4]
-	resplength := int(respraw[3])
 	structname := numToCommand[int(resptype)]
 	respbuf = respraw[5:]
 
