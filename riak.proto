@@ -263,3 +263,8 @@ message RpbBucketProps {
     optional uint32 n_val = 1;
     optional bool allow_mult = 2;
 }
+
+message RpbPingResp {}
+message RpbSetClientIdResp {}
+message RpbDelResp {}
+message RpbSetBucketResp {}
