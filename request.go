@@ -1,9 +1,9 @@
 package riakpbc
 
 import (
+	"bytes"
 	"code.google.com/p/goprotobuf/proto"
-        "bytes"
-        "encoding/binary"
+	"encoding/binary"
 )
 
 var commandToNum = map[string]byte{
@@ -88,10 +88,10 @@ func prependRequestHeader(commandName string, marshaledReqData []byte) (formatte
 	msgbuf = append(msgbuf, comm...)
 	msgbuf = append(msgbuf, marshaledReqData...)
 
-        lenbuf := new(bytes.Buffer)
-        binary.Write(lenbuf, binary.BigEndian, int32(len(msgbuf)))
+	lenbuf := new(bytes.Buffer)
+	binary.Write(lenbuf, binary.BigEndian, int32(len(msgbuf)))
 
-        length := lenbuf.Bytes()
+	length := lenbuf.Bytes()
 
 	formattedData = append(formattedData, length...)
 	formattedData = append(formattedData, msgbuf...)
