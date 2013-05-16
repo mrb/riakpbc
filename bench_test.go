@@ -6,7 +6,7 @@ import (
 
 func BenchmarkReadSync(b *testing.B) {
 	b.StopTimer()
-	conn, err := New("127.0.0.1:8087", 1e8, 1e8)
+	conn, err := New("127.0.0.1:10017", 1e8, 1e8)
 
 	if err != nil {
 		return
@@ -23,7 +23,7 @@ func BenchmarkReadSync(b *testing.B) {
 
 func BenchmarkReadAsync(b *testing.B) {
 	b.StopTimer()
-	conn, err := New("127.0.0.1:8087", 1e8, 1e8)
+	conn, err := New("127.0.0.1:10017", 1e8, 1e8)
 	if err != nil {
 		return
 	}

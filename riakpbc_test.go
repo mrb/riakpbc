@@ -8,7 +8,7 @@ import (
 )
 
 func setupConnection(t *testing.T) (conn *Conn) {
-	conn, err := New("192.168.50.4:8087", 1e8, 1e8)
+	conn, err := New("127.0.0.1:10017", 1e8, 1e8)
 	conn.Dial()
 	assert.T(t, err == nil)
 	assert.T(t, conn != nil)
@@ -17,7 +17,7 @@ func setupConnection(t *testing.T) (conn *Conn) {
 }
 
 func setupData(t *testing.T, conn *Conn) {
-	ok, err := conn.StoreObject("riakpbctestbucket", "testkey", "{\"data\":\"is awesome!\"}")
+	ok, err := conn.StoreObject("riakpbctestbucket", "testkey", "{\"data\":\"is awesome!\"}", "application/json")
 	assert.T(t, err == nil)
 	assert.T(t, string(ok) == "Success")
 }

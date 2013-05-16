@@ -1,13 +1,13 @@
 package riakpbc
 
 // Store an object in riak
-func (c *Conn) StoreObject(bucket string, key string, content string) (response []byte, err error) {
+func (c *Conn) StoreObject(bucket string, key string, content []byte, contentType string) (response []byte, err error) {
 	reqstruct := &RpbPutReq{
 		Bucket: []byte(bucket),
 		Key:    []byte(key),
 		Content: &RpbContent{
-			Value:       []byte(content),
-			ContentType: []byte("application/json"),
+			Value:       content,
+      ContentType: []byte(contentType),
 		},
 	}
 

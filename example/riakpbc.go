@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	riak, err := riakpbc.New("127.0.0.1:8087", 1e8, 1e8)
+	riak, err := riakpbc.New("127.0.0.1:10017", 1e8, 1e8)
 
 	if err != nil {
 		log.Print(err)
@@ -19,7 +19,9 @@ func main() {
 		return
 	}
 
-	ok, err := riak.StoreObject("buckey", "bro", "{'data':'rules'}")
+  data := []byte("{'data':'rules'}")
+
+	ok, err := riak.StoreObject("buckey", "bro", data, "application/json")
 	log.Print(string(ok), " - ", err)
 
 	ok, err = riak.SetClientId("coolio")
