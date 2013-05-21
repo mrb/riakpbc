@@ -7,7 +7,7 @@ func (c *Conn) StoreObject(bucket string, key string, content []byte, contentTyp
 		Key:    []byte(key),
 		Content: &RpbContent{
 			Value:       content,
-      ContentType: []byte(contentType),
+			ContentType: []byte(contentType),
 		},
 	}
 

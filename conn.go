@@ -67,9 +67,12 @@ func (c *Conn) Read() (respraw []byte, err error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	respraw = make([]byte, 512)
+	respraw = make([]byte, 1024*1024*5)
 
-	_, err = c.conn.Read(respraw)
+	num, err := c.conn.Read(respraw)
+	if err != nil {
+		return nil, err
+	}
 
 	if err != nil {
 		if nerr, ok := err.(net.Error); ok && nerr.Timeout() {
@@ -78,5 +81,5 @@ func (c *Conn) Read() (respraw []byte, err error) {
 		return nil, err
 	}
 
-	return respraw, nil
+	return respraw[:num], nil
 }
