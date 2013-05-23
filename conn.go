@@ -1,4 +1,3 @@
-// riakpbc is a Protocol Buffers based Riak client for Go
 package riakpbc
 
 import (
@@ -13,29 +12,31 @@ import (
 type Conn struct {
 	mu           sync.Mutex
 	conn         *net.TCPConn
-	addr         string
+	nodes        []string
 	readTimeout  time.Duration
 	writeTimeout time.Duration
 }
 
-// Returns a new Conn connection
-func New(addr string, readTimeout, writeTimeout time.Duration) (*Conn, error) {
-	return &Conn{addr: addr, readTimeout: readTimeout, writeTimeout: writeTimeout}, nil
+// Returns a new Conn connection.
+func New(addr []string, readTimeout, writeTimeout time.Duration) (*Conn, error) {
+	return &Conn{nodes: addr, readTimeout: readTimeout, writeTimeout: writeTimeout}, nil
 }
 
-// Dial connects to a single riak server.
+// Dial connects to a single riak node.
 func (c *Conn) Dial() (err error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	tcpaddr, err := net.ResolveTCPAddr("tcp", c.addr)
-	if err != nil {
-		return err
-	}
+	for _, node := range c.nodes {
+		tcpaddr, err := net.ResolveTCPAddr("tcp", node)
+		if err != nil {
+			return err
+		}
 
-	c.conn, err = net.DialTCP("tcp", nil, tcpaddr)
-	if err != nil {
-		return err
+		c.conn, err = net.DialTCP("tcp", nil, tcpaddr)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

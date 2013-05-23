@@ -5,11 +5,21 @@ import (
 	"github.com/bmizerany/assert"
 	"strings"
 	"testing"
+	"flag"
 )
 
+var (
+	backEndAddress = flag.String("backend_address", "127.0.0.1:10017", "Storage backend address")
+)
+
+func init(){
+	flag.Parse()
+}
+
 func setupConnection(t *testing.T) (conn *Conn) {
-	conn, err := New("127.0.0.1:8087", 1e8, 1e8)
+	conn, err := New([]string{*backEndAddress}, 1e8, 1e8)
 	conn.Dial()
+
 	if err != nil {
 		t.Error(err.Error())
 	}
