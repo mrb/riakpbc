@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	riak, err := riakpbc.New("127.0.0.1:10017", 1e8, 1e8)
+	riak, err := riakpbc.New("127.0.0.1:8087", 1e8, 1e8)
 
 	if err != nil {
 		log.Print(err)
@@ -21,7 +21,7 @@ func main() {
 
 	data := []byte("{'data':'rules', 'data':'rules', 'data':'rules','data':'rules', 'data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules' }")
 
-	ok, err := riak.StoreObject("buckey", "bro", data, "application/json")
+	ok, err := riak.StoreObject("bucket", "data", data, "application/json")
 	log.Print(string(ok), " - ", err)
 
 	ok, err = riak.SetClientId("coolio")
@@ -30,7 +30,7 @@ func main() {
 	ok, err = riak.GetClientId()
 	log.Print(string(ok), " - ", err)
 
-	obj, err := riak.FetchObject("buckey", "bro")
+	obj, err := riak.FetchObject("bucket", "data")
 	log.Print(string(obj), " - ", err)
 
 	riak.Close()
