@@ -2,6 +2,9 @@
 package riakpbc
 
 import (
+	"bytes"
+	"encoding/binary"
+	"io"
 	"net"
 	"sync"
 	"time"
@@ -16,7 +19,7 @@ type Conn struct {
 }
 
 // Returns a new Conn connection
-func New(addr string, readTimeout time.Duration, writeTimeout time.Duration) (*Conn, error) {
+func New(addr string, readTimeout, writeTimeout time.Duration) (*Conn, error) {
 	return &Conn{addr: addr, readTimeout: readTimeout, writeTimeout: writeTimeout}, nil
 }
 
@@ -31,7 +34,6 @@ func (c *Conn) Dial() (err error) {
 	}
 
 	c.conn, err = net.DialTCP("tcp", nil, tcpaddr)
-
 	if err != nil {
 		return err
 	}
@@ -50,12 +52,7 @@ func (c *Conn) Write(formattedRequest []byte) (err error) {
 	defer c.mu.Unlock()
 
 	_, err = c.conn.Write(formattedRequest)
-
 	if err != nil {
-		if nerr, ok := err.(net.Error); ok && nerr.Timeout() {
-			err = ErrWriteTimeout
-		}
-
 		return err
 	}
 
@@ -67,19 +64,26 @@ func (c *Conn) Read() (respraw []byte, err error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	respraw = make([]byte, 1024*1024*5)
-
-	num, err := c.conn.Read(respraw)
+	buf := make([]byte, 4)
+	var size int32
+	// First 4 bytes are always size of message.
+	n, err := io.ReadFull(c.conn, buf)
 	if err != nil {
 		return nil, err
 	}
-
-	if err != nil {
-		if nerr, ok := err.(net.Error); ok && nerr.Timeout() {
-			err = ErrReadTimeout
+	if n == 4 {
+		sbuf := bytes.NewBuffer(buf)
+		binary.Read(sbuf, binary.BigEndian, &size)
+		data := make([]byte, size)
+		// read rest of message
+		m, err := io.ReadFull(c.conn, data)
+		if err != nil {
+			return nil, err
 		}
-		return nil, err
+		if m == int(size) {
+			return data, nil // return message
+		}
 	}
 
-	return respraw[:num], nil
+	return nil, nil
 }
