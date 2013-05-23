@@ -1,7 +1,9 @@
 package riakpbc
 
+type RpbEmptyResp struct{}
+
 // Store an object in riak
-func (c *Conn) StoreObject(bucket string, key string, content []byte, contentType string) (response []byte, err error) {
+func (c *Conn) StoreObject(bucket, key string, content []byte, contentType string) (response []byte, err error) {
 	reqstruct := &RpbPutReq{
 		Bucket: []byte(bucket),
 		Key:    []byte(key),
@@ -21,16 +23,11 @@ func (c *Conn) StoreObject(bucket string, key string, content []byte, contentTyp
 		return nil, err
 	}
 
-	response = uncoercedresponse.([]byte)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return uncoercedresponse.([]byte), nil
 }
 
 // Fetch an object from a bucket
-func (c *Conn) FetchObject(bucket string, key string) (response []byte, err error) {
+func (c *Conn) FetchObject(bucket, key string) (response []byte, err error) {
 	reqstruct := &RpbGetReq{
 		Bucket: []byte(bucket),
 		Key:    []byte(key),
@@ -46,12 +43,7 @@ func (c *Conn) FetchObject(bucket string, key string) (response []byte, err erro
 		return nil, err
 	}
 
-	response = uncoercedresponse.([]byte)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return uncoercedresponse.([]byte), nil
 }
 
 // List all keys from bucket
@@ -74,8 +66,7 @@ func (c *Conn) ListKeys(bucket string) (response [][]byte, err error) {
 	}
 
 	if rawresp == nil {
-		err = ErrNotDone
-		return nil, err
+		return nil, ErrNotDone
 	}
 
 	done := rawresp.(*RpbListKeysResp).Done
@@ -101,7 +92,7 @@ func (c *Conn) ListKeys(bucket string) (response [][]byte, err error) {
 }
 
 // Delete an Object from a bucket
-func (c *Conn) DeleteObject(bucket string, key string) (response []byte, err error) {
+func (c *Conn) DeleteObject(bucket, key string) (response []byte, err error) {
 	reqstruct := &RpbDelReq{
 		Bucket: []byte(bucket),
 		Key:    []byte(key),
@@ -117,32 +108,24 @@ func (c *Conn) DeleteObject(bucket string, key string) (response []byte, err err
 		return nil, err
 	}
 
-	response = uncoercedresponse.([]byte)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return uncoercedresponse.([]byte), nil
 }
 
 // Get server info
 func (c *Conn) GetServerInfo() (response []byte, err error) {
 	reqdata := []byte{}
 
-	err = c.Request(reqdata, "RpbGetServerInfoReq")
+	err = c.RawRequest(reqdata, "RpbGetServerInfoReq")
 	if err != nil {
 		return nil, err
 	}
 
 	uncoercedresponse, err := c.Response(&RpbGetServerInfoResp{})
-
 	if err != nil {
 		return nil, err
 	}
 
-	response = uncoercedresponse.([]byte)
-
-	return response, nil
+	return uncoercedresponse.([]byte), nil
 }
 
 // Ping the server
@@ -154,14 +137,12 @@ func (c *Conn) Ping() (response []byte, err error) {
 		return nil, err
 	}
 
-	uncoercedresponse, err := c.Response(&RpbPingResp{})
-
-	response = uncoercedresponse.([]byte)
+	uncoercedresponse, err := c.Response(&RpbEmptyResp{})
 	if err != nil {
 		return nil, err
 	}
 
-	return response, nil
+	return uncoercedresponse.([]byte), nil
 }
 
 // Get bucket info
@@ -180,30 +161,24 @@ func (c *Conn) GetBucket(bucket string) (response []byte, err error) {
 		return nil, err
 	}
 
-	response = uncoercedresponse.([]byte)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return uncoercedresponse.([]byte), nil
 }
 
 // Get client ID
 func (c *Conn) GetClientId() (response []byte, err error) {
 	reqdata := []byte{}
+
 	err = c.RawRequest(reqdata, "RpbGetClientIdReq")
 	if err != nil {
 		return nil, err
 	}
 
 	uncoercedresponse, err := c.Response(&RpbGetClientIdResp{})
-
-	response = uncoercedresponse.([]byte)
 	if err != nil {
 		return nil, err
 	}
 
-	return response, nil
+	return uncoercedresponse.([]byte), nil
 }
 
 // Set client ID
@@ -217,17 +192,12 @@ func (c *Conn) SetClientId(clientId string) (response []byte, err error) {
 		return nil, err
 	}
 
-	uncoercedresponse, err := c.Response(&RpbSetClientIdResp{})
+	uncoercedresponse, err := c.Response(&RpbSetClientIdReq{})
 	if err != nil {
 		return nil, err
 	}
 
-	response = uncoercedresponse.([]byte)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return uncoercedresponse.([]byte), nil
 }
 
 // MapReduce
@@ -283,17 +253,12 @@ func (c *Conn) SetBucket(bucket string, nval *uint32, allowmult *bool) (response
 		return nil, err
 	}
 
-	uncoercedresponse, err := c.Response(&RpbSetBucketResp{})
+	uncoercedresponse, err := c.Response(&RpbEmptyResp{})
 	if err != nil {
 		return nil, err
 	}
 
-	response = uncoercedresponse.([]byte)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return uncoercedresponse.([]byte), nil
 }
 
 // List all buckets
@@ -306,11 +271,9 @@ func (c *Conn) ListBuckets() (response [][]byte, err error) {
 	}
 
 	uncoercedresponse, err := c.Response(&RpbListBucketsResp{})
-
-	response = uncoercedresponse.([][]byte)
 	if err != nil {
 		return nil, err
 	}
 
-	return response, nil
+	return uncoercedresponse.([][]byte), nil
 }

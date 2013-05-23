@@ -6,13 +6,13 @@ import (
 
 func BenchmarkReadSync(b *testing.B) {
 	b.StopTimer()
-	conn, err := New("127.0.0.1:10017", 1e8, 1e8)
+	conn, err := New("127.0.0.1:8087", 1e8, 1e8)
 
 	if err != nil {
 		return
 	}
 	conn.Dial()
-	conn.StoreObject("bucket", "key", "{}")
+	conn.StoreObject("bucket", "key", []byte("{}"), "application/json")
 
 	b.StartTimer()
 
@@ -23,28 +23,28 @@ func BenchmarkReadSync(b *testing.B) {
 
 func BenchmarkReadAsync(b *testing.B) {
 	b.StopTimer()
-	conn, err := New("127.0.0.1:10017", 1e8, 1e8)
+	conn, err := New("127.0.0.1:8087", 1e8, 1e8)
 	if err != nil {
 		return
 	}
 	conn.Dial()
-	conn.StoreObject("bucket", "key", "{}")
+	conn.StoreObject("bucket", "key", []byte("{}"), "application/json")
 
-	ch := make(chan []byte, 1)
+	ch := make(chan bool, b.N)
 
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
 		go func(c *Conn) {
-			data, _ := c.FetchObject("bucket", "key")
+			_, _ = c.FetchObject("bucket", "key")
 			select {
-			case ch <- data:
+			case ch <- true:
 			default:
 			}
 		}(conn)
 	}
 
 	for i := 0; i < b.N; i++ {
-		_ = <-ch
+		<-ch
 	}
 }

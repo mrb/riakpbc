@@ -13,60 +13,70 @@ var _ = proto.Marshal
 var _ = &json.SyntaxError{}
 var _ = math.Inf
 
+type RpbBucketProps_RpbReplMode int32
+
+const (
+	RpbBucketProps_FALSE    RpbBucketProps_RpbReplMode = 0
+	RpbBucketProps_REALTIME RpbBucketProps_RpbReplMode = 1
+	RpbBucketProps_FULLSYNC RpbBucketProps_RpbReplMode = 2
+	RpbBucketProps_TRUE     RpbBucketProps_RpbReplMode = 3
+)
+
+var RpbBucketProps_RpbReplMode_name = map[int32]string{
+	0: "FALSE",
+	1: "REALTIME",
+	2: "FULLSYNC",
+	3: "TRUE",
+}
+var RpbBucketProps_RpbReplMode_value = map[string]int32{
+	"FALSE":    0,
+	"REALTIME": 1,
+	"FULLSYNC": 2,
+	"TRUE":     3,
+}
+
+func (x RpbBucketProps_RpbReplMode) Enum() *RpbBucketProps_RpbReplMode {
+	p := new(RpbBucketProps_RpbReplMode)
+	*p = x
+	return p
+}
+func (x RpbBucketProps_RpbReplMode) String() string {
+	return proto.EnumName(RpbBucketProps_RpbReplMode_name, int32(x))
+}
+func (x RpbBucketProps_RpbReplMode) MarshalJSON() ([]byte, error) {
+	return json.Marshal(x.String())
+}
+func (x *RpbBucketProps_RpbReplMode) UnmarshalJSON(data []byte) error {
+	value, err := proto.UnmarshalJSONEnum(RpbBucketProps_RpbReplMode_value, data, "RpbBucketProps_RpbReplMode")
+	if err != nil {
+		return err
+	}
+	*x = RpbBucketProps_RpbReplMode(value)
+	return nil
+}
+
 type RpbErrorResp struct {
 	Errmsg           []byte  `protobuf:"bytes,1,req,name=errmsg" json:"errmsg,omitempty"`
 	Errcode          *uint32 `protobuf:"varint,2,req,name=errcode" json:"errcode,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
 
-func (this *RpbErrorResp) Reset()         { *this = RpbErrorResp{} }
-func (this *RpbErrorResp) String() string { return proto.CompactTextString(this) }
-func (*RpbErrorResp) ProtoMessage()       {}
+func (m *RpbErrorResp) Reset()         { *m = RpbErrorResp{} }
+func (m *RpbErrorResp) String() string { return proto.CompactTextString(m) }
+func (*RpbErrorResp) ProtoMessage()    {}
 
-func (this *RpbErrorResp) GetErrmsg() []byte {
-	if this != nil {
-		return this.Errmsg
+func (m *RpbErrorResp) GetErrmsg() []byte {
+	if m != nil {
+		return m.Errmsg
 	}
 	return nil
 }
 
-func (this *RpbErrorResp) GetErrcode() uint32 {
-	if this != nil && this.Errcode != nil {
-		return *this.Errcode
+func (m *RpbErrorResp) GetErrcode() uint32 {
+	if m != nil && m.Errcode != nil {
+		return *m.Errcode
 	}
 	return 0
-}
-
-type RpbGetClientIdResp struct {
-	ClientId         []byte `protobuf:"bytes,1,req,name=client_id" json:"client_id,omitempty"`
-	XXX_unrecognized []byte `json:"-"`
-}
-
-func (this *RpbGetClientIdResp) Reset()         { *this = RpbGetClientIdResp{} }
-func (this *RpbGetClientIdResp) String() string { return proto.CompactTextString(this) }
-func (*RpbGetClientIdResp) ProtoMessage()       {}
-
-func (this *RpbGetClientIdResp) GetClientId() []byte {
-	if this != nil {
-		return this.ClientId
-	}
-	return nil
-}
-
-type RpbSetClientIdReq struct {
-	ClientId         []byte `protobuf:"bytes,1,req,name=client_id" json:"client_id,omitempty"`
-	XXX_unrecognized []byte `json:"-"`
-}
-
-func (this *RpbSetClientIdReq) Reset()         { *this = RpbSetClientIdReq{} }
-func (this *RpbSetClientIdReq) String() string { return proto.CompactTextString(this) }
-func (*RpbSetClientIdReq) ProtoMessage()       {}
-
-func (this *RpbSetClientIdReq) GetClientId() []byte {
-	if this != nil {
-		return this.ClientId
-	}
-	return nil
 }
 
 type RpbGetServerInfoResp struct {
@@ -75,370 +85,46 @@ type RpbGetServerInfoResp struct {
 	XXX_unrecognized []byte `json:"-"`
 }
 
-func (this *RpbGetServerInfoResp) Reset()         { *this = RpbGetServerInfoResp{} }
-func (this *RpbGetServerInfoResp) String() string { return proto.CompactTextString(this) }
-func (*RpbGetServerInfoResp) ProtoMessage()       {}
+func (m *RpbGetServerInfoResp) Reset()         { *m = RpbGetServerInfoResp{} }
+func (m *RpbGetServerInfoResp) String() string { return proto.CompactTextString(m) }
+func (*RpbGetServerInfoResp) ProtoMessage()    {}
 
-func (this *RpbGetServerInfoResp) GetNode() []byte {
-	if this != nil {
-		return this.Node
+func (m *RpbGetServerInfoResp) GetNode() []byte {
+	if m != nil {
+		return m.Node
 	}
 	return nil
 }
 
-func (this *RpbGetServerInfoResp) GetServerVersion() []byte {
-	if this != nil {
-		return this.ServerVersion
+func (m *RpbGetServerInfoResp) GetServerVersion() []byte {
+	if m != nil {
+		return m.ServerVersion
 	}
 	return nil
 }
 
-type RpbGetReq struct {
-	Bucket           []byte  `protobuf:"bytes,1,req,name=bucket" json:"bucket,omitempty"`
-	Key              []byte  `protobuf:"bytes,2,req,name=key" json:"key,omitempty"`
-	R                *uint32 `protobuf:"varint,3,opt,name=r" json:"r,omitempty"`
-	Pr               *uint32 `protobuf:"varint,4,opt,name=pr" json:"pr,omitempty"`
-	BasicQuorum      *bool   `protobuf:"varint,5,opt,name=basic_quorum" json:"basic_quorum,omitempty"`
-	NotfoundOk       *bool   `protobuf:"varint,6,opt,name=notfound_ok" json:"notfound_ok,omitempty"`
-	IfModified       []byte  `protobuf:"bytes,7,opt,name=if_modified" json:"if_modified,omitempty"`
-	Head             *bool   `protobuf:"varint,8,opt,name=head" json:"head,omitempty"`
-	Deletedvclock    *bool   `protobuf:"varint,9,opt,name=deletedvclock" json:"deletedvclock,omitempty"`
-	XXX_unrecognized []byte  `json:"-"`
-}
-
-func (this *RpbGetReq) Reset()         { *this = RpbGetReq{} }
-func (this *RpbGetReq) String() string { return proto.CompactTextString(this) }
-func (*RpbGetReq) ProtoMessage()       {}
-
-func (this *RpbGetReq) GetBucket() []byte {
-	if this != nil {
-		return this.Bucket
-	}
-	return nil
-}
-
-func (this *RpbGetReq) GetKey() []byte {
-	if this != nil {
-		return this.Key
-	}
-	return nil
-}
-
-func (this *RpbGetReq) GetR() uint32 {
-	if this != nil && this.R != nil {
-		return *this.R
-	}
-	return 0
-}
-
-func (this *RpbGetReq) GetPr() uint32 {
-	if this != nil && this.Pr != nil {
-		return *this.Pr
-	}
-	return 0
-}
-
-func (this *RpbGetReq) GetBasicQuorum() bool {
-	if this != nil && this.BasicQuorum != nil {
-		return *this.BasicQuorum
-	}
-	return false
-}
-
-func (this *RpbGetReq) GetNotfoundOk() bool {
-	if this != nil && this.NotfoundOk != nil {
-		return *this.NotfoundOk
-	}
-	return false
-}
-
-func (this *RpbGetReq) GetIfModified() []byte {
-	if this != nil {
-		return this.IfModified
-	}
-	return nil
-}
-
-func (this *RpbGetReq) GetHead() bool {
-	if this != nil && this.Head != nil {
-		return *this.Head
-	}
-	return false
-}
-
-func (this *RpbGetReq) GetDeletedvclock() bool {
-	if this != nil && this.Deletedvclock != nil {
-		return *this.Deletedvclock
-	}
-	return false
-}
-
-type RpbGetResp struct {
-	Content          []*RpbContent `protobuf:"bytes,1,rep,name=content" json:"content,omitempty"`
-	Vclock           []byte        `protobuf:"bytes,2,opt,name=vclock" json:"vclock,omitempty"`
-	Unchanged        *bool         `protobuf:"varint,3,opt,name=unchanged" json:"unchanged,omitempty"`
-	XXX_unrecognized []byte        `json:"-"`
-}
-
-func (this *RpbGetResp) Reset()         { *this = RpbGetResp{} }
-func (this *RpbGetResp) String() string { return proto.CompactTextString(this) }
-func (*RpbGetResp) ProtoMessage()       {}
-
-func (this *RpbGetResp) GetVclock() []byte {
-	if this != nil {
-		return this.Vclock
-	}
-	return nil
-}
-
-func (this *RpbGetResp) GetUnchanged() bool {
-	if this != nil && this.Unchanged != nil {
-		return *this.Unchanged
-	}
-	return false
-}
-
-type RpbPutReq struct {
-	Bucket           []byte      `protobuf:"bytes,1,req,name=bucket" json:"bucket,omitempty"`
-	Key              []byte      `protobuf:"bytes,2,opt,name=key" json:"key,omitempty"`
-	Vclock           []byte      `protobuf:"bytes,3,opt,name=vclock" json:"vclock,omitempty"`
-	Content          *RpbContent `protobuf:"bytes,4,req,name=content" json:"content,omitempty"`
-	W                *uint32     `protobuf:"varint,5,opt,name=w" json:"w,omitempty"`
-	Dw               *uint32     `protobuf:"varint,6,opt,name=dw" json:"dw,omitempty"`
-	ReturnBody       *bool       `protobuf:"varint,7,opt,name=return_body" json:"return_body,omitempty"`
-	Pw               *uint32     `protobuf:"varint,8,opt,name=pw" json:"pw,omitempty"`
-	IfNotModified    *bool       `protobuf:"varint,9,opt,name=if_not_modified" json:"if_not_modified,omitempty"`
-	IfNoneMatch      *bool       `protobuf:"varint,10,opt,name=if_none_match" json:"if_none_match,omitempty"`
-	ReturnHead       *bool       `protobuf:"varint,11,opt,name=return_head" json:"return_head,omitempty"`
-	XXX_unrecognized []byte      `json:"-"`
-}
-
-func (this *RpbPutReq) Reset()         { *this = RpbPutReq{} }
-func (this *RpbPutReq) String() string { return proto.CompactTextString(this) }
-func (*RpbPutReq) ProtoMessage()       {}
-
-func (this *RpbPutReq) GetBucket() []byte {
-	if this != nil {
-		return this.Bucket
-	}
-	return nil
-}
-
-func (this *RpbPutReq) GetKey() []byte {
-	if this != nil {
-		return this.Key
-	}
-	return nil
-}
-
-func (this *RpbPutReq) GetVclock() []byte {
-	if this != nil {
-		return this.Vclock
-	}
-	return nil
-}
-
-func (this *RpbPutReq) GetContent() *RpbContent {
-	if this != nil {
-		return this.Content
-	}
-	return nil
-}
-
-func (this *RpbPutReq) GetW() uint32 {
-	if this != nil && this.W != nil {
-		return *this.W
-	}
-	return 0
-}
-
-func (this *RpbPutReq) GetDw() uint32 {
-	if this != nil && this.Dw != nil {
-		return *this.Dw
-	}
-	return 0
-}
-
-func (this *RpbPutReq) GetReturnBody() bool {
-	if this != nil && this.ReturnBody != nil {
-		return *this.ReturnBody
-	}
-	return false
-}
-
-func (this *RpbPutReq) GetPw() uint32 {
-	if this != nil && this.Pw != nil {
-		return *this.Pw
-	}
-	return 0
-}
-
-func (this *RpbPutReq) GetIfNotModified() bool {
-	if this != nil && this.IfNotModified != nil {
-		return *this.IfNotModified
-	}
-	return false
-}
-
-func (this *RpbPutReq) GetIfNoneMatch() bool {
-	if this != nil && this.IfNoneMatch != nil {
-		return *this.IfNoneMatch
-	}
-	return false
-}
-
-func (this *RpbPutReq) GetReturnHead() bool {
-	if this != nil && this.ReturnHead != nil {
-		return *this.ReturnHead
-	}
-	return false
-}
-
-type RpbPutResp struct {
-	Content          []*RpbContent `protobuf:"bytes,1,rep,name=content" json:"content,omitempty"`
-	Vclock           []byte        `protobuf:"bytes,2,opt,name=vclock" json:"vclock,omitempty"`
-	Key              []byte        `protobuf:"bytes,3,opt,name=key" json:"key,omitempty"`
-	XXX_unrecognized []byte        `json:"-"`
-}
-
-func (this *RpbPutResp) Reset()         { *this = RpbPutResp{} }
-func (this *RpbPutResp) String() string { return proto.CompactTextString(this) }
-func (*RpbPutResp) ProtoMessage()       {}
-
-func (this *RpbPutResp) GetVclock() []byte {
-	if this != nil {
-		return this.Vclock
-	}
-	return nil
-}
-
-func (this *RpbPutResp) GetKey() []byte {
-	if this != nil {
-		return this.Key
-	}
-	return nil
-}
-
-type RpbDelReq struct {
-	Bucket           []byte  `protobuf:"bytes,1,req,name=bucket" json:"bucket,omitempty"`
-	Key              []byte  `protobuf:"bytes,2,req,name=key" json:"key,omitempty"`
-	Rw               *uint32 `protobuf:"varint,3,opt,name=rw" json:"rw,omitempty"`
-	Vclock           []byte  `protobuf:"bytes,4,opt,name=vclock" json:"vclock,omitempty"`
-	R                *uint32 `protobuf:"varint,5,opt,name=r" json:"r,omitempty"`
-	W                *uint32 `protobuf:"varint,6,opt,name=w" json:"w,omitempty"`
-	Pr               *uint32 `protobuf:"varint,7,opt,name=pr" json:"pr,omitempty"`
-	Pw               *uint32 `protobuf:"varint,8,opt,name=pw" json:"pw,omitempty"`
-	Dw               *uint32 `protobuf:"varint,9,opt,name=dw" json:"dw,omitempty"`
-	XXX_unrecognized []byte  `json:"-"`
-}
-
-func (this *RpbDelReq) Reset()         { *this = RpbDelReq{} }
-func (this *RpbDelReq) String() string { return proto.CompactTextString(this) }
-func (*RpbDelReq) ProtoMessage()       {}
-
-func (this *RpbDelReq) GetBucket() []byte {
-	if this != nil {
-		return this.Bucket
-	}
-	return nil
-}
-
-func (this *RpbDelReq) GetKey() []byte {
-	if this != nil {
-		return this.Key
-	}
-	return nil
-}
-
-func (this *RpbDelReq) GetRw() uint32 {
-	if this != nil && this.Rw != nil {
-		return *this.Rw
-	}
-	return 0
-}
-
-func (this *RpbDelReq) GetVclock() []byte {
-	if this != nil {
-		return this.Vclock
-	}
-	return nil
-}
-
-func (this *RpbDelReq) GetR() uint32 {
-	if this != nil && this.R != nil {
-		return *this.R
-	}
-	return 0
-}
-
-func (this *RpbDelReq) GetW() uint32 {
-	if this != nil && this.W != nil {
-		return *this.W
-	}
-	return 0
-}
-
-func (this *RpbDelReq) GetPr() uint32 {
-	if this != nil && this.Pr != nil {
-		return *this.Pr
-	}
-	return 0
-}
-
-func (this *RpbDelReq) GetPw() uint32 {
-	if this != nil && this.Pw != nil {
-		return *this.Pw
-	}
-	return 0
-}
-
-func (this *RpbDelReq) GetDw() uint32 {
-	if this != nil && this.Dw != nil {
-		return *this.Dw
-	}
-	return 0
-}
-
-type RpbListBucketsResp struct {
-	Buckets          [][]byte `protobuf:"bytes,1,rep,name=buckets" json:"buckets,omitempty"`
-	XXX_unrecognized []byte   `json:"-"`
-}
-
-func (this *RpbListBucketsResp) Reset()         { *this = RpbListBucketsResp{} }
-func (this *RpbListBucketsResp) String() string { return proto.CompactTextString(this) }
-func (*RpbListBucketsResp) ProtoMessage()       {}
-
-type RpbListKeysReq struct {
-	Bucket           []byte `protobuf:"bytes,1,req,name=bucket" json:"bucket,omitempty"`
+type RpbPair struct {
+	Key              []byte `protobuf:"bytes,1,req,name=key" json:"key,omitempty"`
+	Value            []byte `protobuf:"bytes,2,opt,name=value" json:"value,omitempty"`
 	XXX_unrecognized []byte `json:"-"`
 }
 
-func (this *RpbListKeysReq) Reset()         { *this = RpbListKeysReq{} }
-func (this *RpbListKeysReq) String() string { return proto.CompactTextString(this) }
-func (*RpbListKeysReq) ProtoMessage()       {}
+func (m *RpbPair) Reset()         { *m = RpbPair{} }
+func (m *RpbPair) String() string { return proto.CompactTextString(m) }
+func (*RpbPair) ProtoMessage()    {}
 
-func (this *RpbListKeysReq) GetBucket() []byte {
-	if this != nil {
-		return this.Bucket
+func (m *RpbPair) GetKey() []byte {
+	if m != nil {
+		return m.Key
 	}
 	return nil
 }
 
-type RpbListKeysResp struct {
-	Keys             [][]byte `protobuf:"bytes,1,rep,name=keys" json:"keys,omitempty"`
-	Done             *bool    `protobuf:"varint,2,opt,name=done" json:"done,omitempty"`
-	XXX_unrecognized []byte   `json:"-"`
-}
-
-func (this *RpbListKeysResp) Reset()         { *this = RpbListKeysResp{} }
-func (this *RpbListKeysResp) String() string { return proto.CompactTextString(this) }
-func (*RpbListKeysResp) ProtoMessage()       {}
-
-func (this *RpbListKeysResp) GetDone() bool {
-	if this != nil && this.Done != nil {
-		return *this.Done
+func (m *RpbPair) GetValue() []byte {
+	if m != nil {
+		return m.Value
 	}
-	return false
+	return nil
 }
 
 type RpbGetBucketReq struct {
@@ -446,13 +132,13 @@ type RpbGetBucketReq struct {
 	XXX_unrecognized []byte `json:"-"`
 }
 
-func (this *RpbGetBucketReq) Reset()         { *this = RpbGetBucketReq{} }
-func (this *RpbGetBucketReq) String() string { return proto.CompactTextString(this) }
-func (*RpbGetBucketReq) ProtoMessage()       {}
+func (m *RpbGetBucketReq) Reset()         { *m = RpbGetBucketReq{} }
+func (m *RpbGetBucketReq) String() string { return proto.CompactTextString(m) }
+func (*RpbGetBucketReq) ProtoMessage()    {}
 
-func (this *RpbGetBucketReq) GetBucket() []byte {
-	if this != nil {
-		return this.Bucket
+func (m *RpbGetBucketReq) GetBucket() []byte {
+	if m != nil {
+		return m.Bucket
 	}
 	return nil
 }
@@ -462,13 +148,13 @@ type RpbGetBucketResp struct {
 	XXX_unrecognized []byte          `json:"-"`
 }
 
-func (this *RpbGetBucketResp) Reset()         { *this = RpbGetBucketResp{} }
-func (this *RpbGetBucketResp) String() string { return proto.CompactTextString(this) }
-func (*RpbGetBucketResp) ProtoMessage()       {}
+func (m *RpbGetBucketResp) Reset()         { *m = RpbGetBucketResp{} }
+func (m *RpbGetBucketResp) String() string { return proto.CompactTextString(m) }
+func (*RpbGetBucketResp) ProtoMessage()    {}
 
-func (this *RpbGetBucketResp) GetProps() *RpbBucketProps {
-	if this != nil {
-		return this.Props
+func (m *RpbGetBucketResp) GetProps() *RpbBucketProps {
+	if m != nil {
+		return m.Props
 	}
 	return nil
 }
@@ -479,258 +165,291 @@ type RpbSetBucketReq struct {
 	XXX_unrecognized []byte          `json:"-"`
 }
 
-func (this *RpbSetBucketReq) Reset()         { *this = RpbSetBucketReq{} }
-func (this *RpbSetBucketReq) String() string { return proto.CompactTextString(this) }
-func (*RpbSetBucketReq) ProtoMessage()       {}
+func (m *RpbSetBucketReq) Reset()         { *m = RpbSetBucketReq{} }
+func (m *RpbSetBucketReq) String() string { return proto.CompactTextString(m) }
+func (*RpbSetBucketReq) ProtoMessage()    {}
 
-func (this *RpbSetBucketReq) GetBucket() []byte {
-	if this != nil {
-		return this.Bucket
+func (m *RpbSetBucketReq) GetBucket() []byte {
+	if m != nil {
+		return m.Bucket
 	}
 	return nil
 }
 
-func (this *RpbSetBucketReq) GetProps() *RpbBucketProps {
-	if this != nil {
-		return this.Props
+func (m *RpbSetBucketReq) GetProps() *RpbBucketProps {
+	if m != nil {
+		return m.Props
 	}
 	return nil
 }
 
-type RpbMapRedReq struct {
-	Request          []byte `protobuf:"bytes,1,req,name=request" json:"request,omitempty"`
-	ContentType      []byte `protobuf:"bytes,2,req,name=content_type" json:"content_type,omitempty"`
+type RpbResetBucketReq struct {
+	Bucket           []byte `protobuf:"bytes,1,req,name=bucket" json:"bucket,omitempty"`
 	XXX_unrecognized []byte `json:"-"`
 }
 
-func (this *RpbMapRedReq) Reset()         { *this = RpbMapRedReq{} }
-func (this *RpbMapRedReq) String() string { return proto.CompactTextString(this) }
-func (*RpbMapRedReq) ProtoMessage()       {}
+func (m *RpbResetBucketReq) Reset()         { *m = RpbResetBucketReq{} }
+func (m *RpbResetBucketReq) String() string { return proto.CompactTextString(m) }
+func (*RpbResetBucketReq) ProtoMessage()    {}
 
-func (this *RpbMapRedReq) GetRequest() []byte {
-	if this != nil {
-		return this.Request
+func (m *RpbResetBucketReq) GetBucket() []byte {
+	if m != nil {
+		return m.Bucket
 	}
 	return nil
 }
 
-func (this *RpbMapRedReq) GetContentType() []byte {
-	if this != nil {
-		return this.ContentType
+type RpbModFun struct {
+	Module           []byte `protobuf:"bytes,1,req,name=module" json:"module,omitempty"`
+	Function         []byte `protobuf:"bytes,2,req,name=function" json:"function,omitempty"`
+	XXX_unrecognized []byte `json:"-"`
+}
+
+func (m *RpbModFun) Reset()         { *m = RpbModFun{} }
+func (m *RpbModFun) String() string { return proto.CompactTextString(m) }
+func (*RpbModFun) ProtoMessage()    {}
+
+func (m *RpbModFun) GetModule() []byte {
+	if m != nil {
+		return m.Module
 	}
 	return nil
 }
 
-type RpbMapRedResp struct {
-	Phase            *uint32 `protobuf:"varint,1,opt,name=phase" json:"phase,omitempty"`
-	Response         []byte  `protobuf:"bytes,2,opt,name=response" json:"response,omitempty"`
-	Done             *bool   `protobuf:"varint,3,opt,name=done" json:"done,omitempty"`
-	XXX_unrecognized []byte  `json:"-"`
-}
-
-func (this *RpbMapRedResp) Reset()         { *this = RpbMapRedResp{} }
-func (this *RpbMapRedResp) String() string { return proto.CompactTextString(this) }
-func (*RpbMapRedResp) ProtoMessage()       {}
-
-func (this *RpbMapRedResp) GetPhase() uint32 {
-	if this != nil && this.Phase != nil {
-		return *this.Phase
-	}
-	return 0
-}
-
-func (this *RpbMapRedResp) GetResponse() []byte {
-	if this != nil {
-		return this.Response
+func (m *RpbModFun) GetFunction() []byte {
+	if m != nil {
+		return m.Function
 	}
 	return nil
 }
 
-func (this *RpbMapRedResp) GetDone() bool {
-	if this != nil && this.Done != nil {
-		return *this.Done
-	}
-	return false
-}
-
-type RpbContent struct {
-	Value            []byte     `protobuf:"bytes,1,req,name=value" json:"value,omitempty"`
-	ContentType      []byte     `protobuf:"bytes,2,opt,name=content_type" json:"content_type,omitempty"`
-	Charset          []byte     `protobuf:"bytes,3,opt,name=charset" json:"charset,omitempty"`
-	ContentEncoding  []byte     `protobuf:"bytes,4,opt,name=content_encoding" json:"content_encoding,omitempty"`
-	Vtag             []byte     `protobuf:"bytes,5,opt,name=vtag" json:"vtag,omitempty"`
-	Links            []*RpbLink `protobuf:"bytes,6,rep,name=links" json:"links,omitempty"`
-	LastMod          *uint32    `protobuf:"varint,7,opt,name=last_mod" json:"last_mod,omitempty"`
-	LastModUsecs     *uint32    `protobuf:"varint,8,opt,name=last_mod_usecs" json:"last_mod_usecs,omitempty"`
-	Usermeta         []*RpbPair `protobuf:"bytes,9,rep,name=usermeta" json:"usermeta,omitempty"`
-	Indexes          []*RpbPair `protobuf:"bytes,10,rep,name=indexes" json:"indexes,omitempty"`
+type RpbCommitHook struct {
+	Modfun           *RpbModFun `protobuf:"bytes,1,opt,name=modfun" json:"modfun,omitempty"`
+	Name             []byte     `protobuf:"bytes,2,opt,name=name" json:"name,omitempty"`
 	XXX_unrecognized []byte     `json:"-"`
 }
 
-func (this *RpbContent) Reset()         { *this = RpbContent{} }
-func (this *RpbContent) String() string { return proto.CompactTextString(this) }
-func (*RpbContent) ProtoMessage()       {}
+func (m *RpbCommitHook) Reset()         { *m = RpbCommitHook{} }
+func (m *RpbCommitHook) String() string { return proto.CompactTextString(m) }
+func (*RpbCommitHook) ProtoMessage()    {}
 
-func (this *RpbContent) GetValue() []byte {
-	if this != nil {
-		return this.Value
+func (m *RpbCommitHook) GetModfun() *RpbModFun {
+	if m != nil {
+		return m.Modfun
 	}
 	return nil
 }
 
-func (this *RpbContent) GetContentType() []byte {
-	if this != nil {
-		return this.ContentType
-	}
-	return nil
-}
-
-func (this *RpbContent) GetCharset() []byte {
-	if this != nil {
-		return this.Charset
-	}
-	return nil
-}
-
-func (this *RpbContent) GetContentEncoding() []byte {
-	if this != nil {
-		return this.ContentEncoding
-	}
-	return nil
-}
-
-func (this *RpbContent) GetVtag() []byte {
-	if this != nil {
-		return this.Vtag
-	}
-	return nil
-}
-
-func (this *RpbContent) GetLastMod() uint32 {
-	if this != nil && this.LastMod != nil {
-		return *this.LastMod
-	}
-	return 0
-}
-
-func (this *RpbContent) GetLastModUsecs() uint32 {
-	if this != nil && this.LastModUsecs != nil {
-		return *this.LastModUsecs
-	}
-	return 0
-}
-
-type RpbPair struct {
-	Key              []byte `protobuf:"bytes,1,req,name=key" json:"key,omitempty"`
-	Value            []byte `protobuf:"bytes,2,opt,name=value" json:"value,omitempty"`
-	XXX_unrecognized []byte `json:"-"`
-}
-
-func (this *RpbPair) Reset()         { *this = RpbPair{} }
-func (this *RpbPair) String() string { return proto.CompactTextString(this) }
-func (*RpbPair) ProtoMessage()       {}
-
-func (this *RpbPair) GetKey() []byte {
-	if this != nil {
-		return this.Key
-	}
-	return nil
-}
-
-func (this *RpbPair) GetValue() []byte {
-	if this != nil {
-		return this.Value
-	}
-	return nil
-}
-
-type RpbLink struct {
-	Bucket           []byte `protobuf:"bytes,1,opt,name=bucket" json:"bucket,omitempty"`
-	Key              []byte `protobuf:"bytes,2,opt,name=key" json:"key,omitempty"`
-	Tag              []byte `protobuf:"bytes,3,opt,name=tag" json:"tag,omitempty"`
-	XXX_unrecognized []byte `json:"-"`
-}
-
-func (this *RpbLink) Reset()         { *this = RpbLink{} }
-func (this *RpbLink) String() string { return proto.CompactTextString(this) }
-func (*RpbLink) ProtoMessage()       {}
-
-func (this *RpbLink) GetBucket() []byte {
-	if this != nil {
-		return this.Bucket
-	}
-	return nil
-}
-
-func (this *RpbLink) GetKey() []byte {
-	if this != nil {
-		return this.Key
-	}
-	return nil
-}
-
-func (this *RpbLink) GetTag() []byte {
-	if this != nil {
-		return this.Tag
+func (m *RpbCommitHook) GetName() []byte {
+	if m != nil {
+		return m.Name
 	}
 	return nil
 }
 
 type RpbBucketProps struct {
-	NVal             *uint32 `protobuf:"varint,1,opt,name=n_val" json:"n_val,omitempty"`
-	AllowMult        *bool   `protobuf:"varint,2,opt,name=allow_mult" json:"allow_mult,omitempty"`
-	XXX_unrecognized []byte  `json:"-"`
+	NVal             *uint32                     `protobuf:"varint,1,opt,name=n_val" json:"n_val,omitempty"`
+	AllowMult        *bool                       `protobuf:"varint,2,opt,name=allow_mult" json:"allow_mult,omitempty"`
+	LastWriteWins    *bool                       `protobuf:"varint,3,opt,name=last_write_wins" json:"last_write_wins,omitempty"`
+	Precommit        []*RpbCommitHook            `protobuf:"bytes,4,rep,name=precommit" json:"precommit,omitempty"`
+	HasPrecommit     *bool                       `protobuf:"varint,5,opt,name=has_precommit,def=0" json:"has_precommit,omitempty"`
+	Postcommit       []*RpbCommitHook            `protobuf:"bytes,6,rep,name=postcommit" json:"postcommit,omitempty"`
+	HasPostcommit    *bool                       `protobuf:"varint,7,opt,name=has_postcommit,def=0" json:"has_postcommit,omitempty"`
+	ChashKeyfun      *RpbModFun                  `protobuf:"bytes,8,opt,name=chash_keyfun" json:"chash_keyfun,omitempty"`
+	Linkfun          *RpbModFun                  `protobuf:"bytes,9,opt,name=linkfun" json:"linkfun,omitempty"`
+	OldVclock        *uint32                     `protobuf:"varint,10,opt,name=old_vclock" json:"old_vclock,omitempty"`
+	YoungVclock      *uint32                     `protobuf:"varint,11,opt,name=young_vclock" json:"young_vclock,omitempty"`
+	BigVclock        *uint32                     `protobuf:"varint,12,opt,name=big_vclock" json:"big_vclock,omitempty"`
+	SmallVclock      *uint32                     `protobuf:"varint,13,opt,name=small_vclock" json:"small_vclock,omitempty"`
+	Pr               *uint32                     `protobuf:"varint,14,opt,name=pr" json:"pr,omitempty"`
+	R                *uint32                     `protobuf:"varint,15,opt,name=r" json:"r,omitempty"`
+	W                *uint32                     `protobuf:"varint,16,opt,name=w" json:"w,omitempty"`
+	Pw               *uint32                     `protobuf:"varint,17,opt,name=pw" json:"pw,omitempty"`
+	Dw               *uint32                     `protobuf:"varint,18,opt,name=dw" json:"dw,omitempty"`
+	Rw               *uint32                     `protobuf:"varint,19,opt,name=rw" json:"rw,omitempty"`
+	BasicQuorum      *bool                       `protobuf:"varint,20,opt,name=basic_quorum" json:"basic_quorum,omitempty"`
+	NotfoundOk       *bool                       `protobuf:"varint,21,opt,name=notfound_ok" json:"notfound_ok,omitempty"`
+	Backend          []byte                      `protobuf:"bytes,22,opt,name=backend" json:"backend,omitempty"`
+	Search           *bool                       `protobuf:"varint,23,opt,name=search" json:"search,omitempty"`
+	Repl             *RpbBucketProps_RpbReplMode `protobuf:"varint,24,opt,name=repl,enum=RpbBucketProps_RpbReplMode" json:"repl,omitempty"`
+	XXX_unrecognized []byte                      `json:"-"`
 }
 
-func (this *RpbBucketProps) Reset()         { *this = RpbBucketProps{} }
-func (this *RpbBucketProps) String() string { return proto.CompactTextString(this) }
-func (*RpbBucketProps) ProtoMessage()       {}
+func (m *RpbBucketProps) Reset()         { *m = RpbBucketProps{} }
+func (m *RpbBucketProps) String() string { return proto.CompactTextString(m) }
+func (*RpbBucketProps) ProtoMessage()    {}
 
-func (this *RpbBucketProps) GetNVal() uint32 {
-	if this != nil && this.NVal != nil {
-		return *this.NVal
+const Default_RpbBucketProps_HasPrecommit bool = false
+const Default_RpbBucketProps_HasPostcommit bool = false
+
+func (m *RpbBucketProps) GetNVal() uint32 {
+	if m != nil && m.NVal != nil {
+		return *m.NVal
 	}
 	return 0
 }
 
-func (this *RpbBucketProps) GetAllowMult() bool {
-	if this != nil && this.AllowMult != nil {
-		return *this.AllowMult
+func (m *RpbBucketProps) GetAllowMult() bool {
+	if m != nil && m.AllowMult != nil {
+		return *m.AllowMult
 	}
 	return false
 }
 
-type RpbPingResp struct {
-	XXX_unrecognized []byte `json:"-"`
+func (m *RpbBucketProps) GetLastWriteWins() bool {
+	if m != nil && m.LastWriteWins != nil {
+		return *m.LastWriteWins
+	}
+	return false
 }
 
-func (this *RpbPingResp) Reset()         { *this = RpbPingResp{} }
-func (this *RpbPingResp) String() string { return proto.CompactTextString(this) }
-func (*RpbPingResp) ProtoMessage()       {}
-
-type RpbSetClientIdResp struct {
-	XXX_unrecognized []byte `json:"-"`
+func (m *RpbBucketProps) GetPrecommit() []*RpbCommitHook {
+	if m != nil {
+		return m.Precommit
+	}
+	return nil
 }
 
-func (this *RpbSetClientIdResp) Reset()         { *this = RpbSetClientIdResp{} }
-func (this *RpbSetClientIdResp) String() string { return proto.CompactTextString(this) }
-func (*RpbSetClientIdResp) ProtoMessage()       {}
-
-type RpbDelResp struct {
-	XXX_unrecognized []byte `json:"-"`
+func (m *RpbBucketProps) GetHasPrecommit() bool {
+	if m != nil && m.HasPrecommit != nil {
+		return *m.HasPrecommit
+	}
+	return Default_RpbBucketProps_HasPrecommit
 }
 
-func (this *RpbDelResp) Reset()         { *this = RpbDelResp{} }
-func (this *RpbDelResp) String() string { return proto.CompactTextString(this) }
-func (*RpbDelResp) ProtoMessage()       {}
-
-type RpbSetBucketResp struct {
-	XXX_unrecognized []byte `json:"-"`
+func (m *RpbBucketProps) GetPostcommit() []*RpbCommitHook {
+	if m != nil {
+		return m.Postcommit
+	}
+	return nil
 }
 
-func (this *RpbSetBucketResp) Reset()         { *this = RpbSetBucketResp{} }
-func (this *RpbSetBucketResp) String() string { return proto.CompactTextString(this) }
-func (*RpbSetBucketResp) ProtoMessage()       {}
+func (m *RpbBucketProps) GetHasPostcommit() bool {
+	if m != nil && m.HasPostcommit != nil {
+		return *m.HasPostcommit
+	}
+	return Default_RpbBucketProps_HasPostcommit
+}
+
+func (m *RpbBucketProps) GetChashKeyfun() *RpbModFun {
+	if m != nil {
+		return m.ChashKeyfun
+	}
+	return nil
+}
+
+func (m *RpbBucketProps) GetLinkfun() *RpbModFun {
+	if m != nil {
+		return m.Linkfun
+	}
+	return nil
+}
+
+func (m *RpbBucketProps) GetOldVclock() uint32 {
+	if m != nil && m.OldVclock != nil {
+		return *m.OldVclock
+	}
+	return 0
+}
+
+func (m *RpbBucketProps) GetYoungVclock() uint32 {
+	if m != nil && m.YoungVclock != nil {
+		return *m.YoungVclock
+	}
+	return 0
+}
+
+func (m *RpbBucketProps) GetBigVclock() uint32 {
+	if m != nil && m.BigVclock != nil {
+		return *m.BigVclock
+	}
+	return 0
+}
+
+func (m *RpbBucketProps) GetSmallVclock() uint32 {
+	if m != nil && m.SmallVclock != nil {
+		return *m.SmallVclock
+	}
+	return 0
+}
+
+func (m *RpbBucketProps) GetPr() uint32 {
+	if m != nil && m.Pr != nil {
+		return *m.Pr
+	}
+	return 0
+}
+
+func (m *RpbBucketProps) GetR() uint32 {
+	if m != nil && m.R != nil {
+		return *m.R
+	}
+	return 0
+}
+
+func (m *RpbBucketProps) GetW() uint32 {
+	if m != nil && m.W != nil {
+		return *m.W
+	}
+	return 0
+}
+
+func (m *RpbBucketProps) GetPw() uint32 {
+	if m != nil && m.Pw != nil {
+		return *m.Pw
+	}
+	return 0
+}
+
+func (m *RpbBucketProps) GetDw() uint32 {
+	if m != nil && m.Dw != nil {
+		return *m.Dw
+	}
+	return 0
+}
+
+func (m *RpbBucketProps) GetRw() uint32 {
+	if m != nil && m.Rw != nil {
+		return *m.Rw
+	}
+	return 0
+}
+
+func (m *RpbBucketProps) GetBasicQuorum() bool {
+	if m != nil && m.BasicQuorum != nil {
+		return *m.BasicQuorum
+	}
+	return false
+}
+
+func (m *RpbBucketProps) GetNotfoundOk() bool {
+	if m != nil && m.NotfoundOk != nil {
+		return *m.NotfoundOk
+	}
+	return false
+}
+
+func (m *RpbBucketProps) GetBackend() []byte {
+	if m != nil {
+		return m.Backend
+	}
+	return nil
+}
+
+func (m *RpbBucketProps) GetSearch() bool {
+	if m != nil && m.Search != nil {
+		return *m.Search
+	}
+	return false
+}
+
+func (m *RpbBucketProps) GetRepl() RpbBucketProps_RpbReplMode {
+	if m != nil && m.Repl != nil {
+		return *m.Repl
+	}
+	return 0
+}
 
 func init() {
+	proto.RegisterEnum("RpbBucketProps_RpbReplMode", RpbBucketProps_RpbReplMode_name, RpbBucketProps_RpbReplMode_value)
 }

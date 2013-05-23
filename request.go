@@ -32,6 +32,10 @@ var commandToNum = map[string]byte{
 	"RpbSetBucketResp":     22,
 	"RpbMapRedReq":         23,
 	"RpbMapRedResp":        24,
+	"RpbIndexReq":          25,
+	"RpbIndexResp":         26,
+	"RpbSearchQueryReq":    27,
+	"RbpSearchQueryResp":   28,
 }
 
 var (
@@ -39,8 +43,7 @@ var (
 )
 
 func (c *Conn) Request(reqstruct interface{}, structname string) (err error) {
-	marshaledRequest, err := marshalRequest(reqstruct)
-
+	marshaledRequest, err := proto.Marshal(reqstruct.(proto.Message))
 	if err != nil {
 		return err
 	}
@@ -57,26 +60,20 @@ func (c *Conn) RawRequest(marshaledRequest []byte, structname string) (err error
 	currentRetries := 0
 	err = c.Write(formattedRequest)
 	if err != nil {
-		return err
-	}
-
-	if err != nil {
-		if err == ErrReadTimeout && currentRetries < maxReadRetries {
-			for currentRetries < maxReadRetries {
+		if err == ErrReadTimeout && currentRetries < maxWriteRetries {
+			for currentRetries < maxWriteRetries {
 				err = c.Write(formattedRequest)
 				if err != nil {
 					currentRetries = currentRetries + 1
+				} else if currentRetries > maxWriteRetries {
+					return ErrWriteTimeout
 				} else {
-					currentRetries = maxReadRetries + 1
+					break // success
 				}
 			}
 		}
-		err = ErrWriteTimeout
-		return err
 	}
-
 	return nil
-
 }
 
 func prependRequestHeader(commandName string, marshaledReqData []byte) (formattedData []byte, e error) {
@@ -90,16 +87,10 @@ func prependRequestHeader(commandName string, marshaledReqData []byte) (formatte
 
 	lenbuf := new(bytes.Buffer)
 	binary.Write(lenbuf, binary.BigEndian, int32(len(msgbuf)))
-
 	length := lenbuf.Bytes()
 
 	formattedData = append(formattedData, length...)
 	formattedData = append(formattedData, msgbuf...)
 
 	return formattedData, nil
-}
-
-func marshalRequest(reqstruct interface{}) (marshaledRequest []byte, err error) {
-	marshaledRequest, err = proto.Marshal(reqstruct.(proto.Message))
-	return marshaledRequest, nil
 }
