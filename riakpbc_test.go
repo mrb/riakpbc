@@ -129,18 +129,3 @@ func TestPing(t *testing.T) {
 	}
 	assert.T(t, string(pong) == "Pong")
 }
-
-func TestMapReduce(t *testing.T) {
-	riak := setupConnection(t)
-	setupData(t, riak)
-
-	twoLevelQuery := "{\"inputs\":[[\"riakpbctestbucket\",\"testkey\"]],\"query\":[{\"map\":{\"language\":\"javascript\",\"keep\":false,\"name\":\"Riak.mapValuesJson\"}},{\"reduce\":{\"language\":\"javascript\",\"keep\":true,\"name\":\"Riak.reduceMax\"}}]}"
-	reduced, err := riak.MapReduce(twoLevelQuery)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	assert.T(t, reduced != nil)
-	assert.T(t, len(reduced) == 2)
-
-	teardownData(t, riak)
-}

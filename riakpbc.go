@@ -200,42 +200,6 @@ func (c *Conn) SetClientId(clientId string) (response []byte, err error) {
 	return uncoercedresponse.([]byte), nil
 }
 
-// MapReduce
-func (c *Conn) MapReduce(content string) (response [][]byte, err error) {
-	reqstruct := &RpbMapRedReq{
-		Request:     []byte(content),
-		ContentType: []byte("application/json"),
-	}
-
-	err = c.Request(reqstruct, "RpbMapRedReq")
-	if err != nil {
-		return nil, err
-	}
-
-	var rawresp interface{}
-	rawresp, err = c.Response(&RpbMapRedResp{})
-	if err != nil {
-		return nil, err
-	}
-
-	done := rawresp.(*RpbMapRedResp).Done
-	respresp := rawresp.(*RpbMapRedResp).Response
-
-	response = append(response, respresp)
-
-	for done == nil {
-		moreresp, moreerr := c.Response(&RpbMapRedResp{})
-		if moreerr != nil {
-			return nil, moreerr
-		}
-
-		done = moreresp.(*RpbMapRedResp).Done
-		response = append(response, moreresp.(*RpbMapRedResp).Response)
-	}
-
-	return response, nil
-}
-
 // Create bucket
 func (c *Conn) SetBucket(bucket string, nval *uint32, allowmult *bool) (response []byte, err error) {
 	propstruct := &RpbBucketProps{

@@ -2,6 +2,8 @@ package riakpbc
 
 import (
 	"code.google.com/p/goprotobuf/proto"
+	"errors"
+	"strconv"
 )
 
 var numToCommand = map[int]string{
@@ -83,10 +85,6 @@ func validateResponseHeader(respraw []byte) (err error) {
 		return ErrNoSuchCommand
 	}
 
-	if resptype == 0 {
-		return ErrRiakError
-	}
-
 	return nil
 }
 
@@ -99,96 +97,122 @@ func unmarshalResponse(respraw []byte) (respbuf interface{}, err error) {
 		respbuf = respraw[1:]
 	}
 
-	if structname == "RpbGetResp" {
+	switch structname {
+
+	case "RpbErrorResp":
+		respstruct := &RpbErrorResp{}
+		err = proto.Unmarshal(respbuf.([]byte), respstruct)
+		if err != nil {
+			return nil, err
+		}
+		return nil, errors.New(strconv.Itoa(int(respstruct.GetErrcode())) + ": " + string(string(respstruct.GetErrmsg())))
+
+	case "RpbPingResp":
+		return []byte("Pong"), nil
+
+	case "RpbGetClientIdResp":
+		respstruct := &RpbGetClientIdResp{}
+		err = proto.Unmarshal(respbuf.([]byte), respstruct)
+		if err != nil {
+			return nil, err
+		}
+		return respstruct.GetClientId(), nil
+
+	case "RpbSetClientIdResp":
+		return []byte("Success"), nil
+
+	case "RpbGetServerInfoResp":
+		respstruct := &RpbGetServerInfoResp{}
+		err = proto.Unmarshal(respbuf.([]byte), respstruct)
+		if err != nil {
+			return nil, err
+		}
+		return respstruct.GetNode(), nil
+
+	case "RpbGetResp":
 		respstruct := &RpbGetResp{}
 		if reslength == 1 {
 			return nil, ErrObjectNotFound
 		}
 		err = proto.Unmarshal(respbuf.([]byte), respstruct)
-		respbuf = respstruct.Content[0].Value
-	}
-
-	if structname == "RpbGetServerInfoResp" {
-		respstruct := &RpbGetServerInfoResp{}
-		err = proto.Unmarshal(respbuf.([]byte), respstruct)
-		respbuf = respstruct.Node
-	}
-
-	if structname == "RpbListBucketsResp" {
-		respstruct := &RpbListBucketsResp{}
-		err = proto.Unmarshal(respbuf.([]byte), respstruct)
-		respbuf = respstruct.Buckets
-	}
-
-	if structname == "RpbListKeysResp" {
-		respstruct := &RpbListKeysResp{}
-		err = proto.Unmarshal(respbuf.([]byte), respstruct)
-		respbuf = respstruct
-	}
-
-	if structname == "RpbGetClientIdResp" {
-		respstruct := &RpbGetClientIdResp{}
-		err = proto.Unmarshal(respbuf.([]byte), respstruct)
-		respbuf = respstruct.ClientId
-	}
-
-	if structname == "RpbSetClientIdResp" {
-		if reslength == 1 {
-			return []byte("Success"), nil
+		if err != nil {
+			return nil, err
 		}
-		return nil, ErrObjectNotFound
-	}
+		return respstruct.GetContent()[0].GetValue(), nil
 
-	if structname == "RpbPutResp" {
+	case "RpbPutResp":
 		respstruct := &RpbPutResp{}
 		if reslength == 1 {
 			return []byte("Success"), nil
 		}
 		err = proto.Unmarshal(respbuf.([]byte), respstruct)
-		respbuf = respstruct.Content
-	}
+		if err != nil {
+			return nil, err
+		}
+		return respstruct.GetContent(), nil
 
-	if structname == "RpbMapRedResp" {
-		respstruct := &RpbMapRedResp{}
+	case "RpbDelResp":
+		return []byte("Success"), nil
+
+	case "RpbListBucketsResp":
+		respstruct := &RpbListBucketsResp{}
 		err = proto.Unmarshal(respbuf.([]byte), respstruct)
-		respbuf = respstruct
-	}
+		if err != nil {
+			return nil, err
+		}
+		return respstruct.GetBuckets(), nil
 
-	if structname == "RpbSetBucketResp" {
-		respbuf = []byte("Success")
-		return respbuf, nil
-	}
+	case "RpbListKeysResp":
+		respstruct := &RpbListKeysResp{}
+		err = proto.Unmarshal(respbuf.([]byte), respstruct)
+		if err != nil {
+			return nil, err
+		}
+		return respstruct, nil
 
-	if structname == "RpbGetBucketResp" {
+	case "RpbGetBucketResp":
 		if reslength == 1 {
 			return nil, ErrObjectNotFound
 		}
 
 		respstruct := &RpbGetBucketResp{}
-
 		err = proto.Unmarshal(respbuf.([]byte), respstruct)
 		if err != nil {
 			return nil, err
 		}
+		return []byte(respstruct.GetProps().String()), nil
 
-		respbuf = []byte(respstruct.Props.String())
+	case "RpbSetBucketResp":
+		return []byte("Success"), nil
 
-		return respbuf, nil
-	}
-
-	if structname == "RpbDelResp" {
-		if reslength == 1 {
-			respbuf = []byte("Success")
+	case "RpbMapRedResp":
+		respstruct := &RpbMapRedResp{}
+		err = proto.Unmarshal(respbuf.([]byte), respstruct)
+		if err != nil {
+			return nil, err
 		}
-		return respbuf, nil
-	}
+		return respstruct, nil
 
-	if structname == "RpbPingResp" {
+	case "RpbIndexResp":
+		respstruct := &RpbIndexResp{}
 		if reslength == 1 {
-			respbuf = []byte("Pong")
+			return nil, ErrObjectNotFound
 		}
-		return respbuf, nil
+		err = proto.Unmarshal(respbuf.([]byte), respstruct)
+		if err != nil {
+			return nil, err
+		}
+		return respstruct, nil
+
+	case "RpbSearchQueryResp":
+		respstruct := &RpbSearchQueryResp{}
+		err = proto.Unmarshal(respbuf.([]byte), respstruct)
+		if err != nil {
+			return nil, err
+		}
+		return respstruct, nil
+
 	}
 
-	return respbuf, nil
+	return nil, nil
 }
