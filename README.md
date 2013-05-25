@@ -1,6 +1,8 @@
 riakpbc
 =======
 
+## This Library is under heavy development as of 05/25/2013. Please execrcise caution.
+
 A Riak Protocol Buffer Client in Go.
 
 A simple `riakpbc` program:
