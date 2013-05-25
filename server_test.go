@@ -5,6 +5,16 @@ import (
 	"testing"
 )
 
+func TestServerInfo(t *testing.T) {
+	riak := setupConnection(t)
+
+	info, err := riak.GetServerInfo()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.T(t, string(info.GetServerVersion()) != "")
+}
+
 func TestPing(t *testing.T) {
 	riak := setupConnection(t)
 

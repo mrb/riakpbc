@@ -6,22 +6,33 @@ package riakpbc
 //
 //    - application/json - JSON-encoded map/reduce job
 //    - application/x-erlang-binary - Erlang external term format
-func (c *Conn) MapReduce(request, contentType string) (*RpbMapRedResp, error) {
+func (c *Conn) MapReduce(request, contentType string) ([]byte, error) {
 	reqstruct := &RpbMapRedReq{
 		Request:     []byte(request),
 		ContentType: []byte(contentType),
 	}
 
 	if err := c.Request(reqstruct, "RpbMapRedReq"); err != nil {
-		return &RpbMapRedResp{}, err
+		return nil, err
 	}
 
 	response, err := c.Response(&RpbMapRedResp{})
 	if err != nil {
-		return &RpbMapRedResp{}, err
+		return nil, err
 	}
 
-	return response.(*RpbMapRedResp), nil
+	mapResponse := response.(*RpbMapRedResp).GetResponse()
+	done := response.(*RpbMapRedResp).GetDone()
+	for done != true {
+		response, err := c.Response(&RpbMapRedResp{})
+		if err != nil {
+			return nil, err
+		}
+		mapResponse = append(mapResponse, response.(*RpbMapRedResp).GetResponse()...)
+		done = response.(*RpbMapRedResp).GetDone()
+	}
+
+	return mapResponse, nil
 }
 
 // Index requests a set of keys that match a secondary index query.

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/bmizerany/assert"
 	"log"
-	"strings"
 	"testing"
 )
 
@@ -73,21 +72,6 @@ func teardownData(t *testing.T, conn *Conn) {
 		t.Error(err.Error())
 	}
 	assert.T(t, string(ok) == "Success")
-}
-
-func TestListBuckets(t *testing.T) {
-	riak := setupConnection(t)
-	setupData(t, riak)
-
-	buckets, err := riak.ListBuckets()
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	bucketString := fmt.Sprintf("%s", buckets)
-	assert.T(t, strings.Contains(bucketString, "riakpbctestbucket"))
-
-	teardownData(t, riak)
 }
 
 func TestFetchObject(t *testing.T) {

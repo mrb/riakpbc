@@ -17,21 +17,32 @@ func (c *Conn) ListBuckets() (*RpbListBucketsResp, error) {
 }
 
 // List all keys from bucket
-func (c *Conn) ListKeys(bucket string) (*RpbListKeysResp, error) {
+func (c *Conn) ListKeys(bucket string) ([][]byte, error) {
 	reqstruct := &RpbListKeysReq{
 		Bucket: []byte(bucket),
 	}
 
 	if err := c.Request(reqstruct, "RpbListKeysReq"); err != nil {
-		return &RpbListKeysResp{}, err
+		return nil, err
 	}
 
 	response, err := c.Response(&RpbListKeysResp{})
 	if err != nil {
-		return &RpbListKeysResp{}, err
+		return nil, err
 	}
 
-	return response.(*RpbListKeysResp), nil
+	keys := response.(*RpbListKeysResp).GetKeys()
+	done := response.(*RpbListKeysResp).GetDone()
+	for done != true {
+		response, err := c.Response(&RpbListKeysResp{})
+		if err != nil {
+			return nil, err
+		}
+		keys = append(keys, response.(*RpbListKeysResp).GetKeys()...)
+		done = response.(*RpbListKeysResp).GetDone()
+	}
+
+	return keys, nil
 }
 
 // Get bucket info

@@ -1,19 +1,19 @@
 package riakpbc
 
 // Get server info
-func (c *Conn) GetServerInfo() (RpbGetServerInfoResp, error) {
+func (c *Conn) GetServerInfo() (*RpbGetServerInfoResp, error) {
 	reqdata := []byte{}
 
 	if err := c.RawRequest(reqdata, "RpbGetServerInfoReq"); err != nil {
-		return RpbGetServerInfoResp{}, err
+		return &RpbGetServerInfoResp{}, err
 	}
 
 	response, err := c.Response(&RpbGetServerInfoResp{})
 	if err != nil {
-		return RpbGetServerInfoResp{}, err
+		return &RpbGetServerInfoResp{}, err
 	}
 
-	return response.(RpbGetServerInfoResp), nil
+	return response.(*RpbGetServerInfoResp), nil
 }
 
 // Ping the server
