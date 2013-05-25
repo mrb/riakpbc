@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func ExampleRiakpbc() {
+func ExampleConn() {
 	riak, err := New("127.0.0.1:8087", 1e8, 1e8)
 	if err != nil {
 		log.Print(err.Error())
