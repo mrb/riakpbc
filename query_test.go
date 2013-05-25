@@ -31,8 +31,8 @@ func TestMapReduce(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	assert.T(t, reduced != nil)
-	assert.T(t, len(reduced) == 2)
+	assert.T(t, reduced.GetDone())
+	assert.T(t, len(reduced.GetResponse()) == 2)
 
 	teardownData(t, riak)
 }

@@ -12,12 +12,12 @@ func BenchmarkReadSync(b *testing.B) {
 		return
 	}
 	conn.Dial()
-	conn.StoreObject("bucket", "key", []byte("{}"), "application/json")
+	conn.StoreObject("bucket", "key", []byte("{}"), "application/json", nil)
 
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
-		_, _ = conn.FetchObject("bucket", "key")
+		_, _ = conn.FetchObject("bucket", "key", nil)
 	}
 }
 
@@ -28,7 +28,7 @@ func BenchmarkReadAsync(b *testing.B) {
 		return
 	}
 	conn.Dial()
-	conn.StoreObject("bucket", "key", []byte("{}"), "application/json")
+	conn.StoreObject("bucket", "key", []byte("{}"), "application/json", nil)
 
 	ch := make(chan bool, b.N)
 
@@ -36,7 +36,7 @@ func BenchmarkReadAsync(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		go func(c *Conn) {
-			_, _ = c.FetchObject("bucket", "key")
+			_, _ = c.FetchObject("bucket", "key", nil)
 			select {
 			case ch <- true:
 			default:
