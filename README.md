@@ -16,7 +16,7 @@ import (
 )
 
 func main() {
-	riak, err := riakpbc.New("127.0.0.1:8087", 1e8, 1e8)
+	conn, err := New([]string{"127.0.0.1:8087"}, 1e8, 1e8)
 
 	if err != nil {
 		log.Print(err)
@@ -29,7 +29,7 @@ func main() {
 		return
 	}
 
-	ok, err := riak.StoreObject("buckey", "bro", "{'data':'rules'}")
+	ok, err := riak.StoreObject("bucket", "data", "{'data':'rules'}", "application/json")
 	log.Print(string(ok), " - ", err)
 
 	ok, err = riak.SetClientId("coolio")
@@ -38,14 +38,14 @@ func main() {
 	ok, err = riak.GetClientId()
 	log.Print(string(ok), " - ", err)
 
-	obj, err := riak.FetchObject("buckey", "bro")
+	obj, err := riak.FetchObject("bucket", "data")
 	log.Print(string(obj), " - ", err)
 
 	riak.Close()
 }
 ```
 
-See `example/riakpbc.go` for more usage.
+See `example/example.go` for more usage.
 
 The rest of the API:
 
@@ -133,7 +133,9 @@ There's an example app here: https://github.com/mrb/shoebox and an example in th
 
 ### Creditin'
 
-riakpbc is (c) Michael R. Bernstein, 2012
+riakpbc is (c) Michael R. Bernstein and collaborators, 2013
+
+* Brian Jones (@boj) Fixed a lot of my mistakes, modernized our .proto files, and more!
 
 ### Licensin'
 

@@ -1,19 +1,15 @@
 package main
 
 import (
-	"log"
 	"github.com/mrb/riakpbc"
+	"log"
 )
 
 func main() {
-	riak, err := riakpbc.New("127.0.0.1:8087", 1e8, 1e8)
+	cluster := []string{"127.0.0.1:8087", "127.0.0.1:8088"}
+	riak := riakpbc.New(cluster)
 
-	if err != nil {
-		log.Print(err)
-		return
-	}
-
-	err = riak.Dial()
+	err := riak.Dial()
 	if err != nil {
 		log.Print(err)
 		return
