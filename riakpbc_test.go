@@ -8,10 +8,7 @@ import (
 )
 
 func ExampleConn() {
-	riak, err := New("127.0.0.1:8087", 1e8, 1e8)
-	if err != nil {
-		log.Print(err.Error())
-	}
+	riak := New([]string{"127.0.0.1:8087", "127.0.0.1:8088"})
 
 	if err := riak.Dial(); err != nil {
 		log.Print(err.Error())
@@ -19,7 +16,7 @@ func ExampleConn() {
 
 	data := []byte("{'data':'rules'}")
 
-	_, err = riak.StoreObject("bucket", "data", data, "application/json", nil)
+	_, err := riak.StoreObject("bucket", "data", data, "application/json", nil)
 	if err != nil {
 		log.Println(err.Error())
 	}
@@ -48,9 +45,8 @@ func ExampleConn() {
 }
 
 func setupConnection(t *testing.T) (conn *Conn) {
-	conn, err := New("127.0.0.1:8087", 1e8, 1e8)
-	conn.Dial()
-	if err != nil {
+	conn = New([]string{"127.0.0.1:8087", "127.0.0.1:8088"})
+	if err := conn.Dial(); err != nil {
 		t.Error(err.Error())
 	}
 	assert.T(t, conn != nil)

@@ -89,11 +89,11 @@ func validateResponseHeader(respraw []byte) (err error) {
 }
 
 func unmarshalResponse(respraw []byte) (respbuf interface{}, err error) {
-	reslength := len(respraw)
+	resplength := len(respraw)
 	resptype := respraw[0]
 	structname := numToCommand[int(resptype)]
 
-	if reslength > 1 {
+	if resplength > 1 {
 		respbuf = respraw[1:]
 	}
 
@@ -131,7 +131,7 @@ func unmarshalResponse(respraw []byte) (respbuf interface{}, err error) {
 
 	case "RpbGetResp":
 		respstruct := &RpbGetResp{}
-		if reslength == 1 {
+		if resplength == 1 {
 			return nil, ErrObjectNotFound
 		}
 		err = proto.Unmarshal(respbuf.([]byte), respstruct)
@@ -142,7 +142,7 @@ func unmarshalResponse(respraw []byte) (respbuf interface{}, err error) {
 
 	case "RpbPutResp":
 		respstruct := &RpbPutResp{}
-		if reslength == 1 {
+		if resplength == 1 {
 			return respstruct, nil
 		}
 		err = proto.Unmarshal(respbuf.([]byte), respstruct)
@@ -171,7 +171,7 @@ func unmarshalResponse(respraw []byte) (respbuf interface{}, err error) {
 		return respstruct, nil
 
 	case "RpbGetBucketResp":
-		if reslength == 1 {
+		if resplength == 1 {
 			return nil, ErrObjectNotFound
 		}
 
@@ -195,7 +195,7 @@ func unmarshalResponse(respraw []byte) (respbuf interface{}, err error) {
 
 	case "RpbIndexResp":
 		respstruct := &RpbIndexResp{}
-		if reslength == 1 {
+		if resplength == 1 {
 			return nil, ErrObjectNotFound
 		}
 		err = proto.Unmarshal(respbuf.([]byte), respstruct)

@@ -6,11 +6,7 @@ import (
 
 func BenchmarkReadSync(b *testing.B) {
 	b.StopTimer()
-	conn, err := New("127.0.0.1:8087", 1e8, 1e8)
-
-	if err != nil {
-		return
-	}
+	conn := New([]string{"127.0.0.1:8087", "127.0.0.1:8088"})
 	conn.Dial()
 	conn.StoreObject("bucket", "key", []byte("{}"), "application/json", nil)
 
@@ -23,10 +19,7 @@ func BenchmarkReadSync(b *testing.B) {
 
 func BenchmarkReadAsync(b *testing.B) {
 	b.StopTimer()
-	conn, err := New("127.0.0.1:8087", 1e8, 1e8)
-	if err != nil {
-		return
-	}
+	conn := New([]string{"127.0.0.1:8087", "127.0.0.1:8088"})
 	conn.Dial()
 	conn.StoreObject("bucket", "key", []byte("{}"), "application/json", nil)
 

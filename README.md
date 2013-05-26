@@ -1,6 +1,8 @@
 riakpbc
 =======
 
+## This Library is under heavy development as of 05/25/2013. Please execrcise caution.
+
 A Riak Protocol Buffer Client in Go.
 
 ### Notifyin'
@@ -29,7 +31,9 @@ There's an example app here: https://github.com/mrb/shoebox and an example in th
 
 ### Creditin'
 
-riakpbc is (c) Michael R. Bernstein, 2012
+riakpbc is (c) Michael R. Bernstein and collaborators, 2013
+
+* Brian Jones (@boj) Fixed a lot of my mistakes, modernized our .proto files, and more!
 
 ### Licensin'
 
