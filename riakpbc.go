@@ -2,11 +2,13 @@ package riakpbc
 
 type RpbEmptyResp struct{}
 
-// Fetch an object from a bucket
-func (c *Conn) FetchObject(bucket, key string, opts *RpbGetReq) (*RpbGetResp, error) {
+// FetchObject returns an object from a bucket.
+//
+// Pass RpbGetReq to SetOpts for optional parameters.
+func (c *Conn) FetchObject(bucket, key string) (*RpbGetResp, error) {
 	reqstruct := &RpbGetReq{}
-	if opts != nil {
-		reqstruct = opts
+	if opts := c.Opts(); opts != nil {
+		reqstruct = opts.(*RpbGetReq)
 	}
 	reqstruct.Bucket = []byte(bucket)
 	reqstruct.Key = []byte(key)
@@ -23,11 +25,13 @@ func (c *Conn) FetchObject(bucket, key string, opts *RpbGetReq) (*RpbGetResp, er
 	return response.(*RpbGetResp), nil
 }
 
-// Store an object in riak
-func (c *Conn) StoreObject(bucket, key string, content []byte, contentType string, opts *RpbPutReq) (*RpbPutResp, error) {
+// StoreObject puts an object with ky into bucket.
+//
+// Pass RpbPutReq to SetOpts for optional parameters.
+func (c *Conn) StoreObject(bucket, key string, content []byte, contentType string) (*RpbPutResp, error) {
 	reqstruct := &RpbPutReq{}
-	if opts != nil {
-		reqstruct = opts
+	if opts := c.Opts(); opts != nil {
+		reqstruct = opts.(*RpbPutReq)
 	}
 	reqstruct.Bucket = []byte(bucket)
 	reqstruct.Key = []byte(key)
@@ -48,11 +52,13 @@ func (c *Conn) StoreObject(bucket, key string, content []byte, contentType strin
 	return response.(*RpbPutResp), nil
 }
 
-// Delete an Object from a bucket
-func (c *Conn) DeleteObject(bucket, key string, opts *RpbDelReq) ([]byte, error) {
+// DeleteObject removes object with key from bucket.
+//
+// Pass RpbDelReq to SetOpts for optional parameters.
+func (c *Conn) DeleteObject(bucket, key string) ([]byte, error) {
 	reqstruct := &RpbDelReq{}
-	if opts != nil {
-		reqstruct = opts
+	if opts := c.Opts(); opts != nil {
+		reqstruct = opts.(*RpbDelReq)
 	}
 	reqstruct.Bucket = []byte(bucket)
 	reqstruct.Key = []byte(key)

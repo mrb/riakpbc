@@ -16,7 +16,7 @@ func ExampleConn() {
 
 	data := []byte("{'data':'rules'}")
 
-	_, err := riak.StoreObject("bucket", "data", data, "application/json", nil)
+	_, err := riak.StoreObject("bucket", "data", data, "application/json")
 	if err != nil {
 		log.Println(err.Error())
 	}
@@ -32,7 +32,7 @@ func ExampleConn() {
 	}
 	fmt.Println(string(id.GetClientId()))
 
-	obj, err := riak.FetchObject("bucket", "data", nil)
+	obj, err := riak.FetchObject("bucket", "data")
 	if err != nil {
 		log.Println(err.Error())
 	}
@@ -55,7 +55,7 @@ func setupConnection(t *testing.T) (conn *Conn) {
 }
 
 func setupData(t *testing.T, conn *Conn) {
-	ok, err := conn.StoreObject("riakpbctestbucket", "testkey", []byte("{\"data\":\"is awesome!\"}"), "application/json", nil)
+	ok, err := conn.StoreObject("riakpbctestbucket", "testkey", []byte("{\"data\":\"is awesome!\"}"), "application/json")
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -63,7 +63,7 @@ func setupData(t *testing.T, conn *Conn) {
 }
 
 func teardownData(t *testing.T, conn *Conn) {
-	ok, err := conn.DeleteObject("riakpbctestbucket", "testkey", nil)
+	ok, err := conn.DeleteObject("riakpbctestbucket", "testkey")
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -74,7 +74,7 @@ func TestFetchObject(t *testing.T) {
 	riak := setupConnection(t)
 	setupData(t, riak)
 
-	object, err := riak.FetchObject("riakpbctestbucket", "testkey", nil)
+	object, err := riak.FetchObject("riakpbctestbucket", "testkey")
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -89,17 +89,36 @@ func TestFetchObject(t *testing.T) {
 	teardownData(t, riak)
 }
 
+func TestStoreObjectWithOpts(t *testing.T) {
+	riak := setupConnection(t)
+	setupData(t, riak)
+
+	z := new(bool)
+	*z = true
+	opts := &RpbPutReq{
+		ReturnBody: z,
+	}
+	riak.SetOpts(opts)
+	object, err := riak.StoreObject("riakpbctestbucket", "testkeyopts", []byte("{\"data\":\"is awesome!\"}"), "application/json")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.T(t, string(object.GetContent()[0].GetValue()) == "{\"data\":\"is awesome!\"}")
+
+	teardownData(t, riak)
+}
+
 func TestDeleteObject(t *testing.T) {
 	riak := setupConnection(t)
 	setupData(t, riak)
 
-	object, err := riak.DeleteObject("riakpbctestbucket", "testkey", nil)
+	object, err := riak.DeleteObject("riakpbctestbucket", "testkey")
 	if err != nil {
 		t.Error(err.Error())
 	}
 	assert.T(t, string(object) == "Success")
 
-	_, err = riak.FetchObject("riakpbctestbucket", "testkey", nil)
+	_, err = riak.FetchObject("riakpbctestbucket", "testkey")
 	assert.T(t, err.Error() == "object not found")
 
 	teardownData(t, riak)

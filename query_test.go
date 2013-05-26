@@ -40,7 +40,9 @@ func TestIndex(t *testing.T) {
 	riak := setupConnection(t)
 	setupData(t, riak)
 
-	data, err := riak.Index("riakpbctestbucket", "data_bin", 0, &RpbIndexReq{Key: []byte("testkey")})
+	opts := &RpbIndexReq{Key: []byte("testkey")}
+	riak.SetOpts(opts)
+	data, err := riak.Index("riakpbctestbucket", "data_bin", 0)
 	if err != nil {
 		t.Log("In order for this test to pass storage_backend must be set to riak_kv_eleveldb_backend in app.config")
 		t.Error(err.Error())
@@ -55,7 +57,7 @@ func TestSearch(t *testing.T) {
 	setupIndexing(t)
 	setupData(t, riak)
 
-	data, err := riak.Search("*awesome*", "data", nil)
+	data, err := riak.Search("*awesome*", "data")
 	if err != nil {
 		t.Log("In order for this test to pass riak_search may need to be enabled in app.config")
 		t.Error(err.Error())

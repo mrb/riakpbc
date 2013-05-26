@@ -38,10 +38,12 @@ func (c *Conn) MapReduce(request, contentType string) ([]byte, error) {
 // Index requests a set of keys that match a secondary index query.
 //
 //     qtype - an IndexQueryType of either 0 (eq) or 1 (range)
-func (c *Conn) Index(bucket, index string, qtype RpbIndexReq_IndexQueryType, opts *RpbIndexReq) (RpbIndexResp, error) {
+//
+// Pass RpIndexReq to SetOpts for optional parameters.
+func (c *Conn) Index(bucket, index string, qtype RpbIndexReq_IndexQueryType) (RpbIndexResp, error) {
 	reqstruct := &RpbIndexReq{}
-	if opts != nil {
-		reqstruct = opts
+	if opts := c.Opts(); opts != nil {
+		reqstruct = opts.(*RpbIndexReq)
 	}
 	reqstruct.Bucket = []byte(bucket)
 	reqstruct.Index = []byte(index)
@@ -61,11 +63,11 @@ func (c *Conn) Index(bucket, index string, qtype RpbIndexReq_IndexQueryType, opt
 
 // Search scans bucket for query string q and searches index for the match.
 //
-// RpbSearchQueryReq can be passed in to further enhance the query, otherwise pass nil.
-func (c *Conn) Search(q, index string, opts *RpbSearchQueryReq) (RpbSearchQueryResp, error) {
+// Pass RpbSearchQueryReq to SetOpts for optional parameters.
+func (c *Conn) Search(q, index string) (RpbSearchQueryResp, error) {
 	reqstruct := &RpbSearchQueryReq{}
-	if opts != nil {
-		reqstruct = opts
+	if opts := c.Opts(); opts != nil {
+		reqstruct = opts.(*RpbSearchQueryReq)
 	}
 	reqstruct.Q = []byte(q)
 	reqstruct.Index = []byte(index)
