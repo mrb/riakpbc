@@ -6,94 +6,80 @@ package riakpbc
 //
 //    - application/json - JSON-encoded map/reduce job
 //    - application/x-erlang-binary - Erlang external term format
-func (c *Conn) MapReduce(request, contentType string) (response [][]byte, err error) {
+func (c *Conn) MapReduce(request, contentType string) ([]byte, error) {
 	reqstruct := &RpbMapRedReq{
 		Request:     []byte(request),
 		ContentType: []byte(contentType),
 	}
 
-	err = c.Request(reqstruct, "RpbMapRedReq")
+	if err := c.Request(reqstruct, "RpbMapRedReq"); err != nil {
+		return nil, err
+	}
+
+	response, err := c.Response(&RpbMapRedResp{})
 	if err != nil {
 		return nil, err
 	}
 
-	var rawresp interface{}
-	rawresp, err = c.Response(&RpbMapRedResp{})
-	if err != nil {
-		return nil, err
-	}
-
-	done := rawresp.(*RpbMapRedResp).Done
-	respresp := rawresp.(*RpbMapRedResp).Response
-
-	response = append(response, respresp)
-
-	for done == nil {
-		moreresp, moreerr := c.Response(&RpbMapRedResp{})
-		if moreerr != nil {
-			return nil, moreerr
+	mapResponse := response.(*RpbMapRedResp).GetResponse()
+	done := response.(*RpbMapRedResp).GetDone()
+	for done != true {
+		response, err := c.Response(&RpbMapRedResp{})
+		if err != nil {
+			return nil, err
 		}
-
-		done = moreresp.(*RpbMapRedResp).Done
-		response = append(response, moreresp.(*RpbMapRedResp).Response)
+		mapResponse = append(mapResponse, response.(*RpbMapRedResp).GetResponse()...)
+		done = response.(*RpbMapRedResp).GetDone()
 	}
 
-	return response, nil
+	return mapResponse, nil
 }
 
 // Index requests a set of keys that match a secondary index query.
 //
 //     qtype - an IndexQueryType of either 0 (eq) or 1 (range)
-func (c *Conn) Index(bucket, index string, qtype RpbIndexReq_IndexQueryType, opts *RpbIndexReq) (response RpbIndexResp, err error) {
+//
+// Pass RpIndexReq to SetOpts for optional parameters.
+func (c *Conn) Index(bucket, index string, qtype RpbIndexReq_IndexQueryType) (RpbIndexResp, error) {
 	reqstruct := &RpbIndexReq{}
-	if opts != nil {
-		reqstruct = opts
+	if opts := c.Opts(); opts != nil {
+		reqstruct = opts.(*RpbIndexReq)
 	}
 	reqstruct.Bucket = []byte(bucket)
 	reqstruct.Index = []byte(index)
 	reqstruct.Qtype = &qtype
 
-	err = c.Request(reqstruct, "RpbIndexReq")
+	if err := c.Request(reqstruct, "RpbIndexReq"); err != nil {
+		return RpbIndexResp{}, err
+	}
+
+	response, err := c.Response(&RpbIndexResp{})
 	if err != nil {
 		return RpbIndexResp{}, err
 	}
 
-	rawresp, err := c.Response(&RpbIndexResp{})
-	if err != nil {
-		return RpbIndexResp{}, err
-	}
-
-	if rawresp != nil {
-		return rawresp.(RpbIndexResp), nil
-	}
-
-	return RpbIndexResp{}, nil
+	return response.(RpbIndexResp), nil
 }
 
 // Search scans bucket for query string q and searches index for the match.
 //
-// RpbSearchQueryReq can be passed in to further enhance the query, otherwise pass nil.
-func (c *Conn) Search(q, index string, opts *RpbSearchQueryReq) (response RpbSearchQueryResp, err error) {
+// Pass RpbSearchQueryReq to SetOpts for optional parameters.
+func (c *Conn) Search(q, index string) (RpbSearchQueryResp, error) {
 	reqstruct := &RpbSearchQueryReq{}
-	if opts != nil {
-		reqstruct = opts
+	if opts := c.Opts(); opts != nil {
+		reqstruct = opts.(*RpbSearchQueryReq)
 	}
 	reqstruct.Q = []byte(q)
 	reqstruct.Index = []byte(index)
 
-	err = c.Request(reqstruct, "RpbSearchQueryReq")
-	if err != nil {
+	if err := c.Request(reqstruct, "RpbSearchQueryReq"); err != nil {
 		return RpbSearchQueryResp{}, err
 	}
 
-	rawresp, err := c.Response(&RpbSearchQueryResp{})
-	if err != nil {
+	response, err := c.Response(&RpbSearchQueryResp{})
+	if err != nil || response == nil {
 		return RpbSearchQueryResp{}, err
 	}
 
-	if rawresp != nil {
-		return rawresp.(RpbSearchQueryResp), nil
-	}
-
-	return RpbSearchQueryResp{}, nil
+	return response.(RpbSearchQueryResp), nil
 }
