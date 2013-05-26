@@ -116,7 +116,7 @@ func unmarshalResponse(respraw []byte) (respbuf interface{}, err error) {
 		if err != nil {
 			return nil, err
 		}
-		return respstruct.GetClientId(), nil
+		return respstruct, nil
 
 	case "RpbSetClientIdResp":
 		return []byte("Success"), nil
@@ -127,7 +127,7 @@ func unmarshalResponse(respraw []byte) (respbuf interface{}, err error) {
 		if err != nil {
 			return nil, err
 		}
-		return respstruct.GetNode(), nil
+		return respstruct, nil
 
 	case "RpbGetResp":
 		respstruct := &RpbGetResp{}
@@ -138,18 +138,18 @@ func unmarshalResponse(respraw []byte) (respbuf interface{}, err error) {
 		if err != nil {
 			return nil, err
 		}
-		return respstruct.GetContent()[0].GetValue(), nil
+		return respstruct, nil
 
 	case "RpbPutResp":
 		respstruct := &RpbPutResp{}
 		if resplength == 1 {
-			return []byte("Success"), nil
+			return respstruct, nil
 		}
 		err = proto.Unmarshal(respbuf.([]byte), respstruct)
 		if err != nil {
 			return nil, err
 		}
-		return respstruct.GetContent(), nil
+		return respstruct, nil
 
 	case "RpbDelResp":
 		return []byte("Success"), nil
@@ -160,7 +160,7 @@ func unmarshalResponse(respraw []byte) (respbuf interface{}, err error) {
 		if err != nil {
 			return nil, err
 		}
-		return respstruct.GetBuckets(), nil
+		return respstruct, nil
 
 	case "RpbListKeysResp":
 		respstruct := &RpbListKeysResp{}
@@ -180,7 +180,7 @@ func unmarshalResponse(respraw []byte) (respbuf interface{}, err error) {
 		if err != nil {
 			return nil, err
 		}
-		return []byte(respstruct.GetProps().String()), nil
+		return respstruct, nil
 
 	case "RpbSetBucketResp":
 		return []byte("Success"), nil

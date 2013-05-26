@@ -3,6 +3,7 @@ package riakpbc
 type Conn struct {
 	cluster []string
 	pool    *Pool
+	opts    interface{} // potential Rpb...Req opts
 }
 
 type Pool struct {
@@ -25,6 +26,19 @@ func (c *Conn) Dial() error {
 	}
 	return nil
 }
+
+// Opts returns the set options, and reests them internally to nil.
+func (c *Conn) Opts() interface{} {
+	opts := c.opts
+	c.opts = nil
+	return opts
+}
+
+// SetOpts allows Rpb...Req options to be set.
+func (c *Conn) SetOpts(opts interface{}) {
+	c.opts = opts
+}
+
 func (c *Conn) Write(request []byte) error {
 	return c.pool.Write(request)
 }
