@@ -1,13 +1,11 @@
 riakpbc
 =======
 
-## This Library is under heavy development as of 05/25/2013. Please execrcise caution.
-
 A Riak Protocol Buffer Client in Go.
 
 ### Notifyin'
 
-This library (as of 2013-05-25) is currently under heavy development flux and may have some large API breaking changes.  This notice will go away once things become more stable over the next few weeks.
+**This library (as of 2013-05-25) is currently under heavy development flux and may have some large API breaking changes.  This notice will go away once things become more stable over the next few weeks.**
 
 ### Documentin'
 
