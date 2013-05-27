@@ -27,18 +27,17 @@ func (c *Conn) FetchObject(bucket, key string) (*RpbGetResp, error) {
 
 // StoreObject puts an object with ky into bucket.
 //
+// Content shoud be passed as a RpbContent struct.
+//
 // Pass RpbPutReq to SetOpts for optional parameters.
-func (c *Conn) StoreObject(bucket, key string, content []byte, contentType string) (*RpbPutResp, error) {
+func (c *Conn) StoreObject(bucket, key string, content *RpbContent) (*RpbPutResp, error) {
 	reqstruct := &RpbPutReq{}
 	if opts := c.Opts(); opts != nil {
 		reqstruct = opts.(*RpbPutReq)
 	}
 	reqstruct.Bucket = []byte(bucket)
 	reqstruct.Key = []byte(key)
-	reqstruct.Content = &RpbContent{
-		Value:       content,
-		ContentType: []byte(contentType),
-	}
+	reqstruct.Content = content
 
 	if err := c.Request(reqstruct, "RpbPutReq"); err != nil {
 		return &RpbPutResp{}, err
