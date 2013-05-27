@@ -82,6 +82,7 @@ func (self *Encoder) Marshal(data interface{}) (*RpbContent, error) {
 			return nil, err
 		}
 		out.Value = jsondata
+		out.ContentType = []byte("application/json")
 	}
 
 	return out, nil
