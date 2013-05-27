@@ -1,11 +1,16 @@
 package riakpbc
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/bmizerany/assert"
 	"log"
 	"testing"
 )
+
+type Data struct {
+	Data string `json:"data"`
+}
 
 func ExampleConn() {
 	riak := New([]string{"127.0.0.1:8087", "127.0.0.1:8088"})
@@ -14,9 +19,18 @@ func ExampleConn() {
 		log.Print(err.Error())
 	}
 
-	data := []byte("{'data':'rules'}")
-
-	_, err := riak.StoreObject("bucket", "data", data, "application/json")
+	// type Data struct {
+	// 	Data string `json:"data"`
+	// }
+	data, err := json.Marshal(&Data{Data: "rules"})
+	if err != nil {
+		log.Println(err.Error())
+	}
+	content := &RpbContent{
+		Value:       data,
+		ContentType: []byte("application/json"),
+	}
+	_, err = riak.StoreObject("bucket", "data", content)
 	if err != nil {
 		log.Println(err.Error())
 	}
@@ -39,7 +53,7 @@ func ExampleConn() {
 	fmt.Println(string(obj.GetContent()[0].GetValue()))
 	// Output:
 	// coolio
-	// {'data':'rules'}
+	// {"data":"rules"}
 
 	riak.Close()
 }
@@ -55,7 +69,15 @@ func setupConnection(t *testing.T) (conn *Conn) {
 }
 
 func setupData(t *testing.T, conn *Conn) {
-	ok, err := conn.StoreObject("riakpbctestbucket", "testkey", []byte("{\"data\":\"is awesome!\"}"), "application/json")
+	data, err := json.Marshal(&Data{Data: "is awesome!"})
+	if err != nil {
+		log.Println(err.Error())
+	}
+	content := &RpbContent{
+		Value:       data,
+		ContentType: []byte("application/json"),
+	}
+	ok, err := conn.StoreObject("riakpbctestbucket", "testkey", content)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -93,17 +115,26 @@ func TestStoreObjectWithOpts(t *testing.T) {
 	riak := setupConnection(t)
 	setupData(t, riak)
 
+	data, err := json.Marshal(&Data{Data: "is awesome!"})
+	if err != nil {
+		log.Println(err.Error())
+	}
+	content := &RpbContent{
+		Value:       data,
+		ContentType: []byte("application/json"),
+	}
+
 	z := new(bool)
 	*z = true
 	opts := &RpbPutReq{
 		ReturnBody: z,
 	}
 	riak.SetOpts(opts)
-	object, err := riak.StoreObject("riakpbctestbucket", "testkeyopts", []byte("{\"data\":\"is awesome!\"}"), "application/json")
+	object, err := riak.StoreObject("riakpbctestbucket", "testkeyopts", content)
 	if err != nil {
 		t.Error(err.Error())
 	}
-	assert.T(t, string(object.GetContent()[0].GetValue()) == "{\"data\":\"is awesome!\"}")
+	assert.T(t, string(object.GetContent()[0].GetValue()) == string(data))
 
 	teardownData(t, riak)
 }
