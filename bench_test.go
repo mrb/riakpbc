@@ -1,6 +1,8 @@
 package riakpbc
 
 import (
+	"encoding/json"
+	"log"
 	"testing"
 )
 
@@ -8,7 +10,16 @@ func BenchmarkReadSync(b *testing.B) {
 	b.StopTimer()
 	conn := New([]string{"127.0.0.1:8087", "127.0.0.1:8088"})
 	conn.Dial()
-	conn.StoreObject("bucket", "key", []byte("{}"), "application/json")
+
+	data, err := json.Marshal(&Data{Data: "rules"})
+	if err != nil {
+		log.Println(err.Error())
+	}
+	content := &RpbContent{
+		Value:       data,
+		ContentType: []byte("application/json"),
+	}
+	conn.StoreObject("bucket", "key", content)
 
 	b.StartTimer()
 
@@ -21,7 +32,16 @@ func BenchmarkReadAsync(b *testing.B) {
 	b.StopTimer()
 	conn := New([]string{"127.0.0.1:8087", "127.0.0.1:8088"})
 	conn.Dial()
-	conn.StoreObject("bucket", "key", []byte("{}"), "application/json")
+
+	data, err := json.Marshal(&Data{Data: "rules"})
+	if err != nil {
+		log.Println(err.Error())
+	}
+	content := &RpbContent{
+		Value:       data,
+		ContentType: []byte("application/json"),
+	}
+	conn.StoreObject("bucket", "key", content)
 
 	ch := make(chan bool, b.N)
 

@@ -38,33 +38,39 @@ func (c *Conn) MapReduce(request, contentType string) ([]byte, error) {
 // Index requests a set of keys that match a secondary index query.
 //
 //     qtype - an IndexQueryType of either 0 (eq) or 1 (range)
-//
-// Pass RpIndexReq to SetOpts for optional parameters.
-func (c *Conn) Index(bucket, index string, qtype RpbIndexReq_IndexQueryType) (RpbIndexResp, error) {
+func (c *Conn) Index(bucket, index, key, start, end string) (*RpbIndexResp, error) {
 	reqstruct := &RpbIndexReq{}
-	if opts := c.Opts(); opts != nil {
-		reqstruct = opts.(*RpbIndexReq)
-	}
 	reqstruct.Bucket = []byte(bucket)
 	reqstruct.Index = []byte(index)
-	reqstruct.Qtype = &qtype
+
+	var qType RpbIndexReq_IndexQueryType
+	if key != "" {
+		qType = 0
+		reqstruct.Qtype = &qType
+		reqstruct.Key = []byte(key)
+	} else {
+		qType = 1
+		reqstruct.Qtype = &qType
+		reqstruct.RangeMin = []byte(start)
+		reqstruct.RangeMax = []byte(end)
+	}
 
 	if err := c.Request(reqstruct, "RpbIndexReq"); err != nil {
-		return RpbIndexResp{}, err
+		return &RpbIndexResp{}, err
 	}
 
 	response, err := c.Response(&RpbIndexResp{})
 	if err != nil {
-		return RpbIndexResp{}, err
+		return &RpbIndexResp{}, err
 	}
 
-	return response.(RpbIndexResp), nil
+	return response.(*RpbIndexResp), nil
 }
 
 // Search scans bucket for query string q and searches index for the match.
 //
 // Pass RpbSearchQueryReq to SetOpts for optional parameters.
-func (c *Conn) Search(q, index string) (RpbSearchQueryResp, error) {
+func (c *Conn) Search(q, index string) (*RpbSearchQueryResp, error) {
 	reqstruct := &RpbSearchQueryReq{}
 	if opts := c.Opts(); opts != nil {
 		reqstruct = opts.(*RpbSearchQueryReq)
@@ -73,13 +79,13 @@ func (c *Conn) Search(q, index string) (RpbSearchQueryResp, error) {
 	reqstruct.Index = []byte(index)
 
 	if err := c.Request(reqstruct, "RpbSearchQueryReq"); err != nil {
-		return RpbSearchQueryResp{}, err
+		return &RpbSearchQueryResp{}, err
 	}
 
 	response, err := c.Response(&RpbSearchQueryResp{})
 	if err != nil || response == nil {
-		return RpbSearchQueryResp{}, err
+		return &RpbSearchQueryResp{}, err
 	}
 
-	return response.(RpbSearchQueryResp), nil
+	return response.(*RpbSearchQueryResp), nil
 }
