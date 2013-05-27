@@ -15,6 +15,22 @@ func NewEncoder() *Encoder {
 	return self
 }
 
+// Marshal takes a struct with `riak` tagged fields and builds the correct
+// RpbContent to send along to Riak.
+//
+// Any fields of type string are set as a _bin index, and fields of any
+// int type set to an _int index.
+//
+// Examples:
+//
+//  // Field is a _bin index
+//  Field string `riak:"index"`
+//
+//  // Field is an _int index
+//  Field int `riak:"index"`
+//
+//  // Field is a _bin index and also a json field in the actual data.
+//  Field string `json:"field" riak:"index"`
 func (self *Encoder) Marshal(data interface{}) (*RpbContent, error) {
 	t := reflect.ValueOf(data)
 	if t.Kind() != reflect.Ptr {
@@ -22,12 +38,13 @@ func (self *Encoder) Marshal(data interface{}) (*RpbContent, error) {
 	}
 
 	// Output
-	isJson := false
 	out := &RpbContent{}
 
 	e := t.Elem()
 	switch e.Kind() {
 	case reflect.Struct:
+		isJson := false
+
 		for i := 0; i < e.NumField(); i++ {
 			val := e.Field(i).Interface()
 			fld := e.Type().Field(i)
@@ -40,7 +57,7 @@ func (self *Encoder) Marshal(data interface{}) (*RpbContent, error) {
 			}
 
 			// If any of the struct tags are "json" then this is a json structure.
-			if tag.Get("json") != "" {
+			if isJson == false && tag.Get("json") != "" {
 				isJson = true
 			}
 
@@ -50,7 +67,7 @@ func (self *Encoder) Marshal(data interface{}) (*RpbContent, error) {
 					case "index":
 						var key string
 						switch knd {
-						case reflect.Int:
+						case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 							key = fld.Name + "_int"
 							break
 						case reflect.String:
@@ -70,19 +87,19 @@ func (self *Encoder) Marshal(data interface{}) (*RpbContent, error) {
 				}
 			}
 		}
+
+		// Automatically marshal json structures.
+		if isJson {
+			jsondata, err := json.Marshal(data)
+			if err != nil {
+				return nil, err
+			}
+			out.Value = jsondata
+			out.ContentType = []byte("application/json")
+		}
 		break
 	default:
 		return nil, errors.New("Marshal expected a struct")
-	}
-
-	// Automatically marshal json structures.
-	if isJson {
-		jsondata, err := json.Marshal(data)
-		if err != nil {
-			return nil, err
-		}
-		out.Value = jsondata
-		out.ContentType = []byte("application/json")
 	}
 
 	return out, nil
