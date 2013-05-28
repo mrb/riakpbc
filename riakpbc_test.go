@@ -13,7 +13,7 @@ type Data struct {
 }
 
 func ExampleConn() {
-	riak := New([]string{"127.0.0.1:8087", "127.0.0.1:8087"})
+	riak := New([]string{"127.0.0.1:8087", "127.0.0.1:8088"})
 
 	if err := riak.Dial(); err != nil {
 		log.Print(err.Error())
