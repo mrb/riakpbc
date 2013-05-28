@@ -13,7 +13,7 @@ type Data struct {
 }
 
 func ExampleConn() {
-	riak := New([]string{"127.0.0.1:8087", "127.0.0.1:8088"})
+	riak := New([]string{"127.0.0.1:8087", "127.0.0.1:8087"})
 
 	if err := riak.Dial(); err != nil {
 		log.Print(err.Error())
@@ -91,6 +91,10 @@ func TestStoreObject(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
+	_, err = riak.StoreObject("riakpbctestbucket", "testkey_int", 1000)
+	if err != nil {
+		t.Error(err.Error())
+	}
 	_, err = riak.StoreObject("riakpbctestbucket", "testkey_binary", []byte("binary data"))
 	if err != nil {
 		t.Error(err.Error())
@@ -105,6 +109,10 @@ func TestStoreObject(t *testing.T) {
 		t.Error(err.Error())
 	}
 	_, err = riak.DeleteObject("riakpbctestbucket", "testkey_string")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	_, err = riak.DeleteObject("riakpbctestbucket", "testkey_int")
 	if err != nil {
 		t.Error(err.Error())
 	}
