@@ -1,5 +1,11 @@
 package riakpbc
 
+import (
+	"log"
+	"math/rand"
+	"time"
+)
+
 type Conn struct {
 	cluster []string
 	pool    *Pool
@@ -7,7 +13,7 @@ type Conn struct {
 }
 
 type Pool struct {
-	nodes []*Node
+	nodes map[string]*Node // index the node with its address string
 }
 
 func New(cluster []string) *Conn {
@@ -18,12 +24,15 @@ func New(cluster []string) *Conn {
 }
 
 func (c *Conn) Dial() error {
-	for _, node := range c.pool.nodes {
+	for k, node := range c.pool.nodes {
 		err := node.Dial()
 		if err != nil {
-			return err
+			c.pool.DeleteNode(k)
 		}
 	}
+
+	log.Print("[POOL] Riak Dialed. Connected to ", len(c.pool.nodes), " Riak nodes.")
+
 	return nil
 }
 
@@ -52,17 +61,44 @@ func (c *Conn) Close() {
 }
 
 func (pool *Pool) SelectNode() *Node {
-	node := pool.nodes[0]
-	return node
+	var selectedNode *Node
+
+	var randVal float32
+	randVal = 0
+
+	for _, node := range pool.nodes {
+		throwAwayRand := rand.Float32()
+
+		if throwAwayRand > randVal {
+			selectedNode = node
+			randVal = throwAwayRand
+		}
+	}
+	return selectedNode
+}
+
+func (pool *Pool) DeleteNode(nodeKey string) {
+	delete(pool.nodes, nodeKey)
+
+	var nodeStrings []string
+
+	for k, _ := range pool.nodes {
+		nodeStrings = append(nodeStrings, k)
+	}
+
+	log.Print("[POOL] Node ", nodeKey, " deleted. New pool consists of ", nodeStrings)
+	return
 }
 
 func (pool *Pool) Write(request []byte) error {
 	node := pool.SelectNode()
+	log.Print("[WRITE] To Node ", node.addr)
 	return node.Write(request)
 }
 
 func (pool *Pool) Read() (response []byte, err error) {
 	node := pool.SelectNode()
+	log.Print("[READ] From Node ", node.addr)
 	return node.Read()
 }
 
@@ -73,15 +109,18 @@ func (pool *Pool) Close() {
 }
 
 func newPool(cluster []string) *Pool {
-	var nodes []*Node
+	rand.Seed(time.Now().UTC().UnixNano())
+	nodeMap := make(map[string]*Node, len(cluster))
 
 	for _, node := range cluster {
-		inode := NewNode(node, 1e8, 1e8)
-		nodes = append(nodes, inode)
+		nodeMap[node] = NewNode(node, 1e8, 1e8)
 	}
 
 	pool := &Pool{
-		nodes: nodes,
+		nodes: nodeMap,
 	}
+
+	log.Print("[POOL] New connection Pool established. Attempting connection to ", len(pool.nodes), " Riak nodes.")
+
 	return pool
 }
