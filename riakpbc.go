@@ -3,6 +3,7 @@ package riakpbc
 import (
 	"errors"
 	"reflect"
+	"strconv"
 )
 
 type RpbEmptyResp struct{}
@@ -47,36 +48,44 @@ func (c *Conn) StoreObject(bucket, key string, content interface{}) (*RpbPutResp
 	reqstruct.Bucket = []byte(bucket)
 	reqstruct.Key = []byte(key)
 
-	// Determine the primitive type of content.
-	t := reflect.TypeOf(content)
+	if _, ok := content.(*RpbContent); ok {
+		reqstruct.Content = content.(*RpbContent)
+	} else {
+		// Determine the primitive type of content.
+		t := reflect.TypeOf(content)
 
-	if t.Kind() == reflect.Ptr { // struct or RpbContent
-		switch t.Elem().Kind() {
-		case reflect.Struct:
-			e := NewEncoder()
-			encctnt, err := e.Marshal(content)
-			if err != nil {
-				return nil, err
+		if t.Kind() == reflect.Ptr { // struct or RpbContent
+			switch t.Elem().Kind() {
+			case reflect.Struct:
+				e := NewEncoder()
+				encctnt, err := e.Marshal(content)
+				if err != nil {
+					return nil, err
+				}
+				reqstruct.Content = encctnt
+				break
 			}
-			reqstruct.Content = encctnt
-			break
-		default:
-			reqstruct.Content = content.(*RpbContent)
-		}
-	} else { // string or []byte	
-		switch t.Kind() {
-		case reflect.String:
-			reqstruct.Content = &RpbContent{
-				Value:       []byte(content.(string)),
-				ContentType: []byte("plain/text"),
+		} else { // string, int,  or []byte	
+			switch t.Kind() {
+			case reflect.String:
+				reqstruct.Content = &RpbContent{
+					Value:       []byte(content.(string)),
+					ContentType: []byte("plain/text"),
+				}
+				break
+			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+				reqstruct.Content = &RpbContent{
+					Value:       []byte(strconv.FormatInt(int64(content.(int)), 10)),
+					ContentType: []byte("plain/text"),
+				}
+				break
+			default:
+				reqstruct.Content = &RpbContent{
+					Value:       content.([]byte),
+					ContentType: []byte("application/octet-stream"),
+				}
+				break
 			}
-			break
-		default:
-			reqstruct.Content = &RpbContent{
-				Value:       content.([]byte),
-				ContentType: []byte("application/octet-stream"),
-			}
-			break
 		}
 	}
 
