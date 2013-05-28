@@ -65,14 +65,15 @@ func (c *Conn) GetBucket(bucket string) (*RpbGetBucketResp, error) {
 
 // Create bucket
 func (c *Conn) SetBucket(bucket string, nval *uint32, allowmult *bool) ([]byte, error) {
-	propstruct := &RpbBucketProps{
-		NVal:      nval,
-		AllowMult: allowmult,
+	reqstruct := &RpbSetBucketReq{}
+	if opts := c.Opts(); opts != nil {
+		reqstruct = opts.(*RpbSetBucketReq)
 	}
-
-	reqstruct := &RpbSetBucketReq{
-		Bucket: []byte(bucket),
-		Props:  propstruct,
+	reqstruct.Bucket = []byte(bucket)
+	if reqstruct.Props == nil {
+		reqstruct.Props = &RpbBucketProps{}
+		reqstruct.Props.NVal = nval
+		reqstruct.Props.AllowMult = allowmult
 	}
 
 	if err := c.Request(reqstruct, "RpbSetBucketReq"); err != nil {
