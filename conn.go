@@ -9,6 +9,7 @@ import (
 type Conn struct {
 	cluster []string
 	pool    *Pool
+	current *Node
 	opts    interface{} // potential Rpb...Req opts
 }
 
@@ -27,6 +28,7 @@ func (c *Conn) Dial() error {
 	for k, node := range c.pool.nodes {
 		err := node.Dial()
 		if err != nil {
+			log.Print("[POOL] Error: ", err)
 			c.pool.DeleteNode(k)
 		}
 	}
@@ -49,15 +51,19 @@ func (c *Conn) SetOpts(opts interface{}) {
 }
 
 func (c *Conn) Write(request []byte) error {
-	return c.pool.Write(request)
+	return c.current.Write(request)
 }
 
 func (c *Conn) Read() (response []byte, err error) {
-	return c.pool.Read()
+	return c.current.Read()
 }
 
 func (c *Conn) Close() {
 	c.pool.Close()
+}
+
+func (c *Conn) SelectNode() {
+	c.current = c.pool.SelectNode()
 }
 
 func (pool *Pool) SelectNode() *Node {
@@ -74,6 +80,9 @@ func (pool *Pool) SelectNode() *Node {
 			randVal = throwAwayRand
 		}
 	}
+
+	log.Print("[POOL] Selected node", selectedNode.addr)
+
 	return selectedNode
 }
 
@@ -90,18 +99,6 @@ func (pool *Pool) DeleteNode(nodeKey string) {
 	return
 }
 
-func (pool *Pool) Write(request []byte) error {
-	node := pool.SelectNode()
-	log.Print("[WRITE] To Node ", node.addr)
-	return node.Write(request)
-}
-
-func (pool *Pool) Read() (response []byte, err error) {
-	node := pool.SelectNode()
-	log.Print("[READ] From Node ", node.addr)
-	return node.Read()
-}
-
 func (pool *Pool) Close() {
 	for _, node := range pool.nodes {
 		node.Close()
@@ -113,7 +110,7 @@ func newPool(cluster []string) *Pool {
 	nodeMap := make(map[string]*Node, len(cluster))
 
 	for _, node := range cluster {
-		nodeMap[node] = NewNode(node, 1e8, 1e8)
+		nodeMap[node] = NewNode(node, 25e7, 25e7)
 	}
 
 	pool := &Pool{
@@ -121,6 +118,8 @@ func newPool(cluster []string) *Pool {
 	}
 
 	log.Print("[POOL] New connection Pool established. Attempting connection to ", len(pool.nodes), " Riak nodes.")
+
+	pool.SelectNode()
 
 	return pool
 }

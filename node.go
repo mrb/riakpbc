@@ -36,6 +36,10 @@ func (node *Node) Dial() (err error) {
 		return err
 	}
 
+	node.conn.SetKeepAlive(true)
+	node.conn.SetReadDeadline(time.Now().Add(node.readTimeout))
+	node.conn.SetWriteDeadline(time.Now().Add(node.readTimeout))
+
 	return nil
 }
 
