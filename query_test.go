@@ -1,5 +1,6 @@
 package riakpbc
 
+/*
 import (
 	"github.com/bmizerany/assert"
 	"os/exec"
@@ -85,3 +86,4 @@ func TestIndex(t *testing.T) {
 //	teardownData(t, riak)
 //	teardownIndexing(t)
 //}
+*/

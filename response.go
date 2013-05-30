@@ -3,6 +3,7 @@ package riakpbc
 import (
 	"code.google.com/p/goprotobuf/proto"
 	"errors"
+	"net"
 	"strconv"
 )
 
@@ -47,7 +48,7 @@ func (c *Conn) Response(respstruct interface{}) (response interface{}, err error
 	var rawresp []byte
 	rawresp, err = c.Read()
 	if err != nil {
-		if err == ErrReadTimeout && currentRetries < maxReadRetries {
+		if neterr, ok := err.(net.Error); ok && neterr.Timeout() && currentRetries < maxReadRetries {
 			for currentRetries < maxReadRetries {
 				rawresp, err = c.Read()
 				if err != nil {

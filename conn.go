@@ -34,7 +34,6 @@ func (c *Conn) Dial() error {
 	}
 
 	log.Print("[POOL] Riak Dialed. Connected to ", len(c.pool.nodes), " Riak nodes.")
-
 	return nil
 }
 
@@ -64,6 +63,7 @@ func (c *Conn) Close() {
 
 func (c *Conn) SelectNode() {
 	c.current = c.pool.SelectNode()
+	c.current.Dial()
 }
 
 func (pool *Pool) SelectNode() *Node {
@@ -81,8 +81,6 @@ func (pool *Pool) SelectNode() *Node {
 		}
 	}
 
-	log.Print("[POOL] Selected node", selectedNode.addr)
-
 	return selectedNode
 }
 
@@ -95,7 +93,6 @@ func (pool *Pool) DeleteNode(nodeKey string) {
 		nodeStrings = append(nodeStrings, k)
 	}
 
-	log.Print("[POOL] Node ", nodeKey, " deleted. New pool consists of ", nodeStrings)
 	return
 }
 
@@ -110,7 +107,10 @@ func newPool(cluster []string) *Pool {
 	nodeMap := make(map[string]*Node, len(cluster))
 
 	for _, node := range cluster {
-		nodeMap[node] = NewNode(node, 25e7, 25e7)
+		newNode, err := NewNode(node, 10e8, 10e8)
+		if err == nil {
+			nodeMap[node] = newNode
+		}
 	}
 
 	pool := &Pool{

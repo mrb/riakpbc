@@ -1,6 +1,7 @@
 package riakpbc
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/binary"
 	"io"
@@ -10,28 +11,32 @@ import (
 
 type Node struct {
 	addr         string
+	tcpAddr      *net.TCPAddr
 	conn         *net.TCPConn
 	readTimeout  time.Duration
 	writeTimeout time.Duration
 }
 
 // Returns a new Node.
-func NewNode(addr string, readTimeout, writeTimeout time.Duration) *Node {
-	return &Node{
+func NewNode(addr string, readTimeout, writeTimeout time.Duration) (*Node, error) {
+	tcpaddr, err := net.ResolveTCPAddr("tcp", addr)
+	if err != nil {
+		return nil, err
+	}
+
+	node := &Node{
 		addr:         addr,
+		tcpAddr:      tcpaddr,
 		readTimeout:  readTimeout,
 		writeTimeout: writeTimeout,
 	}
+
+	return node, nil
 }
 
 // Dial connects to a single riak node.
 func (node *Node) Dial() (err error) {
-	tcpaddr, err := net.ResolveTCPAddr("tcp", node.addr)
-	if err != nil {
-		return err
-	}
-
-	node.conn, err = net.DialTCP("tcp", nil, tcpaddr)
+	node.conn, err = net.DialTCP("tcp", nil, node.tcpAddr)
 	if err != nil {
 		return err
 	}
@@ -41,6 +46,11 @@ func (node *Node) Dial() (err error) {
 	node.conn.SetWriteDeadline(time.Now().Add(node.readTimeout))
 
 	return nil
+}
+
+func (node *Node) TestConn() error {
+	_, err := bufio.NewReader(node.conn).Peek(1)
+	return err
 }
 
 // Close the connection
