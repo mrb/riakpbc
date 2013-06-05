@@ -125,6 +125,8 @@ func newPool(cluster []string) *Pool {
 		newNode, err := NewNode(node, 10e8, 10e8)
 		if err == nil {
 			nodeMap[node] = newNode
+		} else {
+			log.Print("[POOL] Node rejected from pool. Error: ", err, " Node: ", node)
 		}
 	}
 

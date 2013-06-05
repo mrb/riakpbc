@@ -10,7 +10,7 @@ type Data struct {
 }
 
 func main() {
-	cluster := []string{"127.0.0.1:10017", "127.0.0.1:10027", "127.0.0.1:1037"}
+	cluster := []string{"127.0.0.1:8087", "127.0.0.1:8087", "127.0.0.1:1030007"}
 	riak := riakpbc.New(cluster)
 
 	err := riak.Dial()

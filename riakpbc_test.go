@@ -13,17 +13,17 @@ type Data struct {
 }
 
 func ExampleConn() {
-	riak := New([]string{"127.0.0.1:8087", "127.0.0.1:8088"})
+	riak := New([]string{"127.0.0.1:8087", "127.0.0.1:8088", "127.0.0.0:918237198273"})
 
-	if err := riak.Dial(); err != nil {
+	err := riak.Dial()
+	if err != nil {
 		log.Print(err.Error())
-		return
 	}
 
 	// type Data struct {
 	// 	Data string `json:"data"`
 	// }
-	_, err := riak.StoreObject("bucket", "data", &Data{Data: "rules"})
+	_, err = riak.StoreObject("bucket", "data", &Data{Data: "rules"})
 	if err != nil {
 		log.Println(err.Error())
 	}
