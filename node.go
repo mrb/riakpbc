@@ -42,8 +42,6 @@ func (node *Node) Dial() (err error) {
 	}
 
 	node.conn.SetKeepAlive(true)
-	node.conn.SetReadDeadline(time.Now().Add(node.readTimeout))
-	node.conn.SetWriteDeadline(time.Now().Add(node.readTimeout))
 
 	return nil
 }
@@ -60,6 +58,7 @@ func (node *Node) Close() {
 
 // Write data to the connection
 func (node *Node) Write(formattedRequest []byte) (err error) {
+	node.conn.SetWriteDeadline(time.Now().Add(node.readTimeout))
 	_, err = node.conn.Write(formattedRequest)
 	if err != nil {
 		return err
@@ -70,6 +69,8 @@ func (node *Node) Write(formattedRequest []byte) (err error) {
 
 // Read data from the connection
 func (node *Node) Read() (respraw []byte, err error) {
+	node.conn.SetWriteDeadline(time.Now().Add(node.readTimeout))
+
 	buf := make([]byte, 4)
 	var size int32
 	// First 4 bytes are always size of message.

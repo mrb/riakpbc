@@ -21,6 +21,8 @@ func (c *Conn) GetServerInfo() (*RpbGetServerInfoResp, error) {
 func (c *Conn) Ping() ([]byte, error) {
 	reqdata := []byte{}
 
+	c.SelectNode()
+
 	if err := c.RawRequest(reqdata, "RpbPingReq"); err != nil {
 		return nil, err
 	}

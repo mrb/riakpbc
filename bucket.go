@@ -8,6 +8,8 @@ func (c *Conn) ListBuckets() (*RpbListBucketsResp, error) {
 		return &RpbListBucketsResp{}, err
 	}
 
+	c.SelectNode()
+
 	response, err := c.Response(&RpbListBucketsResp{})
 	if err != nil {
 		return &RpbListBucketsResp{}, err
@@ -21,6 +23,8 @@ func (c *Conn) ListKeys(bucket string) ([][]byte, error) {
 	reqstruct := &RpbListKeysReq{
 		Bucket: []byte(bucket),
 	}
+
+	c.SelectNode()
 
 	if err := c.Request(reqstruct, "RpbListKeysReq"); err != nil {
 		return nil, err
@@ -51,6 +55,8 @@ func (c *Conn) GetBucket(bucket string) (*RpbGetBucketResp, error) {
 		Bucket: []byte(bucket),
 	}
 
+	c.SelectNode()
+
 	if err := c.Request(reqstruct, "RpbGetBucketReq"); err != nil {
 		return &RpbGetBucketResp{}, err
 	}
@@ -75,6 +81,8 @@ func (c *Conn) SetBucket(bucket string, nval *uint32, allowmult *bool) ([]byte, 
 		reqstruct.Props.NVal = nval
 		reqstruct.Props.AllowMult = allowmult
 	}
+
+	c.SelectNode()
 
 	if err := c.Request(reqstruct, "RpbSetBucketReq"); err != nil {
 		return nil, err

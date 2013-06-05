@@ -19,6 +19,8 @@ func (c *Conn) FetchObject(bucket, key string) (*RpbGetResp, error) {
 	reqstruct.Bucket = []byte(bucket)
 	reqstruct.Key = []byte(key)
 
+	c.SelectNode()
+
 	if err := c.Request(reqstruct, "RpbGetReq"); err != nil {
 		return &RpbGetResp{}, err
 	}
@@ -93,6 +95,8 @@ func (c *Conn) StoreObject(bucket, key string, content interface{}) (*RpbPutResp
 		return nil, errors.New("Invalid content type passed.  Must be struct, RpbContent, string, or []byte")
 	}
 
+	c.SelectNode()
+
 	if err := c.Request(reqstruct, "RpbPutReq"); err != nil {
 		return &RpbPutResp{}, err
 	}
@@ -115,6 +119,8 @@ func (c *Conn) DeleteObject(bucket, key string) ([]byte, error) {
 	}
 	reqstruct.Bucket = []byte(bucket)
 	reqstruct.Key = []byte(key)
+
+	c.SelectNode()
 
 	if err := c.Request(reqstruct, "RpbDelReq"); err != nil {
 		return nil, err

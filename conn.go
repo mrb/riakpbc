@@ -55,16 +55,10 @@ func (c *Conn) SetOpts(opts interface{}) {
 }
 
 func (c *Conn) Write(request []byte) error {
-	if c.current == nil {
-		c.SelectNode()
-	}
 	return c.current.Write(request)
 }
 
 func (c *Conn) Read() (response []byte, err error) {
-	if c.current == nil {
-		c.SelectNode()
-	}
 	return c.current.Read()
 }
 

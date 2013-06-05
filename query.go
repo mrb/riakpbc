@@ -12,6 +12,8 @@ func (c *Conn) MapReduce(request, contentType string) ([]byte, error) {
 		ContentType: []byte(contentType),
 	}
 
+	c.SelectNode()
+
 	if err := c.Request(reqstruct, "RpbMapRedReq"); err != nil {
 		return nil, err
 	}
@@ -55,6 +57,8 @@ func (c *Conn) Index(bucket, index, key, start, end string) (*RpbIndexResp, erro
 		reqstruct.RangeMax = []byte(end)
 	}
 
+	c.SelectNode()
+
 	if err := c.Request(reqstruct, "RpbIndexReq"); err != nil {
 		return &RpbIndexResp{}, err
 	}
@@ -77,6 +81,8 @@ func (c *Conn) Search(q, index string) (*RpbSearchQueryResp, error) {
 	}
 	reqstruct.Q = []byte(q)
 	reqstruct.Index = []byte(index)
+
+	c.SelectNode()
 
 	if err := c.Request(reqstruct, "RpbSearchQueryReq"); err != nil {
 		return &RpbSearchQueryResp{}, err

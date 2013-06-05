@@ -47,6 +47,7 @@ func (c *Conn) Response(respstruct interface{}) (response interface{}, err error
 	currentRetries := 0
 	var rawresp []byte
 	rawresp, err = c.Read()
+
 	if err != nil {
 		if neterr, ok := err.(net.Error); ok && neterr.Timeout() && currentRetries < maxReadRetries {
 			for currentRetries < maxReadRetries {
