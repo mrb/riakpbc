@@ -12,6 +12,7 @@ func TestServerInfo(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
+	assert.T(t, info != nil)
 	assert.T(t, string(info.GetServerVersion()) != "")
 }
 

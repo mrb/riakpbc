@@ -14,4 +14,5 @@ var (
 	ErrNotDone        = errors.New("not done")
 	ErrReadTimeout    = errors.New("read timeout")
 	ErrWriteTimeout   = errors.New("write timeout")
+	ErrZeroNodes      = errors.New("zero nodes in pool")
 )

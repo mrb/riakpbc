@@ -33,7 +33,12 @@ func (c *Conn) Dial() error {
 		}
 	}
 
-	log.Print("[POOL] Riak Dialed. Connected to ", len(c.pool.nodes), " Riak nodes.")
+	log.Print("[POOL] Riak Dialed. Connected to ", c.pool.Size(), " Riak nodes.")
+
+	if c.pool.Size() < 1 {
+		return ErrZeroNodes
+	}
+
 	return nil
 }
 
@@ -50,10 +55,16 @@ func (c *Conn) SetOpts(opts interface{}) {
 }
 
 func (c *Conn) Write(request []byte) error {
+	if c.current == nil {
+		c.SelectNode()
+	}
 	return c.current.Write(request)
 }
 
 func (c *Conn) Read() (response []byte, err error) {
+	if c.current == nil {
+		c.SelectNode()
+	}
 	return c.current.Read()
 }
 
@@ -100,6 +111,10 @@ func (pool *Pool) Close() {
 	for _, node := range pool.nodes {
 		node.Close()
 	}
+}
+
+func (pool *Pool) Size() int {
+	return len(pool.nodes)
 }
 
 func newPool(cluster []string) *Pool {

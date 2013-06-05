@@ -17,6 +17,7 @@ func ExampleConn() {
 
 	if err := riak.Dial(); err != nil {
 		log.Print(err.Error())
+		return
 	}
 
 	// type Data struct {
@@ -52,10 +53,11 @@ func ExampleConn() {
 
 func setupConnection(t *testing.T) (conn *Conn) {
 	conn = New([]string{"127.0.0.1:8087", "127.0.0.1:8088"})
-	if err := conn.Dial(); err != nil {
+	var err error
+	if err = conn.Dial(); err != nil {
 		t.Error(err.Error())
 	}
-	assert.T(t, conn != nil)
+	assert.T(t, err == nil)
 
 	return conn
 }
