@@ -63,6 +63,7 @@ func (node *Node) Write(formattedRequest []byte) (err error) {
 	node.conn.SetWriteDeadline(time.Now().Add(node.readTimeout))
 	_, err = node.conn.Write(formattedRequest)
 	if err != nil {
+		node.errorRate.Add(1.0)
 		return err
 	}
 
@@ -78,6 +79,7 @@ func (node *Node) Read() (respraw []byte, err error) {
 	// First 4 bytes are always size of message.
 	n, err := io.ReadFull(node.conn, buf)
 	if err != nil {
+		node.errorRate.Add(1.0)
 		return nil, err
 	}
 	if n == 4 {
@@ -87,6 +89,7 @@ func (node *Node) Read() (respraw []byte, err error) {
 		// read rest of message
 		m, err := io.ReadFull(node.conn, data)
 		if err != nil {
+			node.errorRate.Add(1.0)
 			return nil, err
 		}
 		if m == int(size) {

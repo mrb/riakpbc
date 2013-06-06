@@ -1,6 +1,7 @@
 package riakpbc
 
 import (
+	"fmt"
 	"log"
 	"math/rand"
 	"time"
@@ -71,6 +72,10 @@ func (c *Conn) SelectNode() {
 	c.current.Dial()
 }
 
+func (c *Conn) Pool() *Pool {
+	return c.pool
+}
+
 func (pool *Pool) SelectNode() *Node {
 	var selectedNode *Node
 
@@ -109,6 +114,19 @@ func (pool *Pool) Close() {
 
 func (pool *Pool) Size() int {
 	return len(pool.nodes)
+}
+
+func (pool *Pool) Stats() {
+	log.Print(pool.nodes)
+}
+
+func (pool *Pool) String() string {
+	var outString string
+	for _, node := range pool.nodes {
+		nodeString := fmt.Sprintf(" [%s %f] ", node.addr, node.errorRate.Value())
+		outString += nodeString
+	}
+	return outString
 }
 
 func newPool(cluster []string) *Pool {

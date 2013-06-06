@@ -31,21 +31,17 @@ func main() {
 		_, err = riak.StoreObject("bucket", "data", &Data{Data: data})
 		_, err = riak.SetClientId("coolio")
 
-		id, err := riak.GetClientId()
+		_, err = riak.GetClientId()
 		if err != nil {
 			log.Print("1 [ERR] ", err)
 			break
 		}
 
-		log.Print("[OK] ", id)
-
-		resp, err := riak.FetchObject("bucket", "data")
+		_, err = riak.FetchObject("bucket", "data")
 		if err != nil {
 			log.Print("2 [ERR] ", err)
 			break
 		}
-
-		log.Print("[OK] ", len(resp.GetContent()[0].GetValue()))
 
 		_, err = riak.StoreObject("bucket", "moreData", "stringData")
 		if err != nil {
@@ -53,14 +49,13 @@ func main() {
 			break
 		}
 
-		resp, err = riak.FetchObject("bucket", "moreData")
+		_, err = riak.FetchObject("bucket", "moreData")
 		if err != nil {
 			log.Print("4 [ERR] ", err)
 			break
 		}
 
-		log.Print("[OK] ", len(resp.GetContent()[0].GetValue()))
-		log.Print("Iteration ", times)
+		log.Print("Iteration: ", times, " Nodes: ", riak.Pool())
 	}
 
 	actionEnd = time.Now()

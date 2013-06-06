@@ -22,7 +22,7 @@ func TestDecaying(t *testing.T) {
 	decaying.Add(1.0)
 	decaying.Add(1.0)
 	lastVal := decaying.Value()
-  assert.T(t, lastVal > 1.0)
-  trulyLastVal := decaying.Value()
-  assert.T(t, lastVal > trulyLastVal)
+	assert.T(t, lastVal > 1.0)
+	trulyLastVal := decaying.Value()
+	assert.T(t, lastVal > trulyLastVal)
 }
