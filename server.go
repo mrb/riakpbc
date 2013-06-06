@@ -4,7 +4,7 @@ package riakpbc
 func (c *Conn) GetServerInfo() (*RpbGetServerInfoResp, error) {
 	reqdata := []byte{}
 
-  c.SelectNode()
+	c.SelectNode()
 
 	err := c.RawRequest(reqdata, "RpbGetServerInfoReq")
 	if err != nil {

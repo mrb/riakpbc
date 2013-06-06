@@ -33,13 +33,13 @@ func ExampleConn() {
 		log.Println(err.Error())
 	}
 
-  /*
-	id, err := riak.GetClientId()
-	if err != nil {
-		log.Println(err.Error())
-	}
-	fmt.Println(string(id.GetClientId()))\
-  */
+	/*
+		id, err := riak.GetClientId()
+		if err != nil {
+			log.Println(err.Error())
+		}
+		fmt.Println(string(id.GetClientId()))\
+	*/
 
 	obj, err := riak.FetchObject("bucket", "data")
 	if err != nil {
@@ -54,9 +54,9 @@ func ExampleConn() {
 
 func setupConnection(t *testing.T) (conn *Conn) {
 	conn = New([]string{"127.0.0.1:8087",
-                      "127.0.0.1:8088",
-                      "127.0.0.1:8087",
-                      "127.0.0.1:8088"})
+		"127.0.0.1:8088",
+		"127.0.0.1:8087",
+		"127.0.0.1:8088"})
 	var err error
 	if err = conn.Dial(); err != nil {
 		t.Error(err.Error())
