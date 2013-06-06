@@ -13,7 +13,7 @@ type Data struct {
 }
 
 func ExampleConn() {
-	riak := New([]string{"127.0.0.1:8087", "127.0.0.1:8088", "127.0.0.0:918237198273"})
+	riak := New([]string{"127.0.0.1:8087", "127.0.0.0:918237198273"})
 
 	err := riak.Dial()
 	if err != nil {
@@ -33,11 +33,13 @@ func ExampleConn() {
 		log.Println(err.Error())
 	}
 
+  /*
 	id, err := riak.GetClientId()
 	if err != nil {
 		log.Println(err.Error())
 	}
-	fmt.Println(string(id.GetClientId()))
+	fmt.Println(string(id.GetClientId()))\
+  */
 
 	obj, err := riak.FetchObject("bucket", "data")
 	if err != nil {
@@ -45,14 +47,27 @@ func ExampleConn() {
 	}
 	fmt.Println(string(obj.GetContent()[0].GetValue()))
 	// Output:
-	// coolio
 	// {"data":"rules"}
 
 	riak.Close()
 }
 
 func setupConnection(t *testing.T) (conn *Conn) {
-	conn = New([]string{"127.0.0.1:8087", "127.0.0.1:8088"})
+	conn = New([]string{"127.0.0.1:8087",
+                      "127.0.0.1:8088",
+                      "127.0.0.1:8087",
+                      "127.0.0.1:8088"})
+	var err error
+	if err = conn.Dial(); err != nil {
+		t.Error(err.Error())
+	}
+	assert.T(t, err == nil)
+
+	return conn
+}
+
+func setupSingleNodeConnection(t *testing.T) (conn *Conn) {
+	conn = New([]string{"127.0.0.1:8087"})
 	var err error
 	if err = conn.Dial(); err != nil {
 		t.Error(err.Error())

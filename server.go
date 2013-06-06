@@ -4,6 +4,8 @@ package riakpbc
 func (c *Conn) GetServerInfo() (*RpbGetServerInfoResp, error) {
 	reqdata := []byte{}
 
+  c.SelectNode()
+
 	err := c.RawRequest(reqdata, "RpbGetServerInfoReq")
 	if err != nil {
 		return &RpbGetServerInfoResp{}, err
@@ -39,6 +41,8 @@ func (c *Conn) Ping() ([]byte, error) {
 func (c *Conn) GetClientId() (*RpbGetClientIdResp, error) {
 	reqdata := []byte{}
 
+	c.SelectNode()
+
 	if err := c.RawRequest(reqdata, "RpbGetClientIdReq"); err != nil {
 		return &RpbGetClientIdResp{}, err
 	}
@@ -56,6 +60,8 @@ func (c *Conn) SetClientId(clientId string) ([]byte, error) {
 	reqstruct := &RpbSetClientIdReq{
 		ClientId: []byte(clientId),
 	}
+
+	c.SelectNode()
 
 	if err := c.Request(reqstruct, "RpbSetClientIdReq"); err != nil {
 		return nil, err

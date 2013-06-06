@@ -4,11 +4,11 @@ package riakpbc
 func (c *Conn) ListBuckets() (*RpbListBucketsResp, error) {
 	reqdata := []byte{}
 
+	c.SelectNode()
+
 	if err := c.RawRequest(reqdata, "RpbListBucketsReq"); err != nil {
 		return &RpbListBucketsResp{}, err
 	}
-
-	c.SelectNode()
 
 	response, err := c.Response(&RpbListBucketsResp{})
 	if err != nil {

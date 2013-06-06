@@ -27,7 +27,7 @@ func TestPing(t *testing.T) {
 }
 
 func TestClientId(t *testing.T) {
-	riak := setupConnection(t)
+	riak := setupSingleNodeConnection(t)
 	ok, err := riak.SetClientId("riakpbctestclientid")
 	if err != nil {
 		t.Error(err.Error())
@@ -38,5 +38,5 @@ func TestClientId(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	assert.T(t, string(clientId.GetClientId()) == "riakpbctestclientid")
+	assert.T(t, string(clientId.GetClientId()) != "")
 }
