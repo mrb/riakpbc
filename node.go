@@ -15,6 +15,7 @@ type Node struct {
 	conn         *net.TCPConn
 	readTimeout  time.Duration
 	writeTimeout time.Duration
+	errorRate    *Decaying
 }
 
 // Returns a new Node.
@@ -29,6 +30,7 @@ func NewNode(addr string, readTimeout, writeTimeout time.Duration) (*Node, error
 		tcpAddr:      tcpaddr,
 		readTimeout:  readTimeout,
 		writeTimeout: writeTimeout,
+		errorRate:    NewDecaying(),
 	}
 
 	return node, nil
