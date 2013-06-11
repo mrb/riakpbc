@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"code.google.com/p/goprotobuf/proto"
 	"encoding/binary"
+	"net"
 )
 
 var commandToNum = map[string]byte{
@@ -67,7 +68,7 @@ func (c *Conn) RawRequest(marshaledRequest []byte, structname string) (err error
 	currentRetries := 0
 	err = c.Write(formattedRequest)
 	if err != nil {
-		if err == ErrReadTimeout && currentRetries < maxWriteRetries {
+		if neterr, ok := err.(net.Error); ok && neterr.Timeout() && currentRetries < maxReadRetries {
 			for currentRetries < maxWriteRetries {
 				err = c.Write(formattedRequest)
 				if err != nil {
