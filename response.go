@@ -65,11 +65,13 @@ func (c *Conn) Response(respstruct interface{}) (response interface{}, err error
 
 	err = validateResponseHeader(rawresp)
 	if err != nil {
+		c.RecordError(1.0)
 		return nil, err
 	}
 
 	response, err = unmarshalResponse(rawresp)
 	if err != nil {
+		c.RecordError(1.0)
 		return nil, err
 	}
 

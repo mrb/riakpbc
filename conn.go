@@ -50,6 +50,14 @@ func (c *Conn) Opts() interface{} {
 	return opts
 }
 
+func (c *Conn) Current() *Node {
+	return c.current
+}
+
+func (c *Conn) RecordError(amount float64) {
+	c.Current().errorRate.Add(amount)
+}
+
 // SetOpts allows Rpb...Req options to be set.
 func (c *Conn) SetOpts(opts interface{}) {
 	c.opts = opts
@@ -77,7 +85,28 @@ func (c *Conn) Pool() *Pool {
 }
 
 func (pool *Pool) SelectNode() *Node {
-	var selectedNode *Node
+	errorThreshold := 0.1
+	var possibleNodes []*Node
+
+	for _, node := range pool.nodes {
+		nodeErrorValue := node.ErrorRate()
+
+		if nodeErrorValue < errorThreshold {
+			possibleNodes = append(possibleNodes, node)
+		}
+	}
+
+	numPossibleNodes := len(possibleNodes)
+
+	if numPossibleNodes > 0 {
+		return possibleNodes[rand.Int31n(int32(numPossibleNodes))]
+	} else {
+		return pool.RandomNode()
+	}
+}
+
+func (pool *Pool) RandomNode() *Node {
+	var randomNode *Node
 
 	var randVal float32
 	randVal = 0
@@ -86,12 +115,12 @@ func (pool *Pool) SelectNode() *Node {
 		throwAwayRand := rand.Float32()
 
 		if throwAwayRand > randVal {
-			selectedNode = node
+			randomNode = node
 			randVal = throwAwayRand
 		}
 	}
 
-	return selectedNode
+	return randomNode
 }
 
 func (pool *Pool) DeleteNode(nodeKey string) {

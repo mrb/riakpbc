@@ -48,6 +48,10 @@ func (node *Node) Dial() (err error) {
 	return nil
 }
 
+func (node *Node) ErrorRate() float64 {
+	return node.errorRate.Value()
+}
+
 func (node *Node) TestConn() error {
 	_, err := bufio.NewReader(node.conn).Peek(1)
 	return err
@@ -63,7 +67,6 @@ func (node *Node) Write(formattedRequest []byte) (err error) {
 	node.conn.SetWriteDeadline(time.Now().Add(node.readTimeout))
 	_, err = node.conn.Write(formattedRequest)
 	if err != nil {
-		node.errorRate.Add(1.0)
 		return err
 	}
 
@@ -79,7 +82,6 @@ func (node *Node) Read() (respraw []byte, err error) {
 	// First 4 bytes are always size of message.
 	n, err := io.ReadFull(node.conn, buf)
 	if err != nil {
-		node.errorRate.Add(1.0)
 		return nil, err
 	}
 	if n == 4 {

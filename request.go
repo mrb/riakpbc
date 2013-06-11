@@ -45,10 +45,17 @@ var (
 func (c *Conn) Request(reqstruct interface{}, structname string) (err error) {
 	marshaledRequest, err := proto.Marshal(reqstruct.(proto.Message))
 	if err != nil {
+		c.RecordError(1.0)
 		return err
 	}
 
-	return c.RawRequest(marshaledRequest, structname)
+	err = c.RawRequest(marshaledRequest, structname)
+	if err != nil {
+		c.RecordError(1.0)
+		return err
+	}
+
+	return
 }
 
 func (c *Conn) RawRequest(marshaledRequest []byte, structname string) (err error) {

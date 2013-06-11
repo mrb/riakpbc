@@ -34,28 +34,32 @@ func main() {
 		_, err = riak.GetClientId()
 		if err != nil {
 			log.Print("1 [ERR] ", err)
-			break
+			//break
 		}
 
 		_, err = riak.FetchObject("bucket", "data")
 		if err != nil {
 			log.Print("2 [ERR] ", err)
-			break
+			//break
+
 		}
 
 		_, err = riak.StoreObject("bucket", "moreData", "stringData")
 		if err != nil {
 			log.Print("3 [ERR] ", err)
-			break
+			//break
+
 		}
 
 		_, err = riak.FetchObject("bucket", "moreData")
 		if err != nil {
 			log.Print("4 [ERR] ", err)
-			break
+			//break
+
 		}
 
 		log.Print("Iteration: ", times, " Nodes: ", riak.Pool())
+		time.Sleep(time.Duration(20) * time.Millisecond)
 	}
 
 	actionEnd = time.Now()

@@ -16,14 +16,14 @@ func NewDecaying() *Decaying {
 	return &Decaying{
 		p:  0.0,
 		e:  math.E,
-		r:  math.Log(0.5) / 10.0,
+		r:  math.Log(0.5) / 10,
 		t0: time.Now(),
 	}
 }
 
 func (decaying *Decaying) Value() float64 {
 	now := time.Now()
-	dt := now.Sub(decaying.t0).Seconds() * 1000 * 1000
+	dt := now.Sub(decaying.t0).Seconds()
 	decaying.t0 = now
 	curValP := decaying.p
 	decaying.p = curValP * math.Pow(decaying.e, (decaying.r*dt))
