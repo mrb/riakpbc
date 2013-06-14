@@ -11,11 +11,10 @@ type Farm struct {
 }
 
 func setupIndexing(t *testing.T, conn *Conn) {
-	out, err := exec.Command("curl", "-i", "-XPUT", "http://127.0.0.1:8098/riak/farm", "-H", "Content-Type: application/json", "-d", "{\"props\":{\"search\":true}}").Output()
+	_, err := exec.Command("curl", "-i", "-XPUT", "http://127.0.0.1:8098/riak/farm", "-H", "Content-Type: application/json", "-d", "{\"props\":{\"search\":true}}").Output()
 	if err != nil {
 		t.Error(err.Error())
 	}
-	t.Log(string(out))
 }
 
 func TestMapReduce(t *testing.T) {
@@ -70,7 +69,6 @@ func TestSearch(t *testing.T) {
 	}
 
 	data, err := riak.Search("farm", "animal:chicken")
-	t.Logf("DATA: %v", data)
 	if err != nil {
 		t.Log("In order for this test to pass riak_search may need to be enabled in app.config")
 		t.Error(err.Error())
