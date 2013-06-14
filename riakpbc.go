@@ -23,7 +23,7 @@ func (c *Conn) FetchObject(bucket, key string) (*RpbGetResp, error) {
 		return &RpbGetResp{}, err
 	}
 
-	response, err := c.Response(&RpbGetResp{})
+	response, err := c.Response()
 	if err != nil {
 		return &RpbGetResp{}, err
 	}
@@ -65,7 +65,7 @@ func (c *Conn) StoreObject(bucket, key string, content interface{}) (*RpbPutResp
 				reqstruct.Content = encctnt
 				break
 			}
-		} else { // string, int,  or []byte	
+		} else { // string, int,  or []byte
 			switch t.Kind() {
 			case reflect.String:
 				reqstruct.Content = &RpbContent{
@@ -97,7 +97,7 @@ func (c *Conn) StoreObject(bucket, key string, content interface{}) (*RpbPutResp
 		return &RpbPutResp{}, err
 	}
 
-	response, err := c.Response(&RpbPutResp{})
+	response, err := c.Response()
 	if err != nil {
 		return &RpbPutResp{}, err
 	}
@@ -120,7 +120,7 @@ func (c *Conn) DeleteObject(bucket, key string) ([]byte, error) {
 		return nil, err
 	}
 
-	response, err := c.Response(&RpbGetResp{})
+	response, err := c.Response()
 	if err != nil {
 		return nil, err
 	}

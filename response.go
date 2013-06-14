@@ -42,7 +42,7 @@ var (
 	maxReadRetries = 3
 )
 
-func (c *Conn) Response(respstruct interface{}) (response interface{}, err error) {
+func (c *Conn) Response() (response interface{}, err error) {
 	currentRetries := 0
 	var rawresp []byte
 	rawresp, err = c.Read()

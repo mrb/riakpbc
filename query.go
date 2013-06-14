@@ -16,7 +16,7 @@ func (c *Conn) MapReduce(request, contentType string) ([]byte, error) {
 		return nil, err
 	}
 
-	response, err := c.Response(&RpbMapRedResp{})
+	response, err := c.Response()
 	if err != nil {
 		return nil, err
 	}
@@ -24,7 +24,7 @@ func (c *Conn) MapReduce(request, contentType string) ([]byte, error) {
 	mapResponse := response.(*RpbMapRedResp).GetResponse()
 	done := response.(*RpbMapRedResp).GetDone()
 	for done != true {
-		response, err := c.Response(&RpbMapRedResp{})
+		response, err := c.Response()
 		if err != nil {
 			return nil, err
 		}
@@ -59,7 +59,7 @@ func (c *Conn) Index(bucket, index, key, start, end string) (*RpbIndexResp, erro
 		return &RpbIndexResp{}, err
 	}
 
-	response, err := c.Response(&RpbIndexResp{})
+	response, err := c.Response()
 	if err != nil {
 		return &RpbIndexResp{}, err
 	}
@@ -82,7 +82,7 @@ func (c *Conn) Search(q, index string) (*RpbSearchQueryResp, error) {
 		return &RpbSearchQueryResp{}, err
 	}
 
-	response, err := c.Response(&RpbSearchQueryResp{})
+	response, err := c.Response()
 	if err != nil || response == nil {
 		return &RpbSearchQueryResp{}, err
 	}

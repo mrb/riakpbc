@@ -8,7 +8,7 @@ func (c *Conn) ListBuckets() (*RpbListBucketsResp, error) {
 		return &RpbListBucketsResp{}, err
 	}
 
-	response, err := c.Response(&RpbListBucketsResp{})
+	response, err := c.Response()
 	if err != nil {
 		return &RpbListBucketsResp{}, err
 	}
@@ -26,7 +26,7 @@ func (c *Conn) ListKeys(bucket string) ([][]byte, error) {
 		return nil, err
 	}
 
-	response, err := c.Response(&RpbListKeysResp{})
+	response, err := c.Response()
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +34,7 @@ func (c *Conn) ListKeys(bucket string) ([][]byte, error) {
 	keys := response.(*RpbListKeysResp).GetKeys()
 	done := response.(*RpbListKeysResp).GetDone()
 	for done != true {
-		response, err := c.Response(&RpbListKeysResp{})
+		response, err := c.Response()
 		if err != nil {
 			return nil, err
 		}
@@ -55,7 +55,7 @@ func (c *Conn) GetBucket(bucket string) (*RpbGetBucketResp, error) {
 		return &RpbGetBucketResp{}, err
 	}
 
-	response, err := c.Response(&RpbGetBucketResp{})
+	response, err := c.Response()
 	if err != nil {
 		return &RpbGetBucketResp{}, err
 	}
@@ -80,7 +80,7 @@ func (c *Conn) SetBucket(bucket string, nval *uint32, allowmult *bool) ([]byte, 
 		return nil, err
 	}
 
-	response, err := c.Response(&RpbEmptyResp{})
+	response, err := c.Response()
 	if err != nil {
 		return nil, err
 	}
