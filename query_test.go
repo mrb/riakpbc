@@ -10,17 +10,8 @@ type Farm struct {
 	Animal string `json:"animal" riak:"index"`
 }
 
-func setupIndexing(t *testing.T) {
-	cmd := exec.Command("search-cmd", "install", "riakpbctestbucket")
-	err := cmd.Run()
-	if err != nil {
-		t.Error(err.Error())
-	}
-}
-
-func teardownIndexing(t *testing.T) {
-	cmd := exec.Command("search-cmd", "uninstall", "riakpbctestbucket")
-	err := cmd.Run()
+func setupIndexing(t *testing.T, conn *Conn) {
+	_, err := exec.Command("curl", "-i", "-XPUT", "http://127.0.0.1:8098/riak/farm", "-H", "Content-Type: application/json", "-d", "{\"props\":{\"search\":true}}").Output()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -70,18 +61,21 @@ func TestIndex(t *testing.T) {
 	}
 }
 
-//func TestSearch(t *testing.T) {
-//	riak := setupConnection(t)
-//	setupIndexing(t)
-//	setupData(t, riak)
-//
-//	data, err := riak.Search("*awesome*", "data")
-//	if err != nil {
-//		t.Log("In order for this test to pass riak_search may need to be enabled in app.config")
-//		t.Error(err.Error())
-//	}
-//	assert.T(t, data.GetNumFound() > 0)
-//
-//	teardownData(t, riak)
-//	teardownIndexing(t)
-//}
+func TestSearch(t *testing.T) {
+	riak := setupConnection(t)
+	setupIndexing(t, riak)
+	if _, err := riak.StoreObject("farm", "chicken", &Farm{Animal: "chicken"}); err != nil {
+		t.Error(err.Error())
+	}
+
+	data, err := riak.Search("farm", "animal:chicken")
+	if err != nil {
+		t.Log("In order for this test to pass riak_search may need to be enabled in app.config")
+		t.Error(err.Error())
+	}
+	assert.T(t, data.GetNumFound() > 0)
+
+	if _, err := riak.DeleteObject("farm", "chicken"); err != nil {
+		t.Error(err.Error())
+	}
+}

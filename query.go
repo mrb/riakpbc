@@ -70,7 +70,7 @@ func (c *Conn) Index(bucket, index, key, start, end string) (*RpbIndexResp, erro
 // Search scans bucket for query string q and searches index for the match.
 //
 // Pass RpbSearchQueryReq to SetOpts for optional parameters.
-func (c *Conn) Search(q, index string) (*RpbSearchQueryResp, error) {
+func (c *Conn) Search(index, q string) (*RpbSearchQueryResp, error) {
 	reqstruct := &RpbSearchQueryReq{}
 	if opts := c.Opts(); opts != nil {
 		reqstruct = opts.(*RpbSearchQueryReq)
