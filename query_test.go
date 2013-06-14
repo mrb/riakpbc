@@ -69,7 +69,7 @@ func TestSearch(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	data, err := riak.Search("animal", "chicken")
+	data, err := riak.Search("farm", "animal:chicken")
 	t.Logf("DATA: %v", data)
 	if err != nil {
 		t.Log("In order for this test to pass riak_search may need to be enabled in app.config")
