@@ -4,6 +4,7 @@ type Conn struct {
 	cluster []string
 	pool    *Pool
 	opts    interface{} // potential Rpb...Req opts
+	Coder *Coder    // Coder for (un)marshalling data
 }
 
 type Pool struct {
@@ -37,6 +38,11 @@ func (c *Conn) Opts() interface{} {
 // SetOpts allows Rpb...Req options to be set.
 func (c *Conn) SetOpts(opts interface{}) {
 	c.opts = opts
+}
+
+// SetCoder sets the default Coder for structs.
+func (c *Conn) SetCoder(Coder *Coder) {
+	c.Coder = Coder
 }
 
 func (c *Conn) Write(request []byte) error {

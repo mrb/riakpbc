@@ -12,8 +12,17 @@ type Data struct {
 	Data string `json:"data"`
 }
 
+type RiakData struct {
+	Email   string `json:"email" riak:"index"`
+	Twitter string `json:"twitter" riak:"index"`
+	Data    []byte `json:"data" riak:"index"`
+}
+
 func ExampleConn() {
 	riak := New([]string{"127.0.0.1:8087", "127.0.0.1:8088"})
+
+	Coder := NewCoder("json", JsonMarshaller)
+	riak.SetCoder(Coder)
 
 	if err := riak.Dial(); err != nil {
 		log.Print(err.Error())
@@ -57,6 +66,9 @@ func setupConnection(t *testing.T) (conn *Conn) {
 	}
 	assert.T(t, conn != nil)
 
+	Coder := NewCoder("json", JsonMarshaller)
+	conn.SetCoder(Coder)
+
 	return conn
 }
 
@@ -79,6 +91,12 @@ func teardownData(t *testing.T, conn *Conn) {
 func TestStoreObject(t *testing.T) {
 	riak := setupConnection(t)
 
+	riak_data := &RiakData{
+		Email:   "riak@example.com",
+		Twitter: "riak-twitter",
+		Data:    []byte("riak-data"),
+	}
+
 	_, err := riak.StoreObject("riakpbctestbucket", "testkey_struct", &Data{Data: "struct data"})
 	if err != nil {
 		t.Error(err.Error())
@@ -96,6 +114,10 @@ func TestStoreObject(t *testing.T) {
 		t.Error(err.Error())
 	}
 	_, err = riak.StoreObject("riakpbctestbucket", "testkey_binary", []byte("binary data"))
+	if err != nil {
+		t.Error(err.Error())
+	}
+	_, err = riak.StoreObject("riakpbctestbucket", "testkey_riakstruct", riak_data)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -117,6 +139,10 @@ func TestStoreObject(t *testing.T) {
 		t.Error(err.Error())
 	}
 	_, err = riak.DeleteObject("riakpbctestbucket", "testkey_binary")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	_, err = riak.DeleteObject("riakpbctestbucket", "testkey_riakstruct")
 	if err != nil {
 		t.Error(err.Error())
 	}
