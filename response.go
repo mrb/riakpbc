@@ -36,14 +36,14 @@ var numToCommand = map[int]string{
 	25: "RpbIndexReq",
 	26: "RpbIndexResp",
 	27: "RpbSearchQueryReq",
-	28: "RbpSearchQueryResp",
+	28: "RpbSearchQueryResp",
 }
 
 var (
 	maxReadRetries = 3
 )
 
-func (c *Conn) Response(respstruct interface{}) (response interface{}, err error) {
+func (c *Conn) Response() (response interface{}, err error) {
 	currentRetries := 0
 	var rawresp []byte
 	rawresp, err = c.Read()

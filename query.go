@@ -18,7 +18,7 @@ func (c *Conn) MapReduce(request, contentType string) ([]byte, error) {
 		return nil, err
 	}
 
-	response, err := c.Response(&RpbMapRedResp{})
+	response, err := c.Response()
 	if err != nil {
 		return nil, err
 	}
@@ -26,7 +26,7 @@ func (c *Conn) MapReduce(request, contentType string) ([]byte, error) {
 	mapResponse := response.(*RpbMapRedResp).GetResponse()
 	done := response.(*RpbMapRedResp).GetDone()
 	for done != true {
-		response, err := c.Response(&RpbMapRedResp{})
+		response, err := c.Response()
 		if err != nil {
 			return nil, err
 		}
@@ -63,7 +63,7 @@ func (c *Conn) Index(bucket, index, key, start, end string) (*RpbIndexResp, erro
 		return &RpbIndexResp{}, err
 	}
 
-	response, err := c.Response(&RpbIndexResp{})
+	response, err := c.Response()
 	if err != nil {
 		return &RpbIndexResp{}, err
 	}
@@ -74,7 +74,7 @@ func (c *Conn) Index(bucket, index, key, start, end string) (*RpbIndexResp, erro
 // Search scans bucket for query string q and searches index for the match.
 //
 // Pass RpbSearchQueryReq to SetOpts for optional parameters.
-func (c *Conn) Search(q, index string) (*RpbSearchQueryResp, error) {
+func (c *Conn) Search(index, q string) (*RpbSearchQueryResp, error) {
 	reqstruct := &RpbSearchQueryReq{}
 	if opts := c.Opts(); opts != nil {
 		reqstruct = opts.(*RpbSearchQueryReq)
@@ -88,7 +88,7 @@ func (c *Conn) Search(q, index string) (*RpbSearchQueryResp, error) {
 		return &RpbSearchQueryResp{}, err
 	}
 
-	response, err := c.Response(&RpbSearchQueryResp{})
+	response, err := c.Response()
 	if err != nil || response == nil {
 		return &RpbSearchQueryResp{}, err
 	}

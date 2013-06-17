@@ -11,7 +11,7 @@ func (c *Conn) GetServerInfo() (*RpbGetServerInfoResp, error) {
 		return &RpbGetServerInfoResp{}, err
 	}
 
-	response, err := c.Response(&RpbGetServerInfoResp{})
+	response, err := c.Response()
 	if err != nil {
 		return &RpbGetServerInfoResp{}, err
 	}
@@ -29,7 +29,7 @@ func (c *Conn) Ping() ([]byte, error) {
 		return nil, err
 	}
 
-	response, err := c.Response(&RpbEmptyResp{})
+	response, err := c.Response()
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func (c *Conn) GetClientId() (*RpbGetClientIdResp, error) {
 		return &RpbGetClientIdResp{}, err
 	}
 
-	response, err := c.Response(&RpbGetClientIdResp{})
+	response, err := c.Response()
 	if err != nil {
 		return &RpbGetClientIdResp{}, err
 	}
@@ -67,7 +67,7 @@ func (c *Conn) SetClientId(clientId string) ([]byte, error) {
 		return nil, err
 	}
 
-	response, err := c.Response(&RpbSetClientIdReq{})
+	response, err := c.Response()
 	if err != nil {
 		return nil, err
 	}
