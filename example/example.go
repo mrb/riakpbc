@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/mrb/riakpbc"
 	"log"
+	"runtime"
 	"time"
 )
 
@@ -11,6 +12,7 @@ type Data struct {
 }
 
 func main() {
+	runtime.GOMAXPROCS(4)
 	cluster := []string{"127.0.0.1:8087", "127.0.0.1:8088", "127.0.0.1:8089", "127.0.0.1:8090", "127.0.0.1:1030007"}
 	riak := riakpbc.New(cluster)
 
@@ -23,45 +25,20 @@ func main() {
 	var actionEnd time.Time
 
 	data := "{'data':'rules', 'data':'rules', 'data':'rules','data':'rules', 'data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules','data':'rules', 'data':'rules', 'data':'rules','data':'rules'}"
-
-	var times int
-	for {
-		times = times + 1
-
-		_, err = riak.StoreObject("bucket", "data", &Data{Data: data})
-		_, err = riak.SetClientId("coolio")
-
-		_, err = riak.GetClientId()
-		if err != nil {
-			log.Print("1 [ERR] ", err)
-			//break
-		}
-
-		_, err = riak.FetchObject("bucket", "data")
-		if err != nil {
-			log.Print("2 [ERR] ", err)
-			//break
-
-		}
-
-		_, err = riak.StoreObject("bucket", "moreData", "stringData")
-		if err != nil {
-			log.Print("3 [ERR] ", err)
-			//break
-
-		}
-
-		_, err = riak.FetchObject("bucket", "moreData")
-		if err != nil {
-			log.Print("4 [ERR] ", err)
-			//break
-
-		}
-
-		log.Print("Iteration: ", times, " Nodes: ", riak.Pool())
-		time.Sleep(time.Duration(20) * time.Millisecond)
+	c := make(chan int)
+	for g := 0; g < 2; g++ {
+		go func(which int, stuff string) {
+			log.Print(which)
+			var times int
+			for {
+				times = times + 1
+				riak.SelectNode()
+				log.Print(riak.Current())
+			}
+		}(g, data)
 	}
-
+	log.Print("DONE")
+	<-c
 	actionEnd = time.Now()
 	actionDuration := actionEnd.Sub(actionBegin)
 	log.Print("Ran for ", actionDuration)
