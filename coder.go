@@ -15,16 +15,22 @@ var typeOfBytes = reflect.TypeOf([]byte(nil))
 // MarshalMethod is the method signature of a marshaller.
 type MarshalMethod func(interface{}, *RpbContent) error
 
+// UnmarshalMethod is the method signature of a unmarshaller.
+type UnmarshalMethod func([]byte, interface{}) error
+
+// Coder contains a tag, marshaller, and unmarshaller.
+// It's primary duty is to convert data from `tag` format to and from a composed struct.
 type Coder struct {
-	tag        string        // the tag to match for the marshaller
-	marshaller MarshalMethod // the method to run on the data
+	tag          string          // the tag to match for the marshaller
+	marshaller   MarshalMethod   // the method to run on the data
+	unmarshaller UnmarshalMethod // the method to extra the data
 }
 
 // JsonMarshaller is an example of a MarshalMethod that is passed to NewEncode().
 //
-// If a different data marshaller is desired, such as XML, YAML, etc., use this as a template.
-func JsonMarshaller(data interface{}, out *RpbContent) error {
-	jsondata, err := json.Marshal(data)
+// If a different data marshaller is desired, such as XML, YAML, etc.  Use this as a template.
+func JsonMarshaller(in interface{}, out *RpbContent) error {
+	jsondata, err := json.Marshal(in)
 	if err != nil {
 		return err
 	}
@@ -33,11 +39,21 @@ func JsonMarshaller(data interface{}, out *RpbContent) error {
 	return nil
 }
 
+// JsonUnmarshaller is an example of an UnmarshallMethod that is passed to NewEncode().
+func JsonUnmarshaller(in []byte, out interface{}) error {
+	err := json.Unmarshal(in, out)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // NewCoder requires a tag and MarshalMethod.
-func NewCoder(tag string, marshaller MarshalMethod) *Coder {
+func NewCoder(tag string, marshaller MarshalMethod, unmarshaller UnmarshalMethod) *Coder {
 	self := new(Coder)
 	self.tag = tag
 	self.marshaller = marshaller
+	self.unmarshaller = unmarshaller
 	return self
 }
 
@@ -57,6 +73,9 @@ func NewCoder(tag string, marshaller MarshalMethod) *Coder {
 //
 //  // Field is a _bin index and also a json field in the actual data.
 //  Field string `json:"field" riak:"index"`
+//
+// TODO: The PBC int interface doesn't seem to work directly with byte data, even though the API specification is byte data.
+// Needs to be investigated further.
 func (self *Coder) Marshal(data interface{}) (*RpbContent, error) {
 	t := reflect.ValueOf(data)
 	if t.Kind() != reflect.Ptr {
@@ -191,4 +210,9 @@ func (self *Coder) Marshal(data interface{}) (*RpbContent, error) {
 	}
 
 	return out, nil
+}
+
+// Unmarshal unwraps the database data into the passed structure based on the defined marshaller.
+func (self *Coder) Unmarshal(in []byte, data interface{}) error {
+	return self.unmarshaller(in, data)
 }

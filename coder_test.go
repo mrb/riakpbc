@@ -24,7 +24,7 @@ type EncodeData struct {
 }
 
 func TestCoder(t *testing.T) {
-	e := NewCoder("json", JsonMarshaller)
+	e := NewCoder("json", JsonMarshaller, JsonUnmarshaller)
 
 	data := &EncodeData{
 		Email:   "riak@example.com",
@@ -69,4 +69,10 @@ func TestCoder(t *testing.T) {
 
 	//t.Log(encdata.GetIndexes())
 	//t.Log(string(encdata.GetValue()))
+
+	result := &EncodeData{}
+	e.Unmarshal(jsondata, result)
+	if result.Email != data.Email {
+		t.Errorf("Expected %s, got %s", data.Email, result.Email)
+	}
 }

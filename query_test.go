@@ -33,13 +33,13 @@ func TestMapReduce(t *testing.T) {
 
 func TestIndex(t *testing.T) {
 	riak := setupConnection(t)
-	if _, err := riak.StoreObject("farm", "chicken", &Farm{Animal: "chicken"}); err != nil {
+	if _, err := riak.StoreStruct("farm", "chicken", &Farm{Animal: "chicken"}); err != nil {
 		t.Error(err.Error())
 	}
-	if _, err := riak.StoreObject("farm", "hen", &Farm{Animal: "hen"}); err != nil {
+	if _, err := riak.StoreStruct("farm", "hen", &Farm{Animal: "hen"}); err != nil {
 		t.Error(err.Error())
 	}
-	if _, err := riak.StoreObject("farm", "rooster", &Farm{Animal: "rooster"}); err != nil {
+	if _, err := riak.StoreStruct("farm", "rooster", &Farm{Animal: "rooster"}); err != nil {
 		t.Error(err.Error())
 	}
 
@@ -64,7 +64,7 @@ func TestIndex(t *testing.T) {
 func TestSearch(t *testing.T) {
 	riak := setupConnection(t)
 	setupIndexing(t, riak)
-	if _, err := riak.StoreObject("farm", "chicken", &Farm{Animal: "chicken"}); err != nil {
+	if _, err := riak.StoreStruct("farm", "chicken", &Farm{Animal: "chicken"}); err != nil {
 		t.Error(err.Error())
 	}
 

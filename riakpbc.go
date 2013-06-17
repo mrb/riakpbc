@@ -8,7 +8,7 @@ import (
 
 type RpbEmptyResp struct{}
 
-// FetchObject returns an object from a bucket.
+// FetchObject returns an object from a bucket and returns a RpbGetResp response.
 //
 // Pass RpbGetReq to SetOpts for optional parameters.
 func (c *Conn) FetchObject(bucket, key string) (*RpbGetResp, error) {
@@ -31,16 +31,14 @@ func (c *Conn) FetchObject(bucket, key string) (*RpbGetResp, error) {
 	return response.(*RpbGetResp), nil
 }
 
-// StoreObject puts an object with ky into bucket.
+// StoreObject puts an object with key into bucket and returns a RpbGetResp response.
 //
-// Content can be passed as either a struct, RpbContent, raw string or binary.
+// The `in` content can be passed as either a RpbContent, string, int, or []byte.
 //
 // Use RpbContent if you need absolute control over what is going into Riak.
-// Otherwise data conveniently gets wrapped for you.  Check Coder.Marshall()
-// for `riak` tags that can be set on a structure for automated indexes and links.
 //
 // Pass RpbPutReq to SetOpts for optional parameters.
-func (c *Conn) StoreObject(bucket, key string, content interface{}) (*RpbPutResp, error) {
+func (c *Conn) StoreObject(bucket, key string, in interface{}) (*RpbPutResp, error) {
 	reqstruct := &RpbPutReq{}
 	if opts := c.Opts(); opts != nil {
 		reqstruct = opts.(*RpbPutReq)
@@ -48,52 +46,36 @@ func (c *Conn) StoreObject(bucket, key string, content interface{}) (*RpbPutResp
 	reqstruct.Bucket = []byte(bucket)
 	reqstruct.Key = []byte(key)
 
-	if _, ok := content.(*RpbContent); ok {
-		reqstruct.Content = content.(*RpbContent)
+	if _, ok := in.(*RpbContent); ok {
+		reqstruct.Content = in.(*RpbContent)
 	} else {
 		// Determine the primitive type of content.
-		t := reflect.TypeOf(content)
+		t := reflect.TypeOf(in)
 
-		if t.Kind() == reflect.Ptr { // struct or RpbContent
-			switch t.Elem().Kind() {
-			case reflect.Struct:
-				if c.Coder == nil {
-					panic("Cannot store a struct unless a marshaller has been set")
-				}
-				// Structs get passed through a marshaller
-				encctnt, err := c.Coder.Marshal(content)
-				if err != nil {
-					return nil, err
-				}
-				reqstruct.Content = encctnt
-				break
+		switch t.Kind() {
+		case reflect.String:
+			reqstruct.Content = &RpbContent{
+				Value:       []byte(in.(string)),
+				ContentType: []byte("plain/text"),
 			}
-		} else { // string, int,  or []byte
-			switch t.Kind() {
-			case reflect.String:
-				reqstruct.Content = &RpbContent{
-					Value:       []byte(content.(string)),
-					ContentType: []byte("plain/text"),
-				}
-				break
-			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-				reqstruct.Content = &RpbContent{
-					Value:       []byte(strconv.FormatInt(int64(content.(int)), 10)),
-					ContentType: []byte("plain/text"),
-				}
-				break
-			default:
-				reqstruct.Content = &RpbContent{
-					Value:       content.([]byte),
-					ContentType: []byte("application/octet-stream"),
-				}
-				break
+			break
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			reqstruct.Content = &RpbContent{
+				Value:       []byte(strconv.FormatInt(int64(in.(int)), 10)),
+				ContentType: []byte("plain/text"),
 			}
+			break
+		default:
+			reqstruct.Content = &RpbContent{
+				Value:       in.([]byte),
+				ContentType: []byte("application/octet-stream"),
+			}
+			break
 		}
 	}
 
 	if reqstruct.Content == nil {
-		return nil, errors.New("Invalid content type passed.  Must be struct, RpbContent, string, int, or []byte")
+		return nil, errors.New("Invalid content type passed.  Must be RpbContent, string, int, or []byte")
 	}
 
 	if err := c.Request(reqstruct, "RpbPutReq"); err != nil {
@@ -129,4 +111,102 @@ func (c *Conn) DeleteObject(bucket, key string) ([]byte, error) {
 	}
 
 	return response.([]byte), nil
+}
+
+// FetchStruct returns an object from a bucket and unmarshals it into the passed struct.
+//
+// Pass RpbGetReq to SetOpts for optional parameters.
+func (c *Conn) FetchStruct(bucket, key string, out interface{}) error {
+	if c.Coder == nil {
+		panic("Cannot fetch to a struct unless a coder has been set")
+	}
+
+	reqstruct := &RpbGetReq{}
+	if opts := c.Opts(); opts != nil {
+		reqstruct = opts.(*RpbGetReq)
+	}
+	reqstruct.Bucket = []byte(bucket)
+	reqstruct.Key = []byte(key)
+
+	if err := c.Request(reqstruct, "RpbGetReq"); err != nil {
+		return err
+	}
+
+	response, err := c.Response()
+	if err != nil {
+		return err
+	}
+
+	t := reflect.TypeOf(out)
+	if t.Kind() == reflect.Ptr { // struct
+		switch t.Elem().Kind() {
+		// Structs get passed through a marshaller
+		case reflect.Struct:
+			// TODO: This only returns the first result.
+			//  I believe the other possible results are related to vlocks, and will eventually need to be addressed.
+			err := c.Coder.Unmarshal(response.(*RpbGetResp).GetContent()[0].GetValue(), out)
+			if err != nil {
+				return err
+			}
+		default:
+			panic("Invalid out struct type passed to FetchStruct")
+		}
+	}
+
+	return nil
+}
+
+// StoreStruct marshals the data from a struct, and adds it with key into bucket.
+//
+// Check Coder.Marshall() for `riak` tags that can be set on a structure for automated indexes and links.
+//
+// Pass RpbPutReq to SetOpts for optional parameters.
+func (c *Conn) StoreStruct(bucket, key string, in interface{}) (*RpbPutResp, error) {
+	if c.Coder == nil {
+		panic("Cannot store a struct unless a coder has been set")
+	}
+
+	reqstruct := &RpbPutReq{}
+	if opts := c.Opts(); opts != nil {
+		reqstruct = opts.(*RpbPutReq)
+	}
+	reqstruct.Bucket = []byte(bucket)
+	reqstruct.Key = []byte(key)
+
+	if _, ok := in.(*RpbContent); ok {
+		reqstruct.Content = in.(*RpbContent)
+	} else {
+		// Determine the primitive type of content.
+		t := reflect.TypeOf(in)
+
+		if t.Kind() == reflect.Ptr { // struct or RpbContent
+			switch t.Elem().Kind() {
+			case reflect.Struct:
+				// Structs get passed through a marshaller
+				encctnt, err := c.Coder.Marshal(in)
+				if err != nil {
+					return nil, err
+				}
+				reqstruct.Content = encctnt
+				break
+			default:
+				panic("Invalid in struct type passed to StoreStruct")
+			}
+		}
+	}
+
+	if reqstruct.Content == nil {
+		return nil, errors.New("Invalid content type passed.  Must be struct, RpbContent, string, int, or []byte")
+	}
+
+	if err := c.Request(reqstruct, "RpbPutReq"); err != nil {
+		return &RpbPutResp{}, err
+	}
+
+	response, err := c.Response()
+	if err != nil {
+		return &RpbPutResp{}, err
+	}
+
+	return response.(*RpbPutResp), nil
 }
