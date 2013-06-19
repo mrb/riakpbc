@@ -72,9 +72,7 @@ func (c *Conn) Close() {
 }
 
 func (c *Conn) SelectNode() *Node {
-	c.pool.Lock()
 	node := c.pool.SelectNode()
-	c.pool.Unlock()
 	return node
 }
 
@@ -83,6 +81,7 @@ func (c *Conn) Pool() *Pool {
 }
 
 func (pool *Pool) SelectNode() *Node {
+	pool.Lock()
 	errorThreshold := 0.1
 	var possibleNodes []*Node
 
@@ -96,13 +95,26 @@ func (pool *Pool) SelectNode() *Node {
 
 	numPossibleNodes := len(possibleNodes)
 
+	var chosenNode *Node
 	if numPossibleNodes > 0 {
-		pool.current = possibleNodes[rand.Int31n(int32(numPossibleNodes))]
+		chosenNode = possibleNodes[rand.Int31n(int32(numPossibleNodes))]
 	} else {
-		pool.current = pool.RandomNode()
+		chosenNode = pool.RandomNode()
 	}
-	current := pool.current
-	return current
+
+	resp, err := chosenNode.ReqResp([]byte{}, "RpbPingReq", true)
+	if resp == nil || string(resp.([]byte)) != "Pong" || err != nil {
+		chosenNode.RecordError(1.0)
+		chosenNode.Dial()
+		//pool.DeleteNode(chosenNode.addr)
+		chosenNode = pool.RandomNode()
+	}
+
+	pool.current = chosenNode
+
+	pool.Unlock()
+
+	return chosenNode
 }
 
 func (pool *Pool) RandomNode() *Node {
@@ -125,14 +137,6 @@ func (pool *Pool) RandomNode() *Node {
 
 func (pool *Pool) DeleteNode(nodeKey string) {
 	delete(pool.nodes, nodeKey)
-
-	var nodeStrings []string
-
-	for k, _ := range pool.nodes {
-		nodeStrings = append(nodeStrings, k)
-	}
-
-	return
 }
 
 func (pool *Pool) Close() {
@@ -182,13 +186,14 @@ func newPool(cluster []string) *Pool {
 
 	log.Print("[POOL] New connection Pool established. Attempting connection to ", len(pool.nodes), " Riak nodes.")
 
-	pool.SelectNode()
-
 	return pool
 }
 
 func (conn *Conn) ReqResp(reqstruct interface{}, structname string, raw bool) (response interface{}, err error) {
-	node := conn.SelectNode()
+	return conn.SelectNode().ReqResp(reqstruct, structname, raw)
+}
+
+func (node *Node) ReqResp(reqstruct interface{}, structname string, raw bool) (response interface{}, err error) {
 	node.Lock()
 	if raw == true {
 		err = node.RawRequest(reqstruct.([]byte), structname)

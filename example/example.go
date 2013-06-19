@@ -28,7 +28,7 @@ func main() {
 
 	for g := 0; g < 4; g++ {
 		go func(which int) {
-			log.Print(which)
+			log.Print("<", which, "> Loaded")
 			var times int
 			for {
 				actionBegin := time.Now()
@@ -37,7 +37,10 @@ func main() {
 				riak.StoreObject("bucket", "data", "{'ok':'ok'}")
 				riak.SetClientId("coolio")
 				riak.GetClientId()
-				data, _ := riak.FetchObject("bucket", "data")
+				data, err := riak.FetchObject("bucket", "data")
+				if err != nil {
+					break
+				}
 				if string(data.GetContent()[0].GetValue()) != "{'ok':'ok'}" {
 					log.Fatal("FUCK")
 				}
@@ -49,7 +52,6 @@ func main() {
 			}
 		}(g)
 	}
-	log.Print("DONE")
 	<-c
 	actionEnd = time.Now()
 	actionDuration := actionEnd.Sub(actionBegin)
