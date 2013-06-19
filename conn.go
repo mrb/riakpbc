@@ -13,6 +13,7 @@ type Conn struct {
 	pool    *Pool
 	opts    interface{} // potential Rpb...Req opts
 	Coder   *Coder      // Coder for (un)marshalling data
+	optsMu  *sync.Mutex
 }
 
 type Pool struct {
@@ -25,6 +26,7 @@ func New(cluster []string) *Conn {
 	return &Conn{
 		cluster: cluster,
 		pool:    newPool(cluster),
+		optsMu:  &sync.Mutex{},
 	}
 }
 
@@ -48,9 +50,11 @@ func (c *Conn) Dial() error {
 
 // Opts returns the set options, and resets them internally to nil.
 func (c *Conn) Opts() interface{} {
-	//opts := c.opts
-	//c.opts = nil
-	return c.opts
+	c.optsMu.Lock()
+	opts := c.opts
+	c.opts = nil
+	c.optsMu.Unlock()
+	return opts
 }
 
 func (c *Conn) Current() *Node {
