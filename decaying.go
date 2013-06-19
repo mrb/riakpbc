@@ -16,7 +16,7 @@ func NewDecaying() *Decaying {
 	return &Decaying{
 		p:  0.0,
 		e:  math.E,
-		r:  math.Log(0.5) / 10 * 1e2,
+		r:  math.Log(0.5) / 10,
 		t0: time.Now(),
 	}
 }
