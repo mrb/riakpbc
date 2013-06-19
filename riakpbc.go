@@ -19,11 +19,12 @@ func (c *Conn) FetchObject(bucket, key string) (*RpbGetResp, error) {
 	reqstruct.Bucket = []byte(bucket)
 	reqstruct.Key = []byte(key)
 
-	if err := c.Request(reqstruct, "RpbGetReq"); err != nil {
+	node := c.SelectNode()
+	if err := node.Request(reqstruct, "RpbGetReq"); err != nil {
 		return &RpbGetResp{}, err
 	}
 
-	response, err := c.Response()
+	response, err := node.Response()
 	if err != nil {
 		return &RpbGetResp{}, err
 	}
@@ -45,8 +46,6 @@ func (c *Conn) StoreObject(bucket, key string, in interface{}) (*RpbPutResp, err
 	}
 	reqstruct.Bucket = []byte(bucket)
 	reqstruct.Key = []byte(key)
-
-	c.SelectNode()
 
 	if _, ok := in.(*RpbContent); ok {
 		reqstruct.Content = in.(*RpbContent)
@@ -80,11 +79,13 @@ func (c *Conn) StoreObject(bucket, key string, in interface{}) (*RpbPutResp, err
 		return nil, errors.New("Invalid content type passed.  Must be RpbContent, string, int, or []byte")
 	}
 
-	if err := c.Request(reqstruct, "RpbPutReq"); err != nil {
+	node := c.SelectNode()
+
+	if err := node.Request(reqstruct, "RpbPutReq"); err != nil {
 		return &RpbPutResp{}, err
 	}
 
-	response, err := c.Response()
+	response, err := node.Response()
 	if err != nil {
 		return &RpbPutResp{}, err
 	}
@@ -103,13 +104,13 @@ func (c *Conn) DeleteObject(bucket, key string) ([]byte, error) {
 	reqstruct.Bucket = []byte(bucket)
 	reqstruct.Key = []byte(key)
 
-	c.SelectNode()
+	node := c.SelectNode()
 
-	if err := c.Request(reqstruct, "RpbDelReq"); err != nil {
+	if err := node.Request(reqstruct, "RpbDelReq"); err != nil {
 		return nil, err
 	}
 
-	response, err := c.Response()
+	response, err := node.Response()
 	if err != nil {
 		return nil, err
 	}
@@ -132,13 +133,13 @@ func (c *Conn) FetchStruct(bucket, key string, out interface{}) error {
 	reqstruct.Bucket = []byte(bucket)
 	reqstruct.Key = []byte(key)
 
-	c.SelectNode()
+	node := c.SelectNode()
 
-	if err := c.Request(reqstruct, "RpbGetReq"); err != nil {
+	if err := node.Request(reqstruct, "RpbGetReq"); err != nil {
 		return err
 	}
 
-	response, err := c.Response()
+	response, err := node.Response()
 	if err != nil {
 		return err
 	}
@@ -179,8 +180,6 @@ func (c *Conn) StoreStruct(bucket, key string, in interface{}) (*RpbPutResp, err
 	reqstruct.Bucket = []byte(bucket)
 	reqstruct.Key = []byte(key)
 
-	c.SelectNode()
-
 	if _, ok := in.(*RpbContent); ok {
 		reqstruct.Content = in.(*RpbContent)
 	} else {
@@ -207,11 +206,13 @@ func (c *Conn) StoreStruct(bucket, key string, in interface{}) (*RpbPutResp, err
 		return nil, errors.New("Invalid content type passed.  Must be struct, RpbContent, string, int, or []byte")
 	}
 
-	if err := c.Request(reqstruct, "RpbPutReq"); err != nil {
+	node := c.SelectNode()
+
+	if err := node.Request(reqstruct, "RpbPutReq"); err != nil {
 		return &RpbPutResp{}, err
 	}
 
-	response, err := c.Response()
+	response, err := node.Response()
 	if err != nil {
 		return &RpbPutResp{}, err
 	}

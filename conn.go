@@ -4,19 +4,21 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"sync"
 	"time"
 )
 
 type Conn struct {
 	cluster []string
 	pool    *Pool
-	current *Node
 	opts    interface{} // potential Rpb...Req opts
 	Coder   *Coder      // Coder for (un)marshalling data
 }
 
 type Pool struct {
-	nodes map[string]*Node // index the node with its address string
+	nodes   map[string]*Node // index the node with its address string
+	current *Node
+	sync.Mutex
 }
 
 func New(cluster []string) *Conn {
@@ -44,19 +46,15 @@ func (c *Conn) Dial() error {
 	return nil
 }
 
-// Opts returns the set options, and reests them internally to nil.
+// Opts returns the set options, and resets them internally to nil.
 func (c *Conn) Opts() interface{} {
-	opts := c.opts
-	c.opts = nil
-	return opts
+	//opts := c.opts
+	//c.opts = nil
+	return c.opts
 }
 
 func (c *Conn) Current() *Node {
-	return c.current
-}
-
-func (c *Conn) RecordError(amount float64) {
-	c.Current().errorRate.Add(amount)
+	return c.pool.Current()
 }
 
 // SetOpts allows Rpb...Req options to be set.
@@ -69,21 +67,12 @@ func (c *Conn) SetCoder(Coder *Coder) {
 	c.Coder = Coder
 }
 
-func (c *Conn) Write(request []byte) error {
-	return c.current.Write(request)
-}
-
-func (c *Conn) Read() (response []byte, err error) {
-	return c.current.Read()
-}
-
 func (c *Conn) Close() {
 	c.pool.Close()
 }
 
-func (c *Conn) SelectNode() {
-	c.current = c.pool.SelectNode()
-	c.current.Dial()
+func (c *Conn) SelectNode() *Node {
+	return c.pool.SelectNode()
 }
 
 func (c *Conn) Pool() *Pool {
@@ -105,10 +94,12 @@ func (pool *Pool) SelectNode() *Node {
 	numPossibleNodes := len(possibleNodes)
 
 	if numPossibleNodes > 0 {
-		return possibleNodes[rand.Int31n(int32(numPossibleNodes))]
+		pool.current = possibleNodes[rand.Int31n(int32(numPossibleNodes))]
 	} else {
-		return pool.RandomNode()
+		pool.current = pool.RandomNode()
 	}
+	current := pool.current
+	return current
 }
 
 func (pool *Pool) RandomNode() *Node {
@@ -145,6 +136,11 @@ func (pool *Pool) Close() {
 	for _, node := range pool.nodes {
 		node.Close()
 	}
+}
+
+func (pool *Pool) Current() *Node {
+	node := pool.current
+	return node
 }
 
 func (pool *Pool) Size() int {

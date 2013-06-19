@@ -43,15 +43,16 @@ var (
 	maxReadRetries = 3
 )
 
-func (c *Conn) Response() (response interface{}, err error) {
+func (node *Node) Response() (response interface{}, err error) {
 	currentRetries := 0
 	var rawresp []byte
-	rawresp, err = c.Read()
+
+	rawresp, err = node.Read()
 
 	if err != nil {
 		if neterr, ok := err.(net.Error); ok && neterr.Timeout() && currentRetries < maxReadRetries {
 			for currentRetries < maxReadRetries {
-				rawresp, err = c.Read()
+				rawresp, err = node.Read()
 				if err != nil {
 					currentRetries = currentRetries + 1
 				} else if currentRetries > maxWriteRetries {
@@ -65,13 +66,13 @@ func (c *Conn) Response() (response interface{}, err error) {
 
 	err = validateResponseHeader(rawresp)
 	if err != nil {
-		c.RecordError(1.0)
+		node.RecordError(1.0)
 		return nil, err
 	}
 
 	response, err = unmarshalResponse(rawresp)
 	if err != nil {
-		c.RecordError(1.0)
+		node.RecordError(1.0)
 		return nil, err
 	}
 

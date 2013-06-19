@@ -4,13 +4,13 @@ package riakpbc
 func (c *Conn) ListBuckets() (*RpbListBucketsResp, error) {
 	reqdata := []byte{}
 
-	c.SelectNode()
+	node := c.SelectNode()
 
-	if err := c.RawRequest(reqdata, "RpbListBucketsReq"); err != nil {
+	if err := node.RawRequest(reqdata, "RpbListBucketsReq"); err != nil {
 		return &RpbListBucketsResp{}, err
 	}
 
-	response, err := c.Response()
+	response, err := node.Response()
 	if err != nil {
 		return &RpbListBucketsResp{}, err
 	}
@@ -24,13 +24,13 @@ func (c *Conn) ListKeys(bucket string) ([][]byte, error) {
 		Bucket: []byte(bucket),
 	}
 
-	c.SelectNode()
+	node := c.SelectNode()
 
-	if err := c.Request(reqstruct, "RpbListKeysReq"); err != nil {
+	if err := node.Request(reqstruct, "RpbListKeysReq"); err != nil {
 		return nil, err
 	}
 
-	response, err := c.Response()
+	response, err := node.Response()
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func (c *Conn) ListKeys(bucket string) ([][]byte, error) {
 	keys := response.(*RpbListKeysResp).GetKeys()
 	done := response.(*RpbListKeysResp).GetDone()
 	for done != true {
-		response, err := c.Response()
+		response, err := node.Response()
 		if err != nil {
 			return nil, err
 		}
@@ -55,13 +55,13 @@ func (c *Conn) GetBucket(bucket string) (*RpbGetBucketResp, error) {
 		Bucket: []byte(bucket),
 	}
 
-	c.SelectNode()
+	node := c.SelectNode()
 
-	if err := c.Request(reqstruct, "RpbGetBucketReq"); err != nil {
+	if err := node.Request(reqstruct, "RpbGetBucketReq"); err != nil {
 		return &RpbGetBucketResp{}, err
 	}
 
-	response, err := c.Response()
+	response, err := node.Response()
 	if err != nil {
 		return &RpbGetBucketResp{}, err
 	}
@@ -82,13 +82,13 @@ func (c *Conn) SetBucket(bucket string, nval *uint32, allowmult *bool) ([]byte, 
 		reqstruct.Props.AllowMult = allowmult
 	}
 
-	c.SelectNode()
+	node := c.SelectNode()
 
-	if err := c.Request(reqstruct, "RpbSetBucketReq"); err != nil {
+	if err := node.Request(reqstruct, "RpbSetBucketReq"); err != nil {
 		return nil, err
 	}
 
-	response, err := c.Response()
+	response, err := node.Response()
 	if err != nil {
 		return nil, err
 	}

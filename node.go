@@ -1,11 +1,11 @@
 package riakpbc
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/binary"
 	"io"
 	"net"
+	"sync"
 	"time"
 )
 
@@ -16,6 +16,7 @@ type Node struct {
 	readTimeout  time.Duration
 	writeTimeout time.Duration
 	errorRate    *Decaying
+	sync.Mutex
 }
 
 // Returns a new Node.
@@ -52,9 +53,8 @@ func (node *Node) ErrorRate() float64 {
 	return node.errorRate.Value()
 }
 
-func (node *Node) TestConn() error {
-	_, err := bufio.NewReader(node.conn).Peek(1)
-	return err
+func (node *Node) RecordError(amount float64) {
+	node.errorRate.Add(amount)
 }
 
 // Close the connection
@@ -81,6 +81,7 @@ func (node *Node) Read() (respraw []byte, err error) {
 	var size int32
 	// First 4 bytes are always size of message.
 	n, err := io.ReadFull(node.conn, buf)
+
 	if err != nil {
 		return nil, err
 	}
@@ -98,6 +99,5 @@ func (node *Node) Read() (respraw []byte, err error) {
 			return data, nil // return message
 		}
 	}
-
 	return nil, nil
 }

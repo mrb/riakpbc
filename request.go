@@ -43,34 +43,35 @@ var (
 	maxWriteRetries = 3
 )
 
-func (c *Conn) Request(reqstruct interface{}, structname string) (err error) {
+func (node *Node) Request(reqstruct interface{}, structname string) (err error) {
 	marshaledRequest, err := proto.Marshal(reqstruct.(proto.Message))
+
 	if err != nil {
-		c.RecordError(1.0)
+		node.RecordError(1.0)
 		return err
 	}
 
-	err = c.RawRequest(marshaledRequest, structname)
+	err = node.RawRequest(marshaledRequest, structname)
 	if err != nil {
-		c.RecordError(1.0)
+		node.RecordError(1.0)
 		return err
 	}
 
 	return
 }
 
-func (c *Conn) RawRequest(marshaledRequest []byte, structname string) (err error) {
+func (node *Node) RawRequest(marshaledRequest []byte, structname string) (err error) {
 	formattedRequest, err := prependRequestHeader(structname, marshaledRequest)
 	if err != nil {
 		return err
 	}
 
 	currentRetries := 0
-	err = c.Write(formattedRequest)
+	err = node.Write(formattedRequest)
 	if err != nil {
 		if neterr, ok := err.(net.Error); ok && neterr.Timeout() && currentRetries < maxReadRetries {
 			for currentRetries < maxWriteRetries {
-				err = c.Write(formattedRequest)
+				err = node.Write(formattedRequest)
 				if err != nil {
 					currentRetries = currentRetries + 1
 				} else if currentRetries > maxWriteRetries {
