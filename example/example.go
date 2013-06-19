@@ -13,7 +13,7 @@ type Data struct {
 
 func main() {
 	runtime.GOMAXPROCS(4)
-	cluster := []string{"127.0.0.1:8087", "127.0.0.1:8088"}
+	cluster := []string{"127.0.0.1:8087", "127.0.0.1:8088", "127.0.0.1:8089", "127.0.0.1:8090"}
 	riak := riakpbc.New(cluster)
 
 	err := riak.Dial()
@@ -21,28 +21,31 @@ func main() {
 		log.Print(err)
 	}
 
-	actionBegin := time.Now()
 	var actionEnd time.Time
+	actionBegin := time.Now()
 
 	c := make(chan int)
 
-	for g := 0; g < 10; g++ {
+	for g := 0; g < 4; g++ {
 		go func(which int) {
 			log.Print(which)
 			var times int
 			for {
+				actionBegin := time.Now()
+
 				times = times + 1
 				riak.StoreObject("bucket", "data", "{'ok':'ok'}")
 				riak.SetClientId("coolio")
-				//riak.GetClientId()
-				//riak.FetchObject("bucket", "data")
-				//riak.StoreObject("bucket", "moreData", "stringData")
-				//riak.FetchObject("bucket", "moreData")
+				riak.GetClientId()
+				data, _ := riak.FetchObject("bucket", "data")
+				if string(data.GetContent()[0].GetValue()) != "{'ok':'ok'}" {
+					log.Fatal("FUCK")
+				}
+				riak.StoreObject("bucket", "moreData", "stringData")
+				riak.FetchObject("bucket", "moreData")
 
-				actionEnd = time.Now()
-				actionDuration := actionEnd.Sub(actionBegin)
-
-				log.Print("gr: ", which, " ", times, " Nodes: ", riak.Pool(), actionDuration)
+				actionDuration := time.Now().Sub(actionBegin)
+				log.Print("<", which, "> @", times, " ", riak.Pool(), " ", actionDuration)
 			}
 		}(g)
 	}

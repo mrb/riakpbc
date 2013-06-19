@@ -19,14 +19,9 @@ func (c *Conn) FetchObject(bucket, key string) (*RpbGetResp, error) {
 	reqstruct.Bucket = []byte(bucket)
 	reqstruct.Key = []byte(key)
 
-	node := c.SelectNode()
-	if err := node.Request(reqstruct, "RpbGetReq"); err != nil {
-		return &RpbGetResp{}, err
-	}
-
-	response, err := node.Response()
+	response, err := c.ReqResp(reqstruct, "RpbGetReq", false)
 	if err != nil {
-		return &RpbGetResp{}, err
+		return nil, err
 	}
 
 	return response.(*RpbGetResp), nil
@@ -79,15 +74,9 @@ func (c *Conn) StoreObject(bucket, key string, in interface{}) (*RpbPutResp, err
 		return nil, errors.New("Invalid content type passed.  Must be RpbContent, string, int, or []byte")
 	}
 
-	node := c.SelectNode()
-
-	if err := node.Request(reqstruct, "RpbPutReq"); err != nil {
-		return &RpbPutResp{}, err
-	}
-
-	response, err := node.Response()
+	response, err := c.ReqResp(reqstruct, "RpbPutReq", false)
 	if err != nil {
-		return &RpbPutResp{}, err
+		return nil, err
 	}
 
 	return response.(*RpbPutResp), nil
@@ -104,13 +93,7 @@ func (c *Conn) DeleteObject(bucket, key string) ([]byte, error) {
 	reqstruct.Bucket = []byte(bucket)
 	reqstruct.Key = []byte(key)
 
-	node := c.SelectNode()
-
-	if err := node.Request(reqstruct, "RpbDelReq"); err != nil {
-		return nil, err
-	}
-
-	response, err := node.Response()
+	response, err := c.ReqResp(reqstruct, "RpbDelReq", false)
 	if err != nil {
 		return nil, err
 	}
@@ -133,13 +116,7 @@ func (c *Conn) FetchStruct(bucket, key string, out interface{}) error {
 	reqstruct.Bucket = []byte(bucket)
 	reqstruct.Key = []byte(key)
 
-	node := c.SelectNode()
-
-	if err := node.Request(reqstruct, "RpbGetReq"); err != nil {
-		return err
-	}
-
-	response, err := node.Response()
+	response, err := c.ReqResp(reqstruct, "RpbGetReq", false)
 	if err != nil {
 		return err
 	}
@@ -206,15 +183,9 @@ func (c *Conn) StoreStruct(bucket, key string, in interface{}) (*RpbPutResp, err
 		return nil, errors.New("Invalid content type passed.  Must be struct, RpbContent, string, int, or []byte")
 	}
 
-	node := c.SelectNode()
-
-	if err := node.Request(reqstruct, "RpbPutReq"); err != nil {
-		return &RpbPutResp{}, err
-	}
-
-	response, err := node.Response()
+	response, err := c.ReqResp(reqstruct, "RpbPutReq", false)
 	if err != nil {
-		return &RpbPutResp{}, err
+		return nil, err
 	}
 
 	return response.(*RpbPutResp), nil

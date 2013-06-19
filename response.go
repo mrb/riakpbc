@@ -42,34 +42,6 @@ var (
 	maxReadRetries = 3
 )
 
-func (node *Node) Response() (response interface{}, err error) {
-	node.Lock()
-	rawresp, err := node.Read()
-
-	if err != nil {
-		node.RecordError(1.0)
-		node.Unlock()
-		return nil, err
-	}
-
-	err = validateResponseHeader(rawresp)
-	if err != nil {
-		node.RecordError(1.0)
-		node.Unlock()
-		return nil, err
-	}
-
-	response, err = unmarshalResponse(rawresp)
-	if err != nil || response == nil {
-		node.RecordError(1.0)
-		node.Unlock()
-		return nil, err
-	}
-	node.Unlock()
-
-	return response, nil
-}
-
 func validateResponseHeader(respraw []byte) (err error) {
 	if len(respraw) < 1 {
 		return ErrCorruptHeader

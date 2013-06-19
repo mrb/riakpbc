@@ -12,27 +12,24 @@ func (c *Conn) MapReduce(request, contentType string) ([]byte, error) {
 		ContentType: []byte(contentType),
 	}
 
-	node := c.SelectNode()
-
-	if err := node.Request(reqstruct, "RpbMapRedReq"); err != nil {
-		return nil, err
-	}
-
-	response, err := node.Response()
+	response, err := c.ReqResp(reqstruct, "RpbMapRedReq", false)
 	if err != nil {
 		return nil, err
 	}
 
 	mapResponse := response.(*RpbMapRedResp).GetResponse()
-	done := response.(*RpbMapRedResp).GetDone()
-	for done != true {
-		response, err := node.Response()
-		if err != nil {
-			return nil, err
+	// I broke this - @mrb
+	/*
+		done := response.(*RpbMapRedResp).GetDone()
+		for done != true {
+			response, err := node.Response()
+			if err != nil {
+				return nil, err
+			}
+			mapResponse = append(mapResponse, response.(*RpbMapRedResp).GetResponse()...)
+			done = response.(*RpbMapRedResp).GetDone()
 		}
-		mapResponse = append(mapResponse, response.(*RpbMapRedResp).GetResponse()...)
-		done = response.(*RpbMapRedResp).GetDone()
-	}
+	*/
 
 	return mapResponse, nil
 }
@@ -57,15 +54,9 @@ func (c *Conn) Index(bucket, index, key, start, end string) (*RpbIndexResp, erro
 		reqstruct.RangeMax = []byte(end)
 	}
 
-	node := c.SelectNode()
-
-	if err := node.Request(reqstruct, "RpbIndexReq"); err != nil {
-		return &RpbIndexResp{}, err
-	}
-
-	response, err := node.Response()
+	response, err := c.ReqResp(reqstruct, "RpbIndexReq", false)
 	if err != nil {
-		return &RpbIndexResp{}, err
+		return nil, err
 	}
 
 	return response.(*RpbIndexResp), nil
@@ -82,15 +73,9 @@ func (c *Conn) Search(index, q string) (*RpbSearchQueryResp, error) {
 	reqstruct.Q = []byte(q)
 	reqstruct.Index = []byte(index)
 
-	node := c.SelectNode()
-
-	if err := node.Request(reqstruct, "RpbSearchQueryReq"); err != nil {
-		return &RpbSearchQueryResp{}, err
-	}
-
-	response, err := node.Response()
-	if err != nil || response == nil {
-		return &RpbSearchQueryResp{}, err
+	response, err := c.ReqResp(reqstruct, "RpbSearchQueryReq", false)
+	if err != nil {
+		return nil, err
 	}
 
 	return response.(*RpbSearchQueryResp), nil

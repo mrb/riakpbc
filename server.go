@@ -4,16 +4,9 @@ package riakpbc
 func (c *Conn) GetServerInfo() (*RpbGetServerInfoResp, error) {
 	reqdata := []byte{}
 
-	node := c.SelectNode()
-
-	err := node.RawRequest(reqdata, "RpbGetServerInfoReq")
+	response, err := c.ReqResp(reqdata, "RpbGetServerInfoReq", true)
 	if err != nil {
-		return &RpbGetServerInfoResp{}, err
-	}
-
-	response, err := node.Response()
-	if err != nil {
-		return &RpbGetServerInfoResp{}, err
+		return nil, err
 	}
 
 	return response.(*RpbGetServerInfoResp), nil
@@ -23,13 +16,7 @@ func (c *Conn) GetServerInfo() (*RpbGetServerInfoResp, error) {
 func (c *Conn) Ping() ([]byte, error) {
 	reqdata := []byte{}
 
-	node := c.SelectNode()
-
-	if err := node.RawRequest(reqdata, "RpbPingReq"); err != nil {
-		return nil, err
-	}
-
-	response, err := node.Response()
+	response, err := c.ReqResp(reqdata, "RpbPingReq", true)
 	if err != nil {
 		return nil, err
 	}
@@ -41,15 +28,9 @@ func (c *Conn) Ping() ([]byte, error) {
 func (c *Conn) GetClientId() (*RpbGetClientIdResp, error) {
 	reqdata := []byte{}
 
-	node := c.SelectNode()
-
-	if err := node.RawRequest(reqdata, "RpbGetClientIdReq"); err != nil {
-		return &RpbGetClientIdResp{}, err
-	}
-
-	response, err := node.Response()
+	response, err := c.ReqResp(reqdata, "RpbGetClientIdReq", true)
 	if err != nil {
-		return &RpbGetClientIdResp{}, err
+		return nil, err
 	}
 
 	return response.(*RpbGetClientIdResp), nil
@@ -61,9 +42,7 @@ func (c *Conn) SetClientId(clientId string) ([]byte, error) {
 		ClientId: []byte(clientId),
 	}
 
-	node := c.SelectNode()
-
-	response, err := node.ReqResp(reqstruct, "RpbSetClientIdReq")
+	response, err := c.ReqResp(reqstruct, "RpbSetClientIdReq", false)
 	if err != nil {
 		return nil, err
 	}

@@ -2,7 +2,6 @@ package riakpbc
 
 import (
 	"bytes"
-	"code.google.com/p/goprotobuf/proto"
 	"encoding/binary"
 )
 
@@ -41,42 +40,6 @@ var commandToNum = map[string]byte{
 var (
 	maxWriteRetries = 3
 )
-
-func (node *Node) Request(reqstruct interface{}, structname string) (err error) {
-	marshaledRequest, err := proto.Marshal(reqstruct.(proto.Message))
-
-	if err != nil {
-		node.RecordError(1.0)
-		return err
-	}
-
-	err = node.RawRequest(marshaledRequest, structname)
-	if err != nil {
-		node.RecordError(1.0)
-		return err
-	}
-
-	return
-}
-
-func (node *Node) RawRequest(marshaledRequest []byte, structname string) (err error) {
-	node.Lock()
-	formattedRequest, err := prependRequestHeader(structname, marshaledRequest)
-	if err != nil {
-		node.RecordError(1.0)
-		node.Unlock()
-		return err
-	}
-
-	err = node.Write(formattedRequest)
-	if err != nil {
-		node.RecordError(1.0)
-		node.Unlock()
-		return err
-	}
-	node.Unlock()
-	return
-}
 
 func prependRequestHeader(commandName string, marshaledReqData []byte) (formattedData []byte, e error) {
 	msgbuf := []byte{}

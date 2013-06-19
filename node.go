@@ -2,6 +2,7 @@ package riakpbc
 
 import (
 	"bytes"
+	"code.google.com/p/goprotobuf/proto"
 	"encoding/binary"
 	"io"
 	"net"
@@ -109,6 +110,57 @@ func (node *Node) Read() (respraw []byte, err error) {
 	return nil, nil
 }
 
-func (node *Node) ReqResp(reqstruct interface{}, structname string) {
-	// stub
+func (node *Node) Response() (response interface{}, err error) {
+	rawresp, err := node.Read()
+
+	if err != nil {
+		node.RecordError(1.0)
+		return nil, err
+	}
+
+	err = validateResponseHeader(rawresp)
+	if err != nil {
+		node.RecordError(1.0)
+		return nil, err
+	}
+
+	response, err = unmarshalResponse(rawresp)
+	if err != nil || response == nil {
+		node.RecordError(1.0)
+		return nil, err
+	}
+
+	return response, nil
+}
+
+func (node *Node) Request(reqstruct interface{}, structname string) (err error) {
+	marshaledRequest, err := proto.Marshal(reqstruct.(proto.Message))
+
+	if err != nil {
+		node.RecordError(1.0)
+		return err
+	}
+
+	err = node.RawRequest(marshaledRequest, structname)
+	if err != nil {
+		node.RecordError(1.0)
+		return err
+	}
+
+	return
+}
+
+func (node *Node) RawRequest(marshaledRequest []byte, structname string) (err error) {
+	formattedRequest, err := prependRequestHeader(structname, marshaledRequest)
+	if err != nil {
+		node.RecordError(1.0)
+		return err
+	}
+
+	err = node.Write(formattedRequest)
+	if err != nil {
+		node.RecordError(1.0)
+		return err
+	}
+	return
 }

@@ -186,3 +186,26 @@ func newPool(cluster []string) *Pool {
 
 	return pool
 }
+
+func (conn *Conn) ReqResp(reqstruct interface{}, structname string, raw bool) (response interface{}, err error) {
+	node := conn.SelectNode()
+	node.Lock()
+	if raw == true {
+		err = node.RawRequest(reqstruct.([]byte), structname)
+	} else {
+		err = node.Request(reqstruct, structname)
+	}
+	if err != nil {
+		node.Unlock()
+		return nil, err
+	}
+
+	response, err = node.Response()
+	if err != nil {
+		node.Unlock()
+		return nil, err
+	}
+
+	node.Unlock()
+	return
+}
