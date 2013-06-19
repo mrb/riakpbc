@@ -10,12 +10,13 @@ import (
 )
 
 type Node struct {
-	addr         string
-	tcpAddr      *net.TCPAddr
-	conn         *net.TCPConn
-	readTimeout  time.Duration
-	writeTimeout time.Duration
-	errorRate    *Decaying
+	addr           string
+	tcpAddr        *net.TCPAddr
+	conn           *net.TCPConn
+	readTimeout    time.Duration
+	writeTimeout   time.Duration
+	errorRate      *Decaying
+	errorRateMutex *sync.Mutex
 	sync.Mutex
 }
 
@@ -27,11 +28,12 @@ func NewNode(addr string, readTimeout, writeTimeout time.Duration) (*Node, error
 	}
 
 	node := &Node{
-		addr:         addr,
-		tcpAddr:      tcpaddr,
-		readTimeout:  readTimeout,
-		writeTimeout: writeTimeout,
-		errorRate:    NewDecaying(),
+		addr:           addr,
+		tcpAddr:        tcpaddr,
+		readTimeout:    readTimeout,
+		writeTimeout:   writeTimeout,
+		errorRate:      NewDecaying(),
+		errorRateMutex: &sync.Mutex{},
 	}
 
 	return node, nil
@@ -50,11 +52,16 @@ func (node *Node) Dial() (err error) {
 }
 
 func (node *Node) ErrorRate() float64 {
-	return node.errorRate.Value()
+	node.errorRateMutex.Lock()
+	rate := node.errorRate.Value()
+	node.errorRateMutex.Unlock()
+	return rate
 }
 
 func (node *Node) RecordError(amount float64) {
+	node.errorRateMutex.Lock()
 	node.errorRate.Add(amount)
+	node.errorRateMutex.Unlock()
 }
 
 // Close the connection
@@ -100,4 +107,8 @@ func (node *Node) Read() (respraw []byte, err error) {
 		}
 	}
 	return nil, nil
+}
+
+func (node *Node) ReqResp(reqstruct interface{}, structname string) {
+	// stub
 }

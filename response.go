@@ -3,7 +3,6 @@ package riakpbc
 import (
 	"code.google.com/p/goprotobuf/proto"
 	"errors"
-	"net"
 	"strconv"
 )
 
@@ -44,37 +43,29 @@ var (
 )
 
 func (node *Node) Response() (response interface{}, err error) {
-	currentRetries := 0
-	var rawresp []byte
-
-	rawresp, err = node.Read()
+	node.Lock()
+	rawresp, err := node.Read()
 
 	if err != nil {
-		if neterr, ok := err.(net.Error); ok && neterr.Timeout() && currentRetries < maxReadRetries {
-			for currentRetries < maxReadRetries {
-				rawresp, err = node.Read()
-				if err != nil {
-					currentRetries = currentRetries + 1
-				} else if currentRetries > maxWriteRetries {
-					return nil, ErrReadTimeout
-				} else {
-					break // success
-				}
-			}
-		}
+		node.RecordError(1.0)
+		node.Unlock()
+		return nil, err
 	}
 
 	err = validateResponseHeader(rawresp)
 	if err != nil {
 		node.RecordError(1.0)
+		node.Unlock()
 		return nil, err
 	}
 
 	response, err = unmarshalResponse(rawresp)
-	if err != nil {
+	if err != nil || response == nil {
 		node.RecordError(1.0)
+		node.Unlock()
 		return nil, err
 	}
+	node.Unlock()
 
 	return response, nil
 }
@@ -216,7 +207,6 @@ func unmarshalResponse(respraw []byte) (respbuf interface{}, err error) {
 			return nil, err
 		}
 		return respstruct, nil
-
 	}
 
 	return nil, nil

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"code.google.com/p/goprotobuf/proto"
 	"encoding/binary"
-	"net"
 )
 
 var commandToNum = map[string]byte{
@@ -61,28 +60,22 @@ func (node *Node) Request(reqstruct interface{}, structname string) (err error) 
 }
 
 func (node *Node) RawRequest(marshaledRequest []byte, structname string) (err error) {
+	node.Lock()
 	formattedRequest, err := prependRequestHeader(structname, marshaledRequest)
 	if err != nil {
+		node.RecordError(1.0)
+		node.Unlock()
 		return err
 	}
 
-	currentRetries := 0
 	err = node.Write(formattedRequest)
 	if err != nil {
-		if neterr, ok := err.(net.Error); ok && neterr.Timeout() && currentRetries < maxReadRetries {
-			for currentRetries < maxWriteRetries {
-				err = node.Write(formattedRequest)
-				if err != nil {
-					currentRetries = currentRetries + 1
-				} else if currentRetries > maxWriteRetries {
-					return ErrWriteTimeout
-				} else {
-					break // success
-				}
-			}
-		}
+		node.RecordError(1.0)
+		node.Unlock()
+		return err
 	}
-	return nil
+	node.Unlock()
+	return
 }
 
 func prependRequestHeader(commandName string, marshaledReqData []byte) (formattedData []byte, e error) {

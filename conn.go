@@ -72,7 +72,10 @@ func (c *Conn) Close() {
 }
 
 func (c *Conn) SelectNode() *Node {
-	return c.pool.SelectNode()
+	c.pool.Lock()
+	node := c.pool.SelectNode()
+	c.pool.Unlock()
+	return node
 }
 
 func (c *Conn) Pool() *Pool {
@@ -154,7 +157,7 @@ func (pool *Pool) Stats() {
 func (pool *Pool) String() string {
 	var outString string
 	for _, node := range pool.nodes {
-		nodeString := fmt.Sprintf(" [%s %f] ", node.addr, node.errorRate.Value())
+		nodeString := fmt.Sprintf(" [%s %f] ", node.addr, node.ErrorRate())
 		outString += nodeString
 	}
 	return outString

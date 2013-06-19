@@ -63,11 +63,7 @@ func (c *Conn) SetClientId(clientId string) ([]byte, error) {
 
 	node := c.SelectNode()
 
-	if err := node.Request(reqstruct, "RpbSetClientIdReq"); err != nil {
-		return nil, err
-	}
-
-	response, err := node.Response()
+	response, err := node.ReqResp(reqstruct, "RpbSetClientIdReq")
 	if err != nil {
 		return nil, err
 	}

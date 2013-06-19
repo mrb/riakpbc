@@ -26,24 +26,23 @@ func main() {
 
 	c := make(chan int)
 
-	for g := 0; g < 2; g++ {
+	for g := 0; g < 10; g++ {
 		go func(which int) {
 			log.Print(which)
 			var times int
 			for {
 				times = times + 1
 				riak.StoreObject("bucket", "data", "{'ok':'ok'}")
-				//riak.SetClientId("coolio")
+				riak.SetClientId("coolio")
 				//riak.GetClientId()
-				riak.FetchObject("bucket", "data")
+				//riak.FetchObject("bucket", "data")
 				//riak.StoreObject("bucket", "moreData", "stringData")
-				riak.FetchObject("bucket", "moreData")
+				//riak.FetchObject("bucket", "moreData")
 
 				actionEnd = time.Now()
 				actionDuration := actionEnd.Sub(actionBegin)
 
 				log.Print("gr: ", which, " ", times, " Nodes: ", riak.Pool(), actionDuration)
-				time.Sleep(20 * time.Millisecond)
 			}
 		}(g)
 	}
