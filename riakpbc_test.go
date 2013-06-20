@@ -18,8 +18,8 @@ type RiakData struct {
 	Data    []byte `json:"data" riak:"index"`
 }
 
-func ExampleConn() {
-	riak := New([]string{"127.0.0.1:8087", "127.0.0.0:918237198273"})
+func ExampleClient() {
+	riak := NewClient([]string{"127.0.0.1:8087", "127.0.0.0:918237198273"})
 
 	Coder := NewCoder("json", JsonMarshaller, JsonUnmarshaller)
 	riak.SetCoder(Coder)
@@ -60,47 +60,47 @@ func ExampleConn() {
 	riak.Close()
 }
 
-func setupConnection(t *testing.T) (conn *Conn) {
-	conn = New([]string{"127.0.0.1:8087",
+func setupConnection(t *testing.T) (client *Client) {
+	client = NewClient([]string{"127.0.0.1:8087",
 		"127.0.0.1:8088",
 		"127.0.0.1:8087",
 		"127.0.0.1:8088"})
 	var err error
-	if err = conn.Dial(); err != nil {
+	if err = client.Dial(); err != nil {
 		t.Error(err.Error())
 	}
 	assert.T(t, err == nil)
 
 	Coder := NewCoder("json", JsonMarshaller, JsonUnmarshaller)
-	conn.SetCoder(Coder)
+	client.SetCoder(Coder)
 
-	return conn
+	return client
 }
 
-func setupSingleNodeConnection(t *testing.T) (conn *Conn) {
-	conn = New([]string{"127.0.0.1:8087"})
+func setupSingleNodeConnection(t *testing.T) (client *Client) {
+	client = NewClient([]string{"127.0.0.1:8087"})
 	var err error
-	if err = conn.Dial(); err != nil {
+	if err = client.Dial(); err != nil {
 		t.Error(err.Error())
 	}
 	assert.T(t, err == nil)
 
 	Coder := NewCoder("json", JsonMarshaller, JsonUnmarshaller)
-	conn.SetCoder(Coder)
+	client.SetCoder(Coder)
 
-	return conn
+	return client
 }
 
-func setupData(t *testing.T, conn *Conn) {
-	ok, err := conn.StoreObject("riakpbctestbucket", "testkey", "{\"data\":\"is awesome!\"}")
+func setupData(t *testing.T, client *Client) {
+	ok, err := client.StoreObject("riakpbctestbucket", "testkey", "{\"data\":\"is awesome!\"}")
 	if err != nil {
 		t.Error(err.Error())
 	}
 	assert.T(t, len(ok.GetKey()) == 0)
 }
 
-func teardownData(t *testing.T, conn *Conn) {
-	ok, err := conn.DeleteObject("riakpbctestbucket", "testkey")
+func teardownData(t *testing.T, client *Client) {
+	ok, err := client.DeleteObject("riakpbctestbucket", "testkey")
 	if err != nil {
 		t.Error(err.Error())
 	}

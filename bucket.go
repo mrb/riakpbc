@@ -1,7 +1,7 @@
 package riakpbc
 
 // List all buckets
-func (c *Conn) ListBuckets() (*RpbListBucketsResp, error) {
+func (c *Client) ListBuckets() (*RpbListBucketsResp, error) {
 	reqdata := []byte{}
 
 	response, err := c.ReqResp(reqdata, "RpbListBucketsReq", true)
@@ -13,7 +13,7 @@ func (c *Conn) ListBuckets() (*RpbListBucketsResp, error) {
 }
 
 // List all keys from bucket
-func (c *Conn) ListKeys(bucket string) ([][]byte, error) {
+func (c *Client) ListKeys(bucket string) ([][]byte, error) {
 	reqstruct := &RpbListKeysReq{
 		Bucket: []byte(bucket),
 	}
@@ -42,7 +42,7 @@ func (c *Conn) ListKeys(bucket string) ([][]byte, error) {
 }
 
 // Get bucket info
-func (c *Conn) GetBucket(bucket string) (*RpbGetBucketResp, error) {
+func (c *Client) GetBucket(bucket string) (*RpbGetBucketResp, error) {
 	reqstruct := &RpbGetBucketReq{
 		Bucket: []byte(bucket),
 	}
@@ -56,7 +56,7 @@ func (c *Conn) GetBucket(bucket string) (*RpbGetBucketResp, error) {
 }
 
 // Create bucket
-func (c *Conn) SetBucket(bucket string, nval *uint32, allowmult *bool) ([]byte, error) {
+func (c *Client) SetBucket(bucket string, nval *uint32, allowmult *bool) ([]byte, error) {
 	reqstruct := &RpbSetBucketReq{}
 	if opts := c.Opts(); opts != nil {
 		reqstruct = opts.(*RpbSetBucketReq)

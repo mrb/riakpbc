@@ -14,7 +14,7 @@ type Data struct {
 func main() {
 	runtime.GOMAXPROCS(4)
 	cluster := []string{"127.0.0.1:8087", "127.0.0.1:8088", "127.0.0.1:8089", "127.0.0.1:8090"}
-	riak := riakpbc.New(cluster)
+	riak := riakpbc.NewClient(cluster)
 
 	err := riak.Dial()
 	if err != nil {

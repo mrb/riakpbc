@@ -4,85 +4,8 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
-	"sync"
 	"time"
 )
-
-type Conn struct {
-	cluster []string
-	pool    *Pool
-	opts    interface{} // potential Rpb...Req opts
-	Coder   *Coder      // Coder for (un)marshalling data
-	optsMu  *sync.Mutex
-}
-
-type Pool struct {
-	nodes   map[string]*Node // index the node with its address string
-	current *Node
-	sync.Mutex
-}
-
-func New(cluster []string) *Conn {
-	return &Conn{
-		cluster: cluster,
-		pool:    newPool(cluster),
-		optsMu:  &sync.Mutex{},
-	}
-}
-
-func (c *Conn) Dial() error {
-	for k, node := range c.pool.nodes {
-		err := node.Dial()
-		if err != nil {
-			log.Print("[POOL] Error: ", err)
-			c.pool.DeleteNode(k)
-		}
-	}
-
-	log.Print("[POOL] Riak Dialed. Connected to ", c.pool.Size(), " Riak nodes.")
-
-	if c.pool.Size() < 1 {
-		return ErrZeroNodes
-	}
-
-	return nil
-}
-
-// Opts returns the set options, and resets them internally to nil.
-func (c *Conn) Opts() interface{} {
-	c.optsMu.Lock()
-	opts := c.opts
-	c.opts = nil
-	c.optsMu.Unlock()
-	return opts
-}
-
-func (c *Conn) Current() *Node {
-	return c.pool.Current()
-}
-
-// SetOpts allows Rpb...Req options to be set.
-func (c *Conn) SetOpts(opts interface{}) {
-	c.opts = opts
-}
-
-// SetCoder sets the default Coder for structs.
-func (c *Conn) SetCoder(Coder *Coder) {
-	c.Coder = Coder
-}
-
-func (c *Conn) Close() {
-	c.pool.Close()
-}
-
-func (c *Conn) SelectNode() *Node {
-	node := c.pool.SelectNode()
-	return node
-}
-
-func (c *Conn) Pool() *Pool {
-	return c.pool
-}
 
 func (pool *Pool) SelectNode() *Node {
 	pool.Lock()
@@ -191,30 +114,4 @@ func newPool(cluster []string) *Pool {
 	log.Print("[POOL] New connection Pool established. Attempting connection to ", len(pool.nodes), " Riak nodes.")
 
 	return pool
-}
-
-func (conn *Conn) ReqResp(reqstruct interface{}, structname string, raw bool) (response interface{}, err error) {
-	return conn.SelectNode().ReqResp(reqstruct, structname, raw)
-}
-
-func (node *Node) ReqResp(reqstruct interface{}, structname string, raw bool) (response interface{}, err error) {
-	node.Lock()
-	if raw == true {
-		err = node.RawRequest(reqstruct.([]byte), structname)
-	} else {
-		err = node.Request(reqstruct, structname)
-	}
-	if err != nil {
-		node.Unlock()
-		return nil, err
-	}
-
-	response, err = node.Response()
-	if err != nil {
-		node.Unlock()
-		return nil, err
-	}
-
-	node.Unlock()
-	return
 }
