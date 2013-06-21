@@ -51,6 +51,7 @@ func (pool *Pool) SelectNode() *Node {
 				go func(iNode *Node) {
 					nodeGood := iNode.Ping()
 					if nodeGood == false {
+            iNode.RecordError(100.0)
 						iNode.Lock()
 						iNode.Close()
 						iNode.Dial()
