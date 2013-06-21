@@ -6,35 +6,35 @@ import (
 
 func BenchmarkReadSync(b *testing.B) {
 	b.StopTimer()
-	conn := New([]string{"127.0.0.1:8087", "127.0.0.1:8088"})
-	conn.Dial()
-	conn.StoreObject("bucket", "key", &Data{Data: "rules"})
+	client := NewClient([]string{"127.0.0.1:8087", "127.0.0.1:8088"})
+	client.Dial()
+	client.StoreObject("bucket", "key", &Data{Data: "rules"})
 
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
-		_, _ = conn.FetchObject("bucket", "key")
+		_, _ = client.FetchObject("bucket", "key")
 	}
 }
 
 func BenchmarkReadAsync(b *testing.B) {
 	b.StopTimer()
-	conn := New([]string{"127.0.0.1:8087", "127.0.0.1:8088"})
-	conn.Dial()
-	conn.StoreObject("bucket", "key", &Data{Data: "rules"})
+	client := NewClient([]string{"127.0.0.1:8087", "127.0.0.1:8088"})
+	client.Dial()
+	client.StoreObject("bucket", "key", &Data{Data: "rules"})
 
 	ch := make(chan bool, b.N)
 
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
-		go func(c *Conn) {
+		go func(c *Client) {
 			_, _ = c.FetchObject("bucket", "key")
 			select {
 			case ch <- true:
 			default:
 			}
-		}(conn)
+		}(client)
 	}
 
 	for i := 0; i < b.N; i++ {
@@ -44,31 +44,31 @@ func BenchmarkReadAsync(b *testing.B) {
 
 func BenchmarkStoreStruct(b *testing.B) {
 	b.StopTimer()
-	conn := New([]string{"127.0.0.1:8087", "127.0.0.1:8088"})
-	conn.Dial()
-	conn.StoreObject("bucket", "key", &Data{Data: "rules"})
+	client := NewClient([]string{"127.0.0.1:8087", "127.0.0.1:8088"})
+	client.Dial()
+	client.StoreObject("bucket", "key", &Data{Data: "rules"})
 
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
-		_, _ = conn.FetchObject("bucket", "key")
+		_, _ = client.FetchObject("bucket", "key")
 	}
 }
 
 func BenchmarkStoreRpbContent(b *testing.B) {
 	b.StopTimer()
-	conn := New([]string{"127.0.0.1:8087", "127.0.0.1:8088"})
-	conn.Dial()
+	client := NewClient([]string{"127.0.0.1:8087", "127.0.0.1:8088"})
+	client.Dial()
 
 	data := &RpbContent{
 		Value:       []byte("{\"data\":\"rules\"}"),
 		ContentType: []byte("application/json"),
 	}
-	conn.StoreObject("bucket", "key", data)
+	client.StoreObject("bucket", "key", data)
 
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
-		_, _ = conn.FetchObject("bucket", "key")
+		_, _ = client.FetchObject("bucket", "key")
 	}
 }

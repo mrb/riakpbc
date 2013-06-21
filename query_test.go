@@ -10,8 +10,8 @@ type Farm struct {
 	Animal string `json:"animal" riak:"index"`
 }
 
-func setupIndexing(t *testing.T, conn *Conn) {
-	_, err := exec.Command("curl", "-i", "-XPUT", "http://127.0.0.1:8098/riak/farm", "-H", "Content-Type: application/json", "-d", "{\"props\":{\"search\":true}}").Output()
+func setupIndexing(t *testing.T, client *Client) {
+	_, err := exec.Command("curl", "-i", "-XPUT", "http://127.0.0.1:10018/riak/farm", "-H", "Content-Type: application/json", "-d", "{\"props\":{\"search\":true}}").Output()
 	if err != nil {
 		t.Error(err.Error())
 	}

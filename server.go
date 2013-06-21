@@ -1,30 +1,22 @@
 package riakpbc
 
 // Get server info
-func (c *Conn) GetServerInfo() (*RpbGetServerInfoResp, error) {
+func (c *Client) GetServerInfo() (*RpbGetServerInfoResp, error) {
 	reqdata := []byte{}
 
-	if err := c.RawRequest(reqdata, "RpbGetServerInfoReq"); err != nil {
-		return &RpbGetServerInfoResp{}, err
-	}
-
-	response, err := c.Response()
+	response, err := c.ReqResp(reqdata, "RpbGetServerInfoReq", true)
 	if err != nil {
-		return &RpbGetServerInfoResp{}, err
+		return nil, err
 	}
 
 	return response.(*RpbGetServerInfoResp), nil
 }
 
 // Ping the server
-func (c *Conn) Ping() ([]byte, error) {
+func (c *Client) Ping() ([]byte, error) {
 	reqdata := []byte{}
 
-	if err := c.RawRequest(reqdata, "RpbPingReq"); err != nil {
-		return nil, err
-	}
-
-	response, err := c.Response()
+	response, err := c.ReqResp(reqdata, "RpbPingReq", true)
 	if err != nil {
 		return nil, err
 	}
@@ -33,32 +25,24 @@ func (c *Conn) Ping() ([]byte, error) {
 }
 
 // Get client ID
-func (c *Conn) GetClientId() (*RpbGetClientIdResp, error) {
+func (c *Client) GetClientId() (*RpbGetClientIdResp, error) {
 	reqdata := []byte{}
 
-	if err := c.RawRequest(reqdata, "RpbGetClientIdReq"); err != nil {
-		return &RpbGetClientIdResp{}, err
-	}
-
-	response, err := c.Response()
+	response, err := c.ReqResp(reqdata, "RpbGetClientIdReq", true)
 	if err != nil {
-		return &RpbGetClientIdResp{}, err
+		return nil, err
 	}
 
 	return response.(*RpbGetClientIdResp), nil
 }
 
 // Set client ID
-func (c *Conn) SetClientId(clientId string) ([]byte, error) {
+func (c *Client) SetClientId(clientId string) ([]byte, error) {
 	reqstruct := &RpbSetClientIdReq{
 		ClientId: []byte(clientId),
 	}
 
-	if err := c.Request(reqstruct, "RpbSetClientIdReq"); err != nil {
-		return nil, err
-	}
-
-	response, err := c.Response()
+	response, err := c.ReqResp(reqstruct, "RpbSetClientIdReq", false)
 	if err != nil {
 		return nil, err
 	}

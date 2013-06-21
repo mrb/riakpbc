@@ -42,38 +42,6 @@ var (
 	maxReadRetries = 3
 )
 
-func (c *Conn) Response() (response interface{}, err error) {
-	currentRetries := 0
-	var rawresp []byte
-	rawresp, err = c.Read()
-	if err != nil {
-		if err == ErrReadTimeout && currentRetries < maxReadRetries {
-			for currentRetries < maxReadRetries {
-				rawresp, err = c.Read()
-				if err != nil {
-					currentRetries = currentRetries + 1
-				} else if currentRetries > maxWriteRetries {
-					return nil, ErrReadTimeout
-				} else {
-					break // success
-				}
-			}
-		}
-	}
-
-	err = validateResponseHeader(rawresp)
-	if err != nil {
-		return nil, err
-	}
-
-	response, err = unmarshalResponse(rawresp)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
-}
-
 func validateResponseHeader(respraw []byte) (err error) {
 	if len(respraw) < 1 {
 		return ErrCorruptHeader
@@ -211,7 +179,6 @@ func unmarshalResponse(respraw []byte) (respbuf interface{}, err error) {
 			return nil, err
 		}
 		return respstruct, nil
-
 	}
 
 	return nil, nil
