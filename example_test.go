@@ -44,6 +44,8 @@ func ExampleClient() {
 		log.Println(err.Error())
 	}
 	fmt.Println(out.Field1)
+	// Output
+	// ExampleData1
 
 	// Store raw data (int, string, []byte)
 	if _, err := riak.StoreObject("bucket", "other", "direct data"); err != nil {
@@ -57,7 +59,7 @@ func ExampleClient() {
 	}
 	fmt.Println(string(obj.GetContent()[0].GetValue()))
 	// Output:
-	// {"data":"rules"}
+	// direct data
 
 	// Close the connections if completely finished
 	riak.Close()

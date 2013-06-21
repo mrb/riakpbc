@@ -59,8 +59,6 @@ As of June 21, 2013 the API is deemed relatively stable.  The library should be 
     	log.Println(err.Error())
     }
     fmt.Println(string(obj.GetContent()[0].GetValue()))
-    // Output:
-    // {"data":"rules"}
     
     // Close the connections if completely finished
     riak.Close()
