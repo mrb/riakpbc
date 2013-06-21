@@ -13,7 +13,7 @@ As of June 21, 2013 the API is deemed relatively stable.  The library should be 
     	Field1 string `riak:"index" json:"field1"`
     	Field2 int    `json:"field2"`
     }
-
+    
     // Initialize riakpbc against a 3 node cluster
     riak := NewClient([]string{"127.0.0.1:8087", "127.0.0.0:9089", "127.0.0.0:9090"})
     
@@ -26,42 +26,42 @@ As of June 21, 2013 the API is deemed relatively stable.  The library should be 
     if err := riak.Dial(); err != nil {
     	log.Print(err.Error())
     }
-
+    
     // Set Client ID
-    _, err = riak.SetClientId("coolio")
-    if err != nil {
+    if _, err := riak.SetClientId("coolio"); err != nil {
     	log.Println(err.Error())
     }
-
+    
     // Store Struct (uses coder)
-    data := Data{
-    	Field1: "data1",
-    	Field2: "data2",
+    data := ExampleData{
+    	Field1: "ExampleData1",
+    	Field2: 1,
     }
-    _, err := riak.StoreStruct("bucket", "data", &data)
-    if err != nil {
+    if _, err := riak.StoreStruct("bucket", "data", &data); err != nil {
     	log.Println(err.Error())
     }
-
+    
     // Fetch Struct (uses coder)
-    out := &Data{}
-    if err := riak.FetchObject("bucket", "other", &out); err != nil {
+    out := &ExampleData{}
+    if err := riak.FetchStruct("bucket", "other", &out); err != nil {
     	log.Println(err.Error())
     }
     fmt.Println(out.Field1)
-
+    
     // Store raw data (int, string, []byte)
-    if err := riak.StoreObject("bucket", "other", "direct data"); err != nil {
+    if _, err := riak.StoreObject("bucket", "other", "direct data"); err != nil {
     	log.Println(err.Error())
     }
-
+    
     // Fetch raw data (int, string, []byte)
     obj, err := riak.FetchObject("bucket", "other")
     if err != nil {
     	log.Println(err.Error())
     }
     fmt.Println(string(obj.GetContent()[0].GetValue()))
-
+    // Output:
+    // {"data":"rules"}
+    
     // Close the connections if completely finished
     riak.Close()
 
