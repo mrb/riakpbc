@@ -9,12 +9,12 @@ As of June 21, 2013 the API is deemed relatively stable.  The library should be 
 
 ### Basic Usage
 
-	  type Data struct {
+    type Data struct {
     	Field1 string `riak:"index" json:"field1"`
     	Field2 int    `json:"field2"`
     }
 
-		// Initialize riakpbc against a 3 node cluster
+    // Initialize riakpbc against a 3 node cluster
     riak := NewClient([]string{"127.0.0.1:8087", "127.0.0.0:9089", "127.0.0.0:9090"})
     
     // Add optional coder for storing JSON data to/from structs
@@ -56,7 +56,7 @@ As of June 21, 2013 the API is deemed relatively stable.  The library should be 
     }
 
     // Fetch raw data (int, string, []byte)
-    obj, err := riak.FetchObject("bucket", "data")
+    obj, err := riak.FetchObject("bucket", "other")
     if err != nil {
     	log.Println(err.Error())
     }
