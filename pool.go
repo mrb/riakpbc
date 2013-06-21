@@ -2,11 +2,40 @@ package riakpbc
 
 import (
 	"fmt"
-	"log"
 	"math/rand"
+	"sync"
 	"time"
 )
 
+type Pool struct {
+	nodes   map[string]*Node // index the node with its address string
+	current *Node
+	sync.Mutex
+}
+
+// NewPool returns an instantiated pool given a slice of node addresses.
+func NewPool(cluster []string) *Pool {
+	rand.Seed(time.Now().UTC().UnixNano())
+	nodeMap := make(map[string]*Node, len(cluster))
+
+	for _, node := range cluster {
+		newNode, err := NewNode(node, 10e8, 10e8)
+		if err == nil {
+			nodeMap[node] = newNode
+		}
+	}
+
+	pool := &Pool{
+		nodes: nodeMap,
+	}
+
+	return pool
+}
+
+// SelectNode returns a node from the pool using weighted error selection.
+//
+// Each node has an assignable error rate, which is incremented when an error
+// occurs, and decays over time - 50% each 10 seconds by default.
 func (pool *Pool) SelectNode() *Node {
 	pool.Lock()
 	errorThreshold := 0.1
@@ -17,6 +46,20 @@ func (pool *Pool) SelectNode() *Node {
 
 		if nodeErrorValue < errorThreshold {
 			possibleNodes = append(possibleNodes, node)
+		} else {
+			if node.ok == false && node.ErrorRate() < 100.0 {
+				go func(iNode *Node) {
+					nodeGood := iNode.Ping()
+					if nodeGood == false {
+						iNode.Lock()
+						iNode.Close()
+						iNode.Dial()
+						iNode.Unlock()
+					} else {
+						iNode.ok = true
+					}
+				}(node)
+			}
 		}
 	}
 
@@ -29,16 +72,7 @@ func (pool *Pool) SelectNode() *Node {
 		chosenNode = pool.RandomNode()
 	}
 
-	resp, err := chosenNode.ReqResp([]byte{}, "RpbPingReq", true)
-	if resp == nil || string(resp.([]byte)) != "Pong" || err != nil {
-		chosenNode.RecordError(1.0)
-		chosenNode.Dial()
-		//pool.DeleteNode(chosenNode.addr)
-		chosenNode = pool.RandomNode()
-	}
-
 	pool.current = chosenNode
-
 	pool.Unlock()
 
 	return chosenNode
@@ -81,37 +115,11 @@ func (pool *Pool) Size() int {
 	return len(pool.nodes)
 }
 
-func (pool *Pool) Stats() {
-	log.Print(pool.nodes)
-}
-
 func (pool *Pool) String() string {
 	var outString string
 	for _, node := range pool.nodes {
-		nodeString := fmt.Sprintf(" [%s %f] ", node.addr, node.ErrorRate())
+		nodeString := fmt.Sprintf(" [%s %f <%t>] ", node.addr, node.ErrorRate(), node.ok)
 		outString += nodeString
 	}
 	return outString
-}
-
-func newPool(cluster []string) *Pool {
-	rand.Seed(time.Now().UTC().UnixNano())
-	nodeMap := make(map[string]*Node, len(cluster))
-
-	for _, node := range cluster {
-		newNode, err := NewNode(node, 10e8, 10e8)
-		if err == nil {
-			nodeMap[node] = newNode
-		} else {
-			log.Print("[POOL] Node rejected from pool. Error: ", err, " Node: ", node)
-		}
-	}
-
-	pool := &Pool{
-		nodes: nodeMap,
-	}
-
-	log.Print("[POOL] New connection Pool established. Attempting connection to ", len(pool.nodes), " Riak nodes.")
-
-	return pool
 }

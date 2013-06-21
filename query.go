@@ -12,26 +12,12 @@ func (c *Client) MapReduce(request, contentType string) ([]byte, error) {
 		ContentType: []byte(contentType),
 	}
 
-	response, err := c.ReqResp(reqstruct, "RpbMapRedReq", false)
+	response, err := c.ReqMultiResp(reqstruct, "RpbMapRedReq")
 	if err != nil {
 		return nil, err
 	}
 
-	mapResponse := response.(*RpbMapRedResp).GetResponse()
-	// I broke this - @mrb
-	/*
-		done := response.(*RpbMapRedResp).GetDone()
-		for done != true {
-			response, err := node.Response()
-			if err != nil {
-				return nil, err
-			}
-			mapResponse = append(mapResponse, response.(*RpbMapRedResp).GetResponse()...)
-			done = response.(*RpbMapRedResp).GetDone()
-		}
-	*/
-
-	return mapResponse, nil
+	return response.([]byte), nil
 }
 
 // Index requests a set of keys that match a secondary index query.

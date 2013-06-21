@@ -18,25 +18,12 @@ func (c *Client) ListKeys(bucket string) ([][]byte, error) {
 		Bucket: []byte(bucket),
 	}
 
-	response, err := c.ReqResp(reqstruct, "RpbListKeysReq", false)
+	response, err := c.ReqMultiResp(reqstruct, "RpbListKeysReq")
 	if err != nil {
 		return nil, err
 	}
 
-	keys := response.(*RpbListKeysResp).GetKeys()
-
-	// i broke this - @mrb
-	/*
-		  done := response.(*RpbListKeysResp).GetDone()
-			for done != true {
-				response, err := node.Response()
-				if err != nil {
-					return nil, err
-				}
-				keys = append(keys, response.(*RpbListKeysResp).GetKeys()...)
-				done = response.(*RpbListKeysResp).GetDone()
-			}
-	*/
+	keys := response.([][]byte)
 
 	return keys, nil
 }

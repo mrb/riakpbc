@@ -11,7 +11,7 @@ type Farm struct {
 }
 
 func setupIndexing(t *testing.T, client *Client) {
-	_, err := exec.Command("curl", "-i", "-XPUT", "http://127.0.0.1:8098/riak/farm", "-H", "Content-Type: application/json", "-d", "{\"props\":{\"search\":true}}").Output()
+	_, err := exec.Command("curl", "-i", "-XPUT", "http://127.0.0.1:10018/riak/farm", "-H", "Content-Type: application/json", "-d", "{\"props\":{\"search\":true}}").Output()
 	if err != nil {
 		t.Error(err.Error())
 	}

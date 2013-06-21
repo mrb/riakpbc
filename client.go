@@ -8,23 +8,19 @@ import (
 type Client struct {
 	cluster []string
 	pool    *Pool
-	opts    interface{} // potential Rpb...Req opts
-	Coder   *Coder      // Coder for (un)marshalling data
+	Coder   *Coder // Coder for (un)marshalling data
 	optsMu  *sync.Mutex
-}
-
-type Pool struct {
-	nodes   map[string]*Node // index the node with its address string
-	current *Node
-	sync.Mutex
+	opts    interface{} // potential Rpb...Req opts
+	logging bool
 }
 
 // NewClient accepts a slice of node address strings and returns a Client object.
 func NewClient(cluster []string) *Client {
 	return &Client{
 		cluster: cluster,
-		pool:    newPool(cluster),
+		pool:    NewPool(cluster),
 		optsMu:  &sync.Mutex{},
+		logging: false,
 	}
 }
 
@@ -35,12 +31,16 @@ func (c *Client) Dial() error {
 	for k, node := range c.pool.nodes {
 		err := node.Dial()
 		if err != nil {
-			log.Print("[POOL] Error: ", err)
+			if c.LoggingEnabled() {
+				log.Print("[POOL] Error: ", err)
+			}
 			c.pool.DeleteNode(k)
 		}
 	}
 
-	log.Print("[POOL] Riak Dialed. Connected to ", c.pool.Size(), " Riak nodes.")
+	if c.LoggingEnabled() {
+		log.Print("[POOL] Riak Dialed. Connected to ", c.pool.Size(), " Riak nodes.")
+	}
 
 	if c.pool.Size() < 1 {
 		return ErrZeroNodes
@@ -89,6 +89,26 @@ func (c *Client) Pool() *Pool {
 	return c.pool
 }
 
+// ReqResp is the top level interface for the client for a bulk of Riak operations
 func (c *Client) ReqResp(reqstruct interface{}, structname string, raw bool) (response interface{}, err error) {
 	return c.SelectNode().ReqResp(reqstruct, structname, raw)
+}
+
+// ReqMultiResp is the top level interface for the client for the few
+// operations which have to hit the server multiple times to guarantee
+// a complete response: List keys, Map Reduce, etc.
+func (c *Client) ReqMultiResp(reqstruct interface{}, structname string) (response interface{}, err error) {
+	return c.SelectNode().ReqMultiResp(reqstruct, structname)
+}
+
+func (c *Client) EnableLogging() {
+	c.logging = true
+}
+
+func (c *Client) DisableLogging() {
+	c.logging = false
+}
+
+func (c *Client) LoggingEnabled() bool {
+	return c.logging
 }

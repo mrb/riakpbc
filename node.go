@@ -11,13 +11,13 @@ import (
 )
 
 type Node struct {
-	addr           string
-	tcpAddr        *net.TCPAddr
-	conn           *net.TCPConn
-	readTimeout    time.Duration
-	writeTimeout   time.Duration
-	errorRate      *Decaying
-	errorRateMutex *sync.Mutex
+	addr         string
+	tcpAddr      *net.TCPAddr
+	conn         *net.TCPConn
+	readTimeout  time.Duration
+	writeTimeout time.Duration
+	errorRate    *Decaying
+	ok           bool
 	sync.Mutex
 }
 
@@ -29,18 +29,18 @@ func NewNode(addr string, readTimeout, writeTimeout time.Duration) (*Node, error
 	}
 
 	node := &Node{
-		addr:           addr,
-		tcpAddr:        tcpaddr,
-		readTimeout:    readTimeout,
-		writeTimeout:   writeTimeout,
-		errorRate:      NewDecaying(),
-		errorRateMutex: &sync.Mutex{},
+		addr:         addr,
+		tcpAddr:      tcpaddr,
+		readTimeout:  readTimeout,
+		writeTimeout: writeTimeout,
+		errorRate:    NewDecaying(),
+		ok:           true,
 	}
 
 	return node, nil
 }
 
-// Dial connects to a single riak node.
+// Dialaconnects to a single riak node.
 func (node *Node) Dial() (err error) {
 	node.conn, err = net.DialTCP("tcp", nil, node.tcpAddr)
 	if err != nil {
@@ -52,26 +52,89 @@ func (node *Node) Dial() (err error) {
 	return nil
 }
 
+// ErrorRate safely returns the current Node's error rate
 func (node *Node) ErrorRate() float64 {
-	node.errorRateMutex.Lock()
-	rate := node.errorRate.Value()
-	node.errorRateMutex.Unlock()
-	return rate
+	return node.errorRate.Value()
 }
 
+// RecordErrror increments the current error value - see decaying.go
 func (node *Node) RecordError(amount float64) {
-	node.errorRateMutex.Lock()
+	node.ok = false
 	node.errorRate.Add(amount)
-	node.errorRateMutex.Unlock()
+}
+
+func (node *Node) ReqResp(reqstruct interface{}, structname string, raw bool) (response interface{}, err error) {
+	node.Lock()
+	if raw == true {
+		err = node.rawRequest(reqstruct.([]byte), structname)
+	} else {
+		err = node.request(reqstruct, structname)
+	}
+
+	if err != nil {
+		node.Unlock()
+		return nil, err
+	}
+
+	response, err = node.response()
+	if err != nil {
+		node.Unlock()
+		return nil, err
+	}
+
+	node.Unlock()
+	return
+}
+
+func (node *Node) ReqMultiResp(reqstruct interface{}, structname string) (response interface{}, err error) {
+	response, err = node.ReqResp(reqstruct, structname, false)
+	if err != nil {
+		return nil, err
+	}
+
+	if structname == "RpbListKeysReq" {
+		keys := response.(*RpbListKeysResp).GetKeys()
+		done := response.(*RpbListKeysResp).GetDone()
+		for done != true {
+			response, err := node.response()
+			if err != nil {
+				return nil, err
+			}
+			keys = append(keys, response.(*RpbListKeysResp).GetKeys()...)
+			done = response.(*RpbListKeysResp).GetDone()
+		}
+		return keys, nil
+	} else if structname == "RpbMapRedReq" {
+		mapResponse := response.(*RpbMapRedResp).GetResponse()
+		done := response.(*RpbMapRedResp).GetDone()
+		for done != true {
+			response, err := node.response()
+			if err != nil {
+				return nil, err
+			}
+			mapResponse = append(mapResponse, response.(*RpbMapRedResp).GetResponse()...)
+			done = response.(*RpbMapRedResp).GetDone()
+		}
+		return mapResponse, nil
+	}
+	return nil, nil
+}
+
+func (node *Node) Ping() bool {
+	resp, err := node.ReqResp([]byte{}, "RpbPingReq", true)
+	if resp == nil || string(resp.([]byte)) != "Pong" || err != nil {
+		return false
+	}
+	return true
 }
 
 // Close the connection
 func (node *Node) Close() {
 	node.conn.Close()
+	node.conn = nil
 }
 
-// Write data to the connection
-func (node *Node) Write(formattedRequest []byte) (err error) {
+func (node *Node) write(formattedRequest []byte) (err error) {
 	node.conn.SetWriteDeadline(time.Now().Add(node.readTimeout))
 	_, err = node.conn.Write(formattedRequest)
 	if err != nil {
@@ -81,8 +144,7 @@ func (node *Node) Write(formattedRequest []byte) (err error) {
 	return nil
 }
 
-// Read data from the connection
-func (node *Node) Read() (respraw []byte, err error) {
+func (node *Node) read() (respraw []byte, err error) {
 	node.conn.SetWriteDeadline(time.Now().Add(node.readTimeout))
 
 	buf := make([]byte, 4)
@@ -100,7 +162,7 @@ func (node *Node) Read() (respraw []byte, err error) {
 		// read rest of message
 		m, err := io.ReadFull(node.conn, data)
 		if err != nil {
-			node.errorRate.Add(1.0)
+			node.RecordError(1.0)
 			return nil, err
 		}
 		if m == int(size) {
@@ -110,9 +172,8 @@ func (node *Node) Read() (respraw []byte, err error) {
 	return nil, nil
 }
 
-func (node *Node) Response() (response interface{}, err error) {
-	rawresp, err := node.Read()
-
+func (node *Node) response() (response interface{}, err error) {
+	rawresp, err := node.read()
 	if err != nil {
 		node.RecordError(1.0)
 		return nil, err
@@ -133,15 +194,14 @@ func (node *Node) Response() (response interface{}, err error) {
 	return response, nil
 }
 
-func (node *Node) Request(reqstruct interface{}, structname string) (err error) {
+func (node *Node) request(reqstruct interface{}, structname string) (err error) {
 	marshaledRequest, err := proto.Marshal(reqstruct.(proto.Message))
-
 	if err != nil {
 		node.RecordError(1.0)
 		return err
 	}
 
-	err = node.RawRequest(marshaledRequest, structname)
+	err = node.rawRequest(marshaledRequest, structname)
 	if err != nil {
 		node.RecordError(1.0)
 		return err
@@ -150,39 +210,17 @@ func (node *Node) Request(reqstruct interface{}, structname string) (err error) 
 	return
 }
 
-func (node *Node) RawRequest(marshaledRequest []byte, structname string) (err error) {
+func (node *Node) rawRequest(marshaledRequest []byte, structname string) (err error) {
 	formattedRequest, err := prependRequestHeader(structname, marshaledRequest)
 	if err != nil {
 		node.RecordError(1.0)
 		return err
 	}
 
-	err = node.Write(formattedRequest)
+	err = node.write(formattedRequest)
 	if err != nil {
 		node.RecordError(1.0)
 		return err
 	}
-	return
-}
-
-func (node *Node) ReqResp(reqstruct interface{}, structname string, raw bool) (response interface{}, err error) {
-	node.Lock()
-	if raw == true {
-		err = node.RawRequest(reqstruct.([]byte), structname)
-	} else {
-		err = node.Request(reqstruct, structname)
-	}
-	if err != nil {
-		node.Unlock()
-		return nil, err
-	}
-
-	response, err = node.Response()
-	if err != nil {
-		node.Unlock()
-		return nil, err
-	}
-
-	node.Unlock()
 	return
 }

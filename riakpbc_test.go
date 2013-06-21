@@ -253,6 +253,7 @@ func TestDeleteObject(t *testing.T) {
 	assert.T(t, string(object) == "Success")
 
 	_, err = riak.FetchObject("riakpbctestbucket", "testkey")
+
 	assert.T(t, err.Error() == "object not found")
 
 	teardownData(t, riak)
