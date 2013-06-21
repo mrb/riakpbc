@@ -1,70 +1,49 @@
 package riakpbc
 
 // List all buckets
-func (c *Conn) ListBuckets() (*RpbListBucketsResp, error) {
+func (c *Client) ListBuckets() (*RpbListBucketsResp, error) {
 	reqdata := []byte{}
 
-	if err := c.RawRequest(reqdata, "RpbListBucketsReq"); err != nil {
-		return &RpbListBucketsResp{}, err
-	}
-
-	response, err := c.Response()
+	response, err := c.ReqResp(reqdata, "RpbListBucketsReq", true)
 	if err != nil {
-		return &RpbListBucketsResp{}, err
+		return nil, err
 	}
 
 	return response.(*RpbListBucketsResp), nil
 }
 
 // List all keys from bucket
-func (c *Conn) ListKeys(bucket string) ([][]byte, error) {
+func (c *Client) ListKeys(bucket string) ([][]byte, error) {
 	reqstruct := &RpbListKeysReq{
 		Bucket: []byte(bucket),
 	}
 
-	if err := c.Request(reqstruct, "RpbListKeysReq"); err != nil {
-		return nil, err
-	}
-
-	response, err := c.Response()
+	response, err := c.ReqMultiResp(reqstruct, "RpbListKeysReq")
 	if err != nil {
 		return nil, err
 	}
 
-	keys := response.(*RpbListKeysResp).GetKeys()
-	done := response.(*RpbListKeysResp).GetDone()
-	for done != true {
-		response, err := c.Response()
-		if err != nil {
-			return nil, err
-		}
-		keys = append(keys, response.(*RpbListKeysResp).GetKeys()...)
-		done = response.(*RpbListKeysResp).GetDone()
-	}
+	keys := response.([][]byte)
 
 	return keys, nil
 }
 
 // Get bucket info
-func (c *Conn) GetBucket(bucket string) (*RpbGetBucketResp, error) {
+func (c *Client) GetBucket(bucket string) (*RpbGetBucketResp, error) {
 	reqstruct := &RpbGetBucketReq{
 		Bucket: []byte(bucket),
 	}
 
-	if err := c.Request(reqstruct, "RpbGetBucketReq"); err != nil {
-		return &RpbGetBucketResp{}, err
-	}
-
-	response, err := c.Response()
+	response, err := c.ReqResp(reqstruct, "RpbGetBucketReq", false)
 	if err != nil {
-		return &RpbGetBucketResp{}, err
+		return nil, err
 	}
 
 	return response.(*RpbGetBucketResp), nil
 }
 
 // Create bucket
-func (c *Conn) SetBucket(bucket string, nval *uint32, allowmult *bool) ([]byte, error) {
+func (c *Client) SetBucket(bucket string, nval *uint32, allowmult *bool) ([]byte, error) {
 	reqstruct := &RpbSetBucketReq{}
 	if opts := c.Opts(); opts != nil {
 		reqstruct = opts.(*RpbSetBucketReq)
@@ -76,11 +55,7 @@ func (c *Conn) SetBucket(bucket string, nval *uint32, allowmult *bool) ([]byte, 
 		reqstruct.Props.AllowMult = allowmult
 	}
 
-	if err := c.Request(reqstruct, "RpbSetBucketReq"); err != nil {
-		return nil, err
-	}
-
-	response, err := c.Response()
+	response, err := c.ReqResp(reqstruct, "RpbSetBucketReq", false)
 	if err != nil {
 		return nil, err
 	}

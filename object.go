@@ -11,7 +11,7 @@ type RpbEmptyResp struct{}
 // FetchObject returns an object from a bucket and returns a RpbGetResp response.
 //
 // Pass RpbGetReq to SetOpts for optional parameters.
-func (c *Conn) FetchObject(bucket, key string) (*RpbGetResp, error) {
+func (c *Client) FetchObject(bucket, key string) (*RpbGetResp, error) {
 	reqstruct := &RpbGetReq{}
 	if opts := c.Opts(); opts != nil {
 		reqstruct = opts.(*RpbGetReq)
@@ -19,13 +19,9 @@ func (c *Conn) FetchObject(bucket, key string) (*RpbGetResp, error) {
 	reqstruct.Bucket = []byte(bucket)
 	reqstruct.Key = []byte(key)
 
-	if err := c.Request(reqstruct, "RpbGetReq"); err != nil {
-		return &RpbGetResp{}, err
-	}
-
-	response, err := c.Response()
+	response, err := c.ReqResp(reqstruct, "RpbGetReq", false)
 	if err != nil {
-		return &RpbGetResp{}, err
+		return nil, err
 	}
 
 	return response.(*RpbGetResp), nil
@@ -38,7 +34,7 @@ func (c *Conn) FetchObject(bucket, key string) (*RpbGetResp, error) {
 // Use RpbContent if you need absolute control over what is going into Riak.
 //
 // Pass RpbPutReq to SetOpts for optional parameters.
-func (c *Conn) StoreObject(bucket, key string, in interface{}) (*RpbPutResp, error) {
+func (c *Client) StoreObject(bucket, key string, in interface{}) (*RpbPutResp, error) {
 	reqstruct := &RpbPutReq{}
 	if opts := c.Opts(); opts != nil {
 		reqstruct = opts.(*RpbPutReq)
@@ -78,13 +74,9 @@ func (c *Conn) StoreObject(bucket, key string, in interface{}) (*RpbPutResp, err
 		return nil, errors.New("Invalid content type passed.  Must be RpbContent, string, int, or []byte")
 	}
 
-	if err := c.Request(reqstruct, "RpbPutReq"); err != nil {
-		return &RpbPutResp{}, err
-	}
-
-	response, err := c.Response()
+	response, err := c.ReqResp(reqstruct, "RpbPutReq", false)
 	if err != nil {
-		return &RpbPutResp{}, err
+		return nil, err
 	}
 
 	return response.(*RpbPutResp), nil
@@ -93,7 +85,7 @@ func (c *Conn) StoreObject(bucket, key string, in interface{}) (*RpbPutResp, err
 // DeleteObject removes object with key from bucket.
 //
 // Pass RpbDelReq to SetOpts for optional parameters.
-func (c *Conn) DeleteObject(bucket, key string) ([]byte, error) {
+func (c *Client) DeleteObject(bucket, key string) ([]byte, error) {
 	reqstruct := &RpbDelReq{}
 	if opts := c.Opts(); opts != nil {
 		reqstruct = opts.(*RpbDelReq)
@@ -101,11 +93,7 @@ func (c *Conn) DeleteObject(bucket, key string) ([]byte, error) {
 	reqstruct.Bucket = []byte(bucket)
 	reqstruct.Key = []byte(key)
 
-	if err := c.Request(reqstruct, "RpbDelReq"); err != nil {
-		return nil, err
-	}
-
-	response, err := c.Response()
+	response, err := c.ReqResp(reqstruct, "RpbDelReq", false)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +104,7 @@ func (c *Conn) DeleteObject(bucket, key string) ([]byte, error) {
 // FetchStruct returns an object from a bucket and unmarshals it into the passed struct.
 //
 // Pass RpbGetReq to SetOpts for optional parameters.
-func (c *Conn) FetchStruct(bucket, key string, out interface{}) error {
+func (c *Client) FetchStruct(bucket, key string, out interface{}) error {
 	if c.Coder == nil {
 		panic("Cannot fetch to a struct unless a coder has been set")
 	}
@@ -128,11 +116,7 @@ func (c *Conn) FetchStruct(bucket, key string, out interface{}) error {
 	reqstruct.Bucket = []byte(bucket)
 	reqstruct.Key = []byte(key)
 
-	if err := c.Request(reqstruct, "RpbGetReq"); err != nil {
-		return err
-	}
-
-	response, err := c.Response()
+	response, err := c.ReqResp(reqstruct, "RpbGetReq", false)
 	if err != nil {
 		return err
 	}
@@ -161,7 +145,7 @@ func (c *Conn) FetchStruct(bucket, key string, out interface{}) error {
 // Check Coder.Marshall() for `riak` tags that can be set on a structure for automated indexes and links.
 //
 // Pass RpbPutReq to SetOpts for optional parameters.
-func (c *Conn) StoreStruct(bucket, key string, in interface{}) (*RpbPutResp, error) {
+func (c *Client) StoreStruct(bucket, key string, in interface{}) (*RpbPutResp, error) {
 	if c.Coder == nil {
 		panic("Cannot store a struct unless a coder has been set")
 	}
@@ -199,13 +183,9 @@ func (c *Conn) StoreStruct(bucket, key string, in interface{}) (*RpbPutResp, err
 		return nil, errors.New("Invalid content type passed.  Must be struct, RpbContent, string, int, or []byte")
 	}
 
-	if err := c.Request(reqstruct, "RpbPutReq"); err != nil {
-		return &RpbPutResp{}, err
-	}
-
-	response, err := c.Response()
+	response, err := c.ReqResp(reqstruct, "RpbPutReq", false)
 	if err != nil {
-		return &RpbPutResp{}, err
+		return nil, err
 	}
 
 	return response.(*RpbPutResp), nil
