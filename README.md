@@ -43,7 +43,7 @@ As of June 21, 2013 the API is deemed relatively stable.  The library should be 
     
     // Fetch Struct (uses coder)
     out := &ExampleData{}
-    if err := riak.FetchStruct("bucket", "other", &out); err != nil {
+    if _, err := riak.FetchStruct("bucket", "other", &out); err != nil {
     	log.Println(err.Error())
     }
     fmt.Println(out.Field1)

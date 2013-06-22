@@ -104,7 +104,7 @@ func (c *Client) DeleteObject(bucket, key string) ([]byte, error) {
 // FetchStruct returns an object from a bucket and unmarshals it into the passed struct.
 //
 // Pass RpbGetReq to SetOpts for optional parameters.
-func (c *Client) FetchStruct(bucket, key string, out interface{}) error {
+func (c *Client) FetchStruct(bucket, key string, out interface{}) (*RpbGetResp, error) {
 	if c.Coder == nil {
 		panic("Cannot fetch to a struct unless a coder has been set")
 	}
@@ -118,7 +118,7 @@ func (c *Client) FetchStruct(bucket, key string, out interface{}) error {
 
 	response, err := c.ReqResp(reqstruct, "RpbGetReq", false)
 	if err != nil {
-		return err
+		return &RpbGetResp{}, err
 	}
 
 	t := reflect.TypeOf(out)
@@ -130,14 +130,14 @@ func (c *Client) FetchStruct(bucket, key string, out interface{}) error {
 			//  I believe the other possible results are related to vlocks, and will eventually need to be addressed.
 			err := c.Coder.Unmarshal(response.(*RpbGetResp).GetContent()[0].GetValue(), out)
 			if err != nil {
-				return err
+				return &RpbGetResp{}, err
 			}
 		default:
 			panic("Invalid out struct type passed to FetchStruct")
 		}
 	}
 
-	return nil
+	return response.(*RpbGetResp), nil
 }
 
 // StoreStruct marshals the data from a struct, and adds it with key into bucket.
