@@ -40,7 +40,7 @@ func ExampleClient() {
 
 	// Fetch Struct (uses coder)
 	out := &ExampleData{}
-	if err := riak.FetchStruct("bucket", "other", &out); err != nil {
+	if _, err := riak.FetchStruct("bucket", "other", &out); err != nil {
 		log.Println(err.Error())
 	}
 	fmt.Println(out.Field1)
