@@ -59,6 +59,12 @@ func TestIndex(t *testing.T) {
 	if _, err := riak.DeleteObject("farm", "rooster"); err != nil {
 		t.Error(err.Error())
 	}
+
+	// Search against a non-existent key should return empty, not error
+	check, err := riak.Index("farm", "animal_bin", "chicken", "", "")
+	if len(check.GetKeys()) > 0 {
+		t.Error("non-existent index search should return 0 results")
+	}
 }
 
 func TestSearch(t *testing.T) {
