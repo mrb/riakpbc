@@ -42,6 +42,9 @@ func (c *Client) Index(bucket, index, key, start, end string) (*RpbIndexResp, er
 
 	response, err := c.ReqResp(reqstruct, "RpbIndexReq", false)
 	if err != nil {
+		if err.Error() == "object not found" {
+			return &RpbIndexResp{}, nil
+		}
 		return nil, err
 	}
 
