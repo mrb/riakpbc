@@ -186,9 +186,12 @@ func TestFetchStruct(t *testing.T) {
 
 	// Test
 	data := &RiakData{}
-	err = riak.FetchStruct("riakpbctestbucket", "testkey_struct", data)
+	result, err := riak.FetchStruct("riakpbctestbucket", "testkey_struct", data)
 	if err != nil {
 		t.Error(err.Error())
+	}
+	if len(result.GetContent()) != 1 {
+		t.Error("expected FetchStruct to also return RpbGetResp content")
 	}
 
 	_, err = riak.DeleteObject("riakpbctestbucket", "testkey_struct")
