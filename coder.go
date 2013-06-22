@@ -190,9 +190,6 @@ func (self *Coder) Marshal(data interface{}) (*RpbContent, error) {
 						}
 						out.Indexes = append(out.Indexes, index)
 						break
-					case "link":
-
-						break
 					}
 				}
 			}
