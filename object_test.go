@@ -2,6 +2,7 @@ package riakpbc
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/bmizerany/assert"
 	"log"
 	"testing"
@@ -64,11 +65,36 @@ func teardownData(t *testing.T, client *Client) {
 	assert.T(t, string(ok) == "Success")
 }
 
+func TestHead(t *testing.T) {
+	riak := setupConnection(t)
+	userMeta := []*RpbPair{&RpbPair{Key: []byte("meta"), Value: []byte("schmeta")}}
+	rpbObj := &RpbContent{Value: []byte("rpbcontent data"), ContentType: []byte("text/plain"), Usermeta: userMeta}
+	_, err := riak.StoreObject("riakpbctestbucket", "testkey_rpbcontent", rpbObj)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	tB := new(bool)
+	*tB = true
+	opts := &RpbGetReq{
+		Head: tB,
+	}
+	riak.SetOpts(opts)
+	obj, err := riak.FetchObject("riakpbctestbucket", "testkey_rpbcontent")
+	oObj := obj.GetContent()
+	assert.T(t, len(oObj) == 1)
+	content := oObj[0]
+	assert.T(t, len(content.GetValue()) == 0)
+	assert.T(t, len(content.GetUsermeta()) == 1)
+	assert.T(t, fmt.Sprintf("%s", content.GetUsermeta()[0]) == fmt.Sprintf("%s", &RpbPair{Key: []byte("meta"), Value: []byte("schmeta")}))
+}
+
 func TestStoreObject(t *testing.T) {
 	riak := setupConnection(t)
 
 	// Insert
-	_, err := riak.StoreObject("riakpbctestbucket", "testkey_rpbcontent", &RpbContent{Value: []byte("rpbcontent data"), ContentType: []byte("text/plain")})
+	userMeta := []*RpbPair{&RpbPair{Key: []byte("meta"), Value: []byte("schmeta")}}
+	rpbObj := &RpbContent{Value: []byte("rpbcontent data"), ContentType: []byte("text/plain"), Usermeta: userMeta}
+	_, err := riak.StoreObject("riakpbctestbucket", "testkey_rpbcontent", rpbObj)
 	if err != nil {
 		t.Error(err.Error())
 	}
