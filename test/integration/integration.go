@@ -68,8 +68,20 @@ func main() {
 					errs = errs + 1
 				}
 
+				userMeta := []*riakpbc.RpbPair{&riakpbc.RpbPair{Key: []byte("meta"), Value: []byte("schmeta")}}
+				rpbObj := &riakpbc.RpbContent{Value: []byte("rpbcontent data"), ContentType: []byte("text/plain"), Usermeta: userMeta}
+				_, err = riak.StoreObject("bucket", "testkey_rpbcontent", rpbObj)
+				if err != nil {
+					errs = errs + 1
+				}
+
+				_, err = riak.FetchHead("bucket", "testkey_rpbcontent")
+				if err != nil {
+					errs = errs + 1
+				}
+
 				actionDuration := time.Now().Sub(actionBegin)
-				log.Print("<", which, "> @", times, " ", riak.Pool(), "!<",errs, "> ", actionDuration)
+				log.Print("<", which, "> @", times, " ", riak.Pool(), "!<", errs, "> ", actionDuration)
 			}
 		}(g)
 	}
