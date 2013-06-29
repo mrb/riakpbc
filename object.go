@@ -11,15 +11,15 @@ type RpbEmptyResp struct{}
 // FetchObject returns an object from a bucket and returns a RpbGetResp response.
 //
 // Pass RpbGetReq to SetOpts for optional parameters.
-func (c *Client) FetchObject(bucket, key string) (*RpbGetResp, error) {
+func (self *Node) FetchObject(bucket, key string) (*RpbGetResp, error) {
 	reqstruct := &RpbGetReq{}
-	if opts := c.Opts(); opts != nil {
+	if opts := self.Opts(); opts != nil {
 		reqstruct = opts.(*RpbGetReq)
 	}
 	reqstruct.Bucket = []byte(bucket)
 	reqstruct.Key = []byte(key)
 
-	response, err := c.ReqResp(reqstruct, "RpbGetReq", false)
+	response, err := self.ReqResp(reqstruct, "RpbGetReq", false)
 	if err != nil {
 		return nil, err
 	}
@@ -34,9 +34,9 @@ func (c *Client) FetchObject(bucket, key string) (*RpbGetResp, error) {
 // Use RpbContent if you need absolute control over what is going into Riak.
 //
 // Pass RpbPutReq to SetOpts for optional parameters.
-func (c *Client) StoreObject(bucket, key string, in interface{}) (*RpbPutResp, error) {
+func (self *Node) StoreObject(bucket, key string, in interface{}) (*RpbPutResp, error) {
 	reqstruct := &RpbPutReq{}
-	if opts := c.Opts(); opts != nil {
+	if opts := self.Opts(); opts != nil {
 		reqstruct = opts.(*RpbPutReq)
 	}
 	reqstruct.Bucket = []byte(bucket)
@@ -74,7 +74,7 @@ func (c *Client) StoreObject(bucket, key string, in interface{}) (*RpbPutResp, e
 		return nil, errors.New("Invalid content type passed.  Must be RpbContent, string, int, or []byte")
 	}
 
-	response, err := c.ReqResp(reqstruct, "RpbPutReq", false)
+	response, err := self.ReqResp(reqstruct, "RpbPutReq", false)
 	if err != nil {
 		return nil, err
 	}
@@ -85,15 +85,15 @@ func (c *Client) StoreObject(bucket, key string, in interface{}) (*RpbPutResp, e
 // DeleteObject removes object with key from bucket.
 //
 // Pass RpbDelReq to SetOpts for optional parameters.
-func (c *Client) DeleteObject(bucket, key string) ([]byte, error) {
+func (self *Node) DeleteObject(bucket, key string) ([]byte, error) {
 	reqstruct := &RpbDelReq{}
-	if opts := c.Opts(); opts != nil {
+	if opts := self.Opts(); opts != nil {
 		reqstruct = opts.(*RpbDelReq)
 	}
 	reqstruct.Bucket = []byte(bucket)
 	reqstruct.Key = []byte(key)
 
-	response, err := c.ReqResp(reqstruct, "RpbDelReq", false)
+	response, err := self.ReqResp(reqstruct, "RpbDelReq", false)
 	if err != nil {
 		return nil, err
 	}
@@ -104,19 +104,19 @@ func (c *Client) DeleteObject(bucket, key string) ([]byte, error) {
 // FetchStruct returns an object from a bucket and unmarshals it into the passed struct.
 //
 // Pass RpbGetReq to SetOpts for optional parameters.
-func (c *Client) FetchStruct(bucket, key string, out interface{}) (*RpbGetResp, error) {
-	if c.Coder == nil {
+func (self *Node) FetchStruct(bucket, key string, out interface{}) (*RpbGetResp, error) {
+	if self.coder == nil {
 		panic("Cannot fetch to a struct unless a coder has been set")
 	}
 
 	reqstruct := &RpbGetReq{}
-	if opts := c.Opts(); opts != nil {
+	if opts := self.Opts(); opts != nil {
 		reqstruct = opts.(*RpbGetReq)
 	}
 	reqstruct.Bucket = []byte(bucket)
 	reqstruct.Key = []byte(key)
 
-	response, err := c.ReqResp(reqstruct, "RpbGetReq", false)
+	response, err := self.ReqResp(reqstruct, "RpbGetReq", false)
 	if err != nil {
 		return &RpbGetResp{}, err
 	}
@@ -128,7 +128,7 @@ func (c *Client) FetchStruct(bucket, key string, out interface{}) (*RpbGetResp, 
 		case reflect.Struct:
 			// TODO: This only returns the first result.
 			//  I believe the other possible results are related to vlocks, and will eventually need to be addressed.
-			err := c.Coder.Unmarshal(response.(*RpbGetResp).GetContent()[0].GetValue(), out)
+			err := self.coder.Unmarshal(response.(*RpbGetResp).GetContent()[0].GetValue(), out)
 			if err != nil {
 				return &RpbGetResp{}, err
 			}
@@ -145,13 +145,13 @@ func (c *Client) FetchStruct(bucket, key string, out interface{}) (*RpbGetResp, 
 // Check Coder.Marshall() for `riak` tags that can be set on a structure for automated indexes and links.
 //
 // Pass RpbPutReq to SetOpts for optional parameters.
-func (c *Client) StoreStruct(bucket, key string, in interface{}) (*RpbPutResp, error) {
-	if c.Coder == nil {
+func (self *Node) StoreStruct(bucket, key string, in interface{}) (*RpbPutResp, error) {
+	if self.coder == nil {
 		panic("Cannot store a struct unless a coder has been set")
 	}
 
 	reqstruct := &RpbPutReq{}
-	if opts := c.Opts(); opts != nil {
+	if opts := self.Opts(); opts != nil {
 		reqstruct = opts.(*RpbPutReq)
 	}
 	reqstruct.Bucket = []byte(bucket)
@@ -167,7 +167,7 @@ func (c *Client) StoreStruct(bucket, key string, in interface{}) (*RpbPutResp, e
 			switch t.Elem().Kind() {
 			case reflect.Struct:
 				// Structs get passed through a marshaller
-				encctnt, err := c.Coder.Marshal(in)
+				encctnt, err := self.coder.Marshal(in)
 				if err != nil {
 					return nil, err
 				}
@@ -183,7 +183,7 @@ func (c *Client) StoreStruct(bucket, key string, in interface{}) (*RpbPutResp, e
 		return nil, errors.New("Invalid content type passed.  Must be struct, RpbContent, string, int, or []byte")
 	}
 
-	response, err := c.ReqResp(reqstruct, "RpbPutReq", false)
+	response, err := self.ReqResp(reqstruct, "RpbPutReq", false)
 	if err != nil {
 		return nil, err
 	}
