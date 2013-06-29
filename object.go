@@ -13,11 +13,26 @@ type RpbEmptyResp struct{}
 // Pass RpbGetReq to SetOpts for optional parameters.
 func (c *Client) FetchObject(bucket, key string) (*RpbGetResp, error) {
 	reqstruct := &RpbGetReq{}
-	if opts := c.Opts(); opts != nil {
-		reqstruct = opts.(*RpbGetReq)
-	}
+
 	reqstruct.Bucket = []byte(bucket)
 	reqstruct.Key = []byte(key)
+
+	response, err := c.ReqResp(reqstruct, "RpbGetReq", false)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.(*RpbGetResp), nil
+}
+
+// Return everything but the value of the object
+func (c *Client) FetchHead(bucket, key string) (*RpbGetResp, error) {
+	reqstruct := &RpbGetReq{}
+	reqstruct.Bucket = []byte(bucket)
+	reqstruct.Key = []byte(key)
+	z := new(bool)
+	*z = true
+	reqstruct.Head = z
 
 	response, err := c.ReqResp(reqstruct, "RpbGetReq", false)
 	if err != nil {
@@ -36,9 +51,7 @@ func (c *Client) FetchObject(bucket, key string) (*RpbGetResp, error) {
 // Pass RpbPutReq to SetOpts for optional parameters.
 func (c *Client) StoreObject(bucket, key string, in interface{}) (*RpbPutResp, error) {
 	reqstruct := &RpbPutReq{}
-	if opts := c.Opts(); opts != nil {
-		reqstruct = opts.(*RpbPutReq)
-	}
+
 	reqstruct.Bucket = []byte(bucket)
 	reqstruct.Key = []byte(key)
 
@@ -87,9 +100,7 @@ func (c *Client) StoreObject(bucket, key string, in interface{}) (*RpbPutResp, e
 // Pass RpbDelReq to SetOpts for optional parameters.
 func (c *Client) DeleteObject(bucket, key string) ([]byte, error) {
 	reqstruct := &RpbDelReq{}
-	if opts := c.Opts(); opts != nil {
-		reqstruct = opts.(*RpbDelReq)
-	}
+
 	reqstruct.Bucket = []byte(bucket)
 	reqstruct.Key = []byte(key)
 
@@ -110,9 +121,7 @@ func (c *Client) FetchStruct(bucket, key string, out interface{}) (*RpbGetResp, 
 	}
 
 	reqstruct := &RpbGetReq{}
-	if opts := c.Opts(); opts != nil {
-		reqstruct = opts.(*RpbGetReq)
-	}
+
 	reqstruct.Bucket = []byte(bucket)
 	reqstruct.Key = []byte(key)
 
@@ -151,9 +160,7 @@ func (c *Client) StoreStruct(bucket, key string, in interface{}) (*RpbPutResp, e
 	}
 
 	reqstruct := &RpbPutReq{}
-	if opts := c.Opts(); opts != nil {
-		reqstruct = opts.(*RpbPutReq)
-	}
+
 	reqstruct.Bucket = []byte(bucket)
 	reqstruct.Key = []byte(key)
 
