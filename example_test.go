@@ -24,8 +24,11 @@ func ExampleClient() {
 		log.Print(err.Error())
 	}
 
+	// Grab a node session.
+	session := riak.Session()
+
 	// Set Client ID
-	if _, err := riak.SetClientId("coolio"); err != nil {
+	if _, err := session.SetClientId("coolio"); err != nil {
 		log.Println(err.Error())
 	}
 
@@ -34,13 +37,13 @@ func ExampleClient() {
 		Field1: "ExampleData1",
 		Field2: 1,
 	}
-	if _, err := riak.StoreStruct("bucket", "data", &data); err != nil {
+	if _, err := session.StoreStruct("bucket", "data", &data); err != nil {
 		log.Println(err.Error())
 	}
 
 	// Fetch Struct (uses coder)
 	out := &ExampleData{}
-	if _, err := riak.FetchStruct("bucket", "other", &out); err != nil {
+	if _, err := session.FetchStruct("bucket", "other", &out); err != nil {
 		log.Println(err.Error())
 	}
 	fmt.Println(out.Field1)
@@ -48,12 +51,12 @@ func ExampleClient() {
 	// ExampleData1
 
 	// Store raw data (int, string, []byte)
-	if _, err := riak.StoreObject("bucket", "other", "direct data"); err != nil {
+	if _, err := session.StoreObject("bucket", "other", "direct data"); err != nil {
 		log.Println(err.Error())
 	}
 
 	// Fetch raw data (int, string, []byte)
-	obj, err := riak.FetchObject("bucket", "other")
+	obj, err := session.FetchObject("bucket", "other")
 	if err != nil {
 		log.Println(err.Error())
 	}

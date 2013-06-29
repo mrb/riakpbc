@@ -1,10 +1,10 @@
 package riakpbc
 
 // List all buckets
-func (c *Client) ListBuckets() (*RpbListBucketsResp, error) {
+func (node *Node) ListBuckets() (*RpbListBucketsResp, error) {
 	reqdata := []byte{}
 
-	response, err := c.ReqResp(reqdata, "RpbListBucketsReq", true)
+	response, err := node.ReqResp(reqdata, "RpbListBucketsReq", true)
 	if err != nil {
 		return nil, err
 	}
@@ -13,12 +13,12 @@ func (c *Client) ListBuckets() (*RpbListBucketsResp, error) {
 }
 
 // List all keys from bucket
-func (c *Client) ListKeys(bucket string) ([][]byte, error) {
+func (node *Node) ListKeys(bucket string) ([][]byte, error) {
 	reqstruct := &RpbListKeysReq{
 		Bucket: []byte(bucket),
 	}
 
-	response, err := c.ReqMultiResp(reqstruct, "RpbListKeysReq")
+	response, err := node.ReqMultiResp(reqstruct, "RpbListKeysReq")
 	if err != nil {
 		return nil, err
 	}
@@ -29,12 +29,12 @@ func (c *Client) ListKeys(bucket string) ([][]byte, error) {
 }
 
 // Get bucket info
-func (c *Client) GetBucket(bucket string) (*RpbGetBucketResp, error) {
+func (node *Node) GetBucket(bucket string) (*RpbGetBucketResp, error) {
 	reqstruct := &RpbGetBucketReq{
 		Bucket: []byte(bucket),
 	}
 
-	response, err := c.ReqResp(reqstruct, "RpbGetBucketReq", false)
+	response, err := node.ReqResp(reqstruct, "RpbGetBucketReq", false)
 	if err != nil {
 		return nil, err
 	}
@@ -43,9 +43,9 @@ func (c *Client) GetBucket(bucket string) (*RpbGetBucketResp, error) {
 }
 
 // Create bucket
-func (c *Client) SetBucket(bucket string, nval *uint32, allowmult *bool) ([]byte, error) {
+func (node *Node) SetBucket(bucket string, nval *uint32, allowmult *bool) ([]byte, error) {
 	reqstruct := &RpbSetBucketReq{}
-	if opts := c.Opts(); opts != nil {
+	if opts := node.Opts(); opts != nil {
 		reqstruct = opts.(*RpbSetBucketReq)
 	}
 	reqstruct.Bucket = []byte(bucket)
@@ -55,7 +55,7 @@ func (c *Client) SetBucket(bucket string, nval *uint32, allowmult *bool) ([]byte
 		reqstruct.Props.AllowMult = allowmult
 	}
 
-	response, err := c.ReqResp(reqstruct, "RpbSetBucketReq", false)
+	response, err := node.ReqResp(reqstruct, "RpbSetBucketReq", false)
 	if err != nil {
 		return nil, err
 	}

@@ -2,15 +2,12 @@ package riakpbc
 
 import (
 	"log"
-	"sync"
 )
 
 type Client struct {
 	cluster []string
 	pool    *Pool
 	Coder   *Coder // Coder for (un)marshalling data
-	optsMu  *sync.Mutex
-	opts    interface{} // potential Rpb...Req opts
 	logging bool
 }
 
@@ -19,7 +16,6 @@ func NewClient(cluster []string) *Client {
 	return &Client{
 		cluster: cluster,
 		pool:    NewPool(cluster),
-		optsMu:  &sync.Mutex{},
 		logging: false,
 	}
 }
@@ -49,23 +45,11 @@ func (c *Client) Dial() error {
 	return nil
 }
 
-// Opts returns the set options, and resets them internally to nil.
-func (c *Client) Opts() interface{} {
-	c.optsMu.Lock()
-	opts := c.opts
-	c.opts = nil
-	c.optsMu.Unlock()
-	return opts
-}
-
-// Current gets the current Node object from the Pool.
-func (c *Client) Current() *Node {
-	return c.pool.Current()
-}
-
-// SetOpts allows Rpb...Req options to be set.
-func (c *Client) SetOpts(opts interface{}) {
-	c.opts = opts
+// Session requests a new Node to temporarily work with.
+func (c *Client) Session() *Node {
+	node := c.pool.SelectNode()
+	node.Coder = c.Coder
+	return node
 }
 
 // SetCoder sets the default Coder for structs.
@@ -78,27 +62,9 @@ func (c *Client) Close() {
 	c.pool.Close()
 }
 
-// SelectNode selects a node from the pool, see *Pool.SelectNode()
-func (c *Client) SelectNode() *Node {
-	node := c.pool.SelectNode()
-	return node
-}
-
 // Pool returns the pool associated with the client.
 func (c *Client) Pool() *Pool {
 	return c.pool
-}
-
-// ReqResp is the top level interface for the client for a bulk of Riak operations
-func (c *Client) ReqResp(reqstruct interface{}, structname string, raw bool) (response interface{}, err error) {
-	return c.SelectNode().ReqResp(reqstruct, structname, raw)
-}
-
-// ReqMultiResp is the top level interface for the client for the few
-// operations which have to hit the server multiple times to guarantee
-// a complete response: List keys, Map Reduce, etc.
-func (c *Client) ReqMultiResp(reqstruct interface{}, structname string) (response interface{}, err error) {
-	return c.SelectNode().ReqMultiResp(reqstruct, structname)
 }
 
 func (c *Client) EnableLogging() {

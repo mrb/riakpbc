@@ -17,8 +17,8 @@ type RiakData struct {
 	Data    []byte `json:"data" riak:"index"`
 }
 
-func setupConnection(t *testing.T) (client *Client) {
-	client = NewClient([]string{"127.0.0.1:8087",
+func setupConnection(t *testing.T) *Node {
+	client := NewClient([]string{"127.0.0.1:8087",
 		"127.0.0.1:8088",
 		"127.0.0.1:8087",
 		"127.0.0.1:8088"})
@@ -31,11 +31,11 @@ func setupConnection(t *testing.T) (client *Client) {
 	Coder := NewCoder("json", JsonMarshaller, JsonUnmarshaller)
 	client.SetCoder(Coder)
 
-	return client
+	return client.Session()
 }
 
-func setupSingleNodeConnection(t *testing.T) (client *Client) {
-	client = NewClient([]string{"127.0.0.1:8087"})
+func setupSingleNodeConnection(t *testing.T) *Node {
+	client := NewClient([]string{"127.0.0.1:8087"})
 	var err error
 	if err = client.Dial(); err != nil {
 		t.Error(err.Error())
@@ -45,19 +45,19 @@ func setupSingleNodeConnection(t *testing.T) (client *Client) {
 	Coder := NewCoder("json", JsonMarshaller, JsonUnmarshaller)
 	client.SetCoder(Coder)
 
-	return client
+	return client.Session()
 }
 
-func setupData(t *testing.T, client *Client) {
-	ok, err := client.StoreObject("riakpbctestbucket", "testkey", "{\"data\":\"is awesome!\"}")
+func setupData(t *testing.T, node *Node) {
+	ok, err := node.StoreObject("riakpbctestbucket", "testkey", "{\"data\":\"is awesome!\"}")
 	if err != nil {
 		t.Error(err.Error())
 	}
 	assert.T(t, len(ok.GetKey()) == 0)
 }
 
-func teardownData(t *testing.T, client *Client) {
-	ok, err := client.DeleteObject("riakpbctestbucket", "testkey")
+func teardownData(t *testing.T, node *Node) {
+	ok, err := node.DeleteObject("riakpbctestbucket", "testkey")
 	if err != nil {
 		t.Error(err.Error())
 	}

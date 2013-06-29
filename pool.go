@@ -49,7 +49,7 @@ func (pool *Pool) SelectNode() *Node {
 		} else {
 			if node.ok == false && node.ErrorRate() < 100.0 {
 				go func(iNode *Node) {
-					nodeGood := iNode.Ping()
+					nodeGood := iNode.DoPing()
 					if nodeGood == false {
 						iNode.RecordError(100.0)
 						iNode.Lock()

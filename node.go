@@ -11,6 +11,7 @@ import (
 )
 
 type Node struct {
+	Coder        *Coder
 	addr         string
 	tcpAddr      *net.TCPAddr
 	conn         *net.TCPConn
@@ -18,6 +19,7 @@ type Node struct {
 	writeTimeout time.Duration
 	errorRate    *Decaying
 	ok           bool
+	opts         interface{} // potential Rpb...Req opts
 	sync.Mutex
 }
 
@@ -61,6 +63,18 @@ func (node *Node) ErrorRate() float64 {
 func (node *Node) RecordError(amount float64) {
 	node.ok = false
 	node.errorRate.Add(amount)
+}
+
+// Opts returns the set options, and resets them internally to nil.
+func (node *Node) Opts() interface{} {
+	opts := node.opts
+	node.opts = nil
+	return opts
+}
+
+// SetOpts allows Rpb...Req options to be set for the currently selected Node.
+func (node *Node) SetOpts(opts interface{}) {
+	node.opts = opts
 }
 
 func (node *Node) ReqResp(reqstruct interface{}, structname string, raw bool) (response interface{}, err error) {
@@ -120,7 +134,7 @@ func (node *Node) ReqMultiResp(reqstruct interface{}, structname string) (respon
 	return nil, nil
 }
 
-func (node *Node) Ping() bool {
+func (node *Node) DoPing() bool {
 	resp, err := node.ReqResp([]byte{}, "RpbPingReq", true)
 	if resp == nil || string(resp.([]byte)) != "Pong" || err != nil {
 		return false

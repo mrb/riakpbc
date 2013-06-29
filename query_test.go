@@ -10,7 +10,7 @@ type Farm struct {
 	Animal string `json:"animal" riak:"index"`
 }
 
-func setupIndexing(t *testing.T, client *Client) {
+func setupIndexing(t *testing.T) {
 	_, err := exec.Command("curl", "-i", "-XPUT", "http://127.0.0.1:10018/riak/farm", "-H", "Content-Type: application/json", "-d", "{\"props\":{\"search\":true}}").Output()
 	if err != nil {
 		t.Error(err.Error())
@@ -69,7 +69,7 @@ func TestIndex(t *testing.T) {
 
 func TestSearch(t *testing.T) {
 	riak := setupConnection(t)
-	setupIndexing(t, riak)
+	setupIndexing(t)
 	if _, err := riak.StoreStruct("farm", "chicken", &Farm{Animal: "chicken"}); err != nil {
 		t.Error(err.Error())
 	}

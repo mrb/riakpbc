@@ -3,8 +3,8 @@ package riakpbc
 // LinkAdd sets a link reference to the link bucket/key in bucket/key.
 //
 // Note that this can be manually done by passing RpbContent to StoreObject.
-func (c *Client) LinkAdd(bucket, key, lbucket, lkey, ltag string) error {
-	obj, err := c.FetchObject(bucket, key)
+func (node *Node) LinkAdd(bucket, key, lbucket, lkey, ltag string) error {
+	obj, err := node.FetchObject(bucket, key)
 	if err != nil {
 		return err
 	}
@@ -20,7 +20,7 @@ func (c *Client) LinkAdd(bucket, key, lbucket, lkey, ltag string) error {
 	}
 	obj.Content[0].Links = append(obj.Content[0].Links, link)
 
-	if _, err := c.StoreObject(bucket, key, obj.GetContent()[0]); err != nil {
+	if _, err := node.StoreObject(bucket, key, obj.GetContent()[0]); err != nil {
 		return err
 	}
 
@@ -28,13 +28,13 @@ func (c *Client) LinkAdd(bucket, key, lbucket, lkey, ltag string) error {
 }
 
 // LinkWalk is just a synonymn for FetchObject.  It expects the link bucket/key.
-func (c *Client) LinkWalk(bucket, key string) (*RpbGetResp, error) {
-	return c.FetchObject(bucket, key)
+func (node *Node) LinkWalk(bucket, key string) (*RpbGetResp, error) {
+	return node.FetchObject(bucket, key)
 }
 
 // LinkRemove removes the associated link bucket/key from the bucket/key.
-func (c *Client) LinkRemove(bucket, key, lbucket, lkey string) error {
-	obj, err := c.FetchObject(bucket, key)
+func (node *Node) LinkRemove(bucket, key, lbucket, lkey string) error {
+	obj, err := node.FetchObject(bucket, key)
 	if err != nil {
 		return err
 	}
@@ -51,7 +51,7 @@ func (c *Client) LinkRemove(bucket, key, lbucket, lkey string) error {
 		}
 	}
 
-	if _, err := c.StoreObject(bucket, key, obj.GetContent()[0]); err != nil {
+	if _, err := node.StoreObject(bucket, key, obj.GetContent()[0]); err != nil {
 		return err
 	}
 
