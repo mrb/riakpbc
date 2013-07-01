@@ -66,8 +66,8 @@ func main() {
 
 				z := new(bool)
 				*z = true
-				opts := &riakpbc.RpbPutReq{
-					ReturnBody: z,
+				opts := &riakpbc.RpbGetReq{
+					Head: z,
 				}
 
 				riak = client.Session()
