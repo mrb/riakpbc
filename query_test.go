@@ -18,8 +18,9 @@ func setupIndexing(t *testing.T) {
 }
 
 func TestMapReduce(t *testing.T) {
-	riak := setupConnection(t)
-	setupData(t, riak)
+	client := setupConnection(t)
+	riak := client.Session()
+	setupData(t, client)
 
 	twoLevelQuery := "{\"inputs\":[[\"riakpbctestbucket\",\"testkey\"]],\"query\":[{\"map\":{\"language\":\"javascript\",\"keep\":false,\"name\":\"Riak.mapValuesJson\"}},{\"reduce\":{\"language\":\"javascript\",\"keep\":true,\"name\":\"Riak.reduceMax\"}}]}"
 	reduced, err := riak.MapReduce(twoLevelQuery, "application/json")
@@ -28,11 +29,12 @@ func TestMapReduce(t *testing.T) {
 	}
 	assert.T(t, string(reduced) == "[{\"data\":\"is awesome!\"}]")
 
-	teardownData(t, riak)
+	teardownData(t, client)
 }
 
 func TestIndex(t *testing.T) {
-	riak := setupConnection(t)
+	client := setupConnection(t)
+	riak := client.Session()
 	if _, err := riak.StoreStruct("farm", "chicken", &Farm{Animal: "chicken"}); err != nil {
 		t.Error(err.Error())
 	}
@@ -68,7 +70,8 @@ func TestIndex(t *testing.T) {
 }
 
 func TestSearch(t *testing.T) {
-	riak := setupConnection(t)
+	client := setupConnection(t)
+	riak := client.Session()
 	setupIndexing(t)
 	if _, err := riak.StoreStruct("farm", "chicken", &Farm{Animal: "chicken"}); err != nil {
 		t.Error(err.Error())

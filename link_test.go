@@ -5,8 +5,9 @@ import (
 )
 
 func TestLink(t *testing.T) {
-	riak := setupConnection(t)
-	setupData(t, riak)
+	client := setupConnection(t)
+	riak := client.Session()
+	setupData(t, client)
 
 	if _, err := riak.StoreObject("riakpbclinktestbucket1", "linktestkeyb1k1", "link start data"); err != nil {
 		t.Error(err.Error())
@@ -51,5 +52,5 @@ func TestLink(t *testing.T) {
 		t.Error("expected links to be empty")
 	}
 
-	teardownData(t, riak)
+	teardownData(t, client)
 }

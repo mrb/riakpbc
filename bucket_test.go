@@ -8,8 +8,9 @@ import (
 )
 
 func TestListBuckets(t *testing.T) {
-	riak := setupConnection(t)
-	setupData(t, riak)
+	client := setupConnection(t)
+	riak := client.Session()
+	setupData(t, client)
 
 	buckets, err := riak.ListBuckets()
 	if err != nil {
@@ -17,12 +18,13 @@ func TestListBuckets(t *testing.T) {
 	}
 	assert.T(t, strings.Contains(buckets.String(), "riakpbctestbucket"))
 
-	teardownData(t, riak)
+	teardownData(t, client)
 }
 
 func TestListKeys(t *testing.T) {
-	riak := setupConnection(t)
-	setupData(t, riak)
+	client := setupConnection(t)
+	riak := client.Session()
+	setupData(t, client)
 
 	keys, err := riak.ListKeys("riakpbctestbucket")
 	if err != nil {
@@ -30,12 +32,13 @@ func TestListKeys(t *testing.T) {
 	}
 	assert.T(t, strings.Contains(fmt.Sprintf("%s", keys), "testkey"))
 
-	teardownData(t, riak)
+	teardownData(t, client)
 }
 
 func TestGetAndSetBuckets(t *testing.T) {
-	riak := setupConnection(t)
-	setupData(t, riak)
+	client := setupConnection(t)
+	riak := client.Session()
+	setupData(t, client)
 
 	nval := uint32(1)
 	allowmult := false
@@ -51,5 +54,5 @@ func TestGetAndSetBuckets(t *testing.T) {
 	}
 	assert.T(t, strings.Contains(string(bucket.GetProps().String()), "false"))
 
-	teardownData(t, riak)
+	teardownData(t, client)
 }
