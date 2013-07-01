@@ -166,23 +166,23 @@ func TestConcurrentOpts(t *testing.T) {
 	sym := make(chan bool, 10)
 	for i := 0; i < 10; i++ {
 		go func() {
-			riak := client.Session()
-			if i%2 == 0 {
-				z := new(bool)
-				*z = true
-				opts := &RpbPutReq{
-					ReturnBody: z,
-				}
-				riak.SetOpts(opts)
+			riak1 := client.Session()
+			z := new(bool)
+			*z = true
+			opts := &RpbPutReq{
+				ReturnBody: z,
 			}
-			object, err := riak.StoreStruct("riakpbctestbucket", "testkeyopts", &Data{Data: "is awesome!"})
+			riak1.SetOpts(opts)
+			object, err := riak1.StoreStruct("riakpbctestbucket", "testkeyopts", &Data{Data: "is awesome!"})
 			if err != nil {
 				t.Error(err.Error())
 			}
-			if i%2 == 0 {
-				assert.T(t, string(object.GetContent()[0].GetValue()) == string(data))
-			} else {
-				assert.T(t, len(object.GetContent()) == 0)
+			assert.T(t, string(object.GetContent()[0].GetValue()) == string(data))
+
+			riak2 := client.Session()
+			_, err = riak2.StoreStruct("riakpbctestbucket", "testkeyopts", &Data{Data: "is awesome!"})
+			if err != nil {
+				t.Error(err.Error())
 			}
 			sym <- true
 		}()
