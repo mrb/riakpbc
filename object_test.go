@@ -17,7 +17,7 @@ type RiakData struct {
 	Data    []byte `json:"data" riak:"index"`
 }
 
-func setupConnection(t *testing.T) *Node {
+func setupConnection(t *testing.T) *Client {
 	client := NewClient([]string{"127.0.0.1:8087",
 		"127.0.0.1:8088",
 		"127.0.0.1:8087",
@@ -31,10 +31,10 @@ func setupConnection(t *testing.T) *Node {
 	Coder := NewCoder("json", JsonMarshaller, JsonUnmarshaller)
 	client.SetCoder(Coder)
 
-	return client.Session()
+	return client
 }
 
-func setupSingleNodeConnection(t *testing.T) *Node {
+func setupSingleNodeConnection(t *testing.T) *Client {
 	client := NewClient([]string{"127.0.0.1:8087"})
 	var err error
 	if err = client.Dial(); err != nil {
@@ -45,10 +45,11 @@ func setupSingleNodeConnection(t *testing.T) *Node {
 	Coder := NewCoder("json", JsonMarshaller, JsonUnmarshaller)
 	client.SetCoder(Coder)
 
-	return client.Session()
+	return client
 }
 
-func setupData(t *testing.T, node *Node) {
+func setupData(t *testing.T, client *Client) {
+	node := client.Session()
 	ok, err := node.StoreObject("riakpbctestbucket", "testkey", "{\"data\":\"is awesome!\"}")
 	if err != nil {
 		t.Error(err.Error())
@@ -56,7 +57,8 @@ func setupData(t *testing.T, node *Node) {
 	assert.T(t, len(ok.GetKey()) == 0)
 }
 
-func teardownData(t *testing.T, node *Node) {
+func teardownData(t *testing.T, client *Client) {
+	node := client.Session()
 	ok, err := node.DeleteObject("riakpbctestbucket", "testkey")
 	if err != nil {
 		t.Error(err.Error())
@@ -65,7 +67,8 @@ func teardownData(t *testing.T, node *Node) {
 }
 
 func TestStoreObject(t *testing.T) {
-	riak := setupConnection(t)
+	client := setupConnection(t)
+	riak := client.Session()
 
 	// Insert
 	_, err := riak.StoreObject("riakpbctestbucket", "testkey_rpbcontent", &RpbContent{Value: []byte("rpbcontent data"), ContentType: []byte("text/plain")})
@@ -105,7 +108,8 @@ func TestStoreObject(t *testing.T) {
 }
 
 func TestStoreStruct(t *testing.T) {
-	riak := setupConnection(t)
+	client := setupConnection(t)
+	riak := client.Session()
 
 	riak_data := &RiakData{
 		Email:   "riak@example.com",
@@ -125,7 +129,8 @@ func TestStoreStruct(t *testing.T) {
 }
 
 func TestStoreObjectWithOpts(t *testing.T) {
-	riak := setupConnection(t)
+	client := setupConnection(t)
+	riak := client.Session()
 
 	data, err := json.Marshal(&Data{Data: "is awesome!"})
 	if err != nil {
@@ -150,9 +155,46 @@ func TestStoreObjectWithOpts(t *testing.T) {
 	}
 }
 
+func TestConcurrentOpts(t *testing.T) {
+	client := setupConnection(t)
+
+	data, err := json.Marshal(&Data{Data: "is awesome!"})
+	if err != nil {
+		log.Println(err.Error())
+	}
+
+	sym := make(chan bool, 10)
+	for i := 0; i < 10; i++ {
+		riak := client.Session()
+		if i%2 == 0 {
+			z := new(bool)
+			*z = true
+			opts := &RpbPutReq{
+				ReturnBody: z,
+			}
+			riak.SetOpts(opts)
+		}
+		object, err := riak.StoreStruct("riakpbctestbucket", "testkeyopts", &Data{Data: "is awesome!"})
+		if err != nil {
+			t.Error(err.Error())
+		}
+		if i%2 == 0 {
+			assert.T(t, string(object.GetContent()[0].GetValue()) == string(data))
+		} else {
+			assert.T(t, len(object.GetContent()) == 0)
+		}
+		sym <- true
+	}
+	for i := 0; i < 10; i++ {
+		<-sym
+	}
+
+}
+
 func TestFetchObject(t *testing.T) {
-	riak := setupConnection(t)
-	setupData(t, riak)
+	client := setupConnection(t)
+	riak := client.Session()
+	setupData(t, client)
 
 	object, err := riak.FetchObject("riakpbctestbucket", "testkey")
 	if err != nil {
@@ -166,12 +208,13 @@ func TestFetchObject(t *testing.T) {
 	}
 	assert.T(t, stringObject == data)
 
-	teardownData(t, riak)
+	teardownData(t, client)
 }
 
 func TestFetchStruct(t *testing.T) {
-	riak := setupConnection(t)
-	setupData(t, riak)
+	client := setupConnection(t)
+	riak := client.Session()
+	setupData(t, client)
 
 	riak_data := &RiakData{
 		Email:   "riak@example.com",
@@ -199,12 +242,13 @@ func TestFetchStruct(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	teardownData(t, riak)
+	teardownData(t, client)
 }
 
 func TestDeleteObject(t *testing.T) {
-	riak := setupConnection(t)
-	setupData(t, riak)
+	client := setupConnection(t)
+	riak := client.Session()
+	setupData(t, client)
 
 	object, err := riak.DeleteObject("riakpbctestbucket", "testkey")
 	if err != nil {
@@ -216,5 +260,5 @@ func TestDeleteObject(t *testing.T) {
 
 	assert.T(t, err.Error() == "object not found")
 
-	teardownData(t, riak)
+	teardownData(t, client)
 }

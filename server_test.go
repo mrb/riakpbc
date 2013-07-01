@@ -6,7 +6,8 @@ import (
 )
 
 func TestServerInfo(t *testing.T) {
-	riak := setupConnection(t)
+	client := setupConnection(t)
+	riak := client.Session()
 
 	info, err := riak.GetServerInfo()
 	if err != nil {
@@ -17,7 +18,8 @@ func TestServerInfo(t *testing.T) {
 }
 
 func TestPing(t *testing.T) {
-	riak := setupConnection(t)
+	client := setupConnection(t)
+	riak := client.Session()
 
 	pong, err := riak.Ping()
 	if err != nil {
@@ -27,7 +29,8 @@ func TestPing(t *testing.T) {
 }
 
 func TestClientId(t *testing.T) {
-	riak := setupSingleNodeConnection(t)
+	client := setupSingleNodeConnection(t)
+	riak := client.Session()
 	ok, err := riak.SetClientId("riakpbctestclientid")
 	if err != nil {
 		t.Error(err.Error())
