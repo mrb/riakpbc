@@ -64,6 +64,14 @@ func main() {
 					errs = errs + 1
 				}
 
+				z := new(bool)
+				*z = true
+				opts := &riakpbc.RpbPutReq{
+					ReturnBody: z,
+				}
+
+				riak = client.Session()
+				riak.SetOpts(opts)
 				_, err = riak.FetchObject("bucket", "moreData")
 				if err != nil {
 					errs = errs + 1
