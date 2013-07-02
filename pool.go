@@ -72,8 +72,6 @@ func (pool *Pool) SelectNode() *Node {
 	} else {
 		chosenNode = pool.RandomNode()
 	}
-
-	pool.current = chosenNode
 	pool.Unlock()
 
 	return chosenNode
@@ -105,11 +103,6 @@ func (pool *Pool) Close() {
 	for _, node := range pool.nodes {
 		node.Close()
 	}
-}
-
-func (pool *Pool) Current() *Node {
-	node := pool.current
-	return node
 }
 
 func (pool *Pool) Size() int {

@@ -47,8 +47,7 @@ func (c *Client) Dial() error {
 
 // Session requests a new Node to temporarily work with.
 func (c *Client) Session() *Node {
-	node := c.pool.SelectNode()
-	return node
+	return c.pool.SelectNode()
 }
 
 // SetCoder sets the default Coder for structs.
