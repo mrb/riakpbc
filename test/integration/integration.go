@@ -26,7 +26,7 @@ func main() {
 
 	c := make(chan int)
 
-	for g := 0; g < 7; g++ {
+	for g := 0; g < 20; g++ {
 		go func(which int) {
 			log.Print("<", which, "> Loaded")
 			var times int
@@ -36,6 +36,15 @@ func main() {
 				riak := client.Session()
 
 				times = times + 1
+
+				z := new(bool)
+				*z = true
+				opts1 := &riakpbc.RpbPutReq{
+					ReturnBody: z,
+				}
+
+				riak = client.Session()
+				riak.SetOpts(opts1)
 				_, err := riak.StoreObject("bucket", "data", "{'ok':'ok'}")
 				if err != nil {
 					errs = errs + 1
@@ -64,14 +73,14 @@ func main() {
 					errs = errs + 1
 				}
 
-				z := new(bool)
+				z = new(bool)
 				*z = true
-				opts := &riakpbc.RpbGetReq{
+				opts2 := &riakpbc.RpbGetReq{
 					Head: z,
 				}
 
 				riak = client.Session()
-				riak.SetOpts(opts)
+				riak.SetOpts(opts2)
 				_, err = riak.FetchObject("bucket", "moreData")
 				if err != nil {
 					errs = errs + 1
