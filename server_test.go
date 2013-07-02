@@ -7,39 +7,45 @@ import (
 
 func TestServerInfo(t *testing.T) {
 	client := setupConnection(t)
-	riak := client.Session()
+	session := client.Session()
 
-	info, err := riak.GetServerInfo()
+	info, err := session.GetServerInfo()
 	if err != nil {
 		t.Error(err.Error())
 	}
 	assert.T(t, info != nil)
 	assert.T(t, string(info.GetServerVersion()) != "")
+
+	client.Free(session)
 }
 
 func TestPing(t *testing.T) {
 	client := setupConnection(t)
-	riak := client.Session()
+	session := client.Session()
 
-	pong, err := riak.Ping()
+	pong, err := session.Ping()
 	if err != nil {
 		t.Error(err.Error())
 	}
 	assert.T(t, string(pong) == "Pong")
+
+	client.Free(session)
 }
 
 func TestClientId(t *testing.T) {
 	client := setupSingleNodeConnection(t)
-	riak := client.Session()
-	ok, err := riak.SetClientId("riakpbctestclientid")
+	session := client.Session()
+	ok, err := session.SetClientId("riakpbctestclientid")
 	if err != nil {
 		t.Error(err.Error())
 	}
 	assert.T(t, string(ok) == "Success")
 
-	clientId, err := riak.GetClientId()
+	clientId, err := session.GetClientId()
 	if err != nil {
 		t.Error(err.Error())
 	}
 	assert.T(t, string(clientId.GetClientId()) != "")
+
+	client.Free(session)
 }

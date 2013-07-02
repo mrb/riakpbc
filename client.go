@@ -7,15 +7,14 @@ import (
 type Client struct {
 	cluster []string
 	pool    *Pool
-	Coder   *Coder // Coder for (un)marshalling data
 	logging bool
 }
 
 // NewClient accepts a slice of node address strings and returns a Client object.
-func NewClient(cluster []string) *Client {
+func NewClient(cluster []string, coder *Coder) *Client {
 	return &Client{
 		cluster: cluster,
-		pool:    NewPool(cluster),
+		pool:    NewPool(cluster, coder),
 		logging: false,
 	}
 }
@@ -23,58 +22,56 @@ func NewClient(cluster []string) *Client {
 // Dial connects all nodes in the pool to their addresses via TCP.
 //
 // Illegally addressed nodes will be rejected here.
-func (c *Client) Dial() error {
-	for k, node := range c.pool.nodes {
+func (self *Client) Dial() error {
+	for k, node := range self.pool.nodes {
 		err := node.Dial()
 		if err != nil {
-			if c.LoggingEnabled() {
+			if self.LoggingEnabled() {
 				log.Print("[POOL] Error: ", err)
 			}
-			c.pool.DeleteNode(k)
+			self.pool.DeleteNode(k)
 		}
 	}
 
-	if c.LoggingEnabled() {
-		log.Print("[POOL] Riak Dialed. Connected to ", c.pool.Size(), " Riak nodes.")
+	if self.LoggingEnabled() {
+		log.Print("[POOL] Riak Dialed. Connected to ", self.pool.Size(), " Riak nodes.")
 	}
 
-	if c.pool.Size() < 1 {
+	if self.pool.Size() < 1 {
 		return ErrZeroNodes
 	}
 
 	return nil
 }
 
-// Session requests a new Node to temporarily work with.
-func (c *Client) Session() *Node {
-	return c.pool.SelectNode()
+// Session requests a new Node to temporarily work with from the pool.
+func (self *Client) Session() *Node {
+	return self.pool.SelectNode()
 }
 
-// SetCoder sets the default Coder for structs.
-func (c *Client) SetCoder(coder *Coder) {
-	for i, _ := range c.pool.nodes {
-		c.pool.nodes[i].Coder = c.Coder
-	}
+// Free must be called on a Node to return it back to the pool.
+func (self *Client) Free(node *Node) {
+	self.pool.ReturnNode(node)
 }
 
 // Close closes the node TCP connections.
-func (c *Client) Close() {
-	c.pool.Close()
+func (self *Client) Close() {
+	self.pool.Close()
 }
 
 // Pool returns the pool associated with the client.
-func (c *Client) Pool() *Pool {
-	return c.pool
+func (self *Client) Pool() *Pool {
+	return self.pool
 }
 
-func (c *Client) EnableLogging() {
-	c.logging = true
+func (self *Client) EnableLogging() {
+	self.logging = true
 }
 
-func (c *Client) DisableLogging() {
-	c.logging = false
+func (self *Client) DisableLogging() {
+	self.logging = false
 }
 
-func (c *Client) LoggingEnabled() bool {
-	return c.logging
+func (self *Client) LoggingEnabled() bool {
+	return self.logging
 }

@@ -6,13 +6,13 @@ package riakpbc
 //
 //    - application/json - JSON-encoded map/reduce job
 //    - application/x-erlang-binary - Erlang external term format
-func (node *Node) MapReduce(request, contentType string) ([]byte, error) {
+func (self *Node) MapReduce(request, contentType string) ([]byte, error) {
 	reqstruct := &RpbMapRedReq{
 		Request:     []byte(request),
 		ContentType: []byte(contentType),
 	}
 
-	response, err := node.ReqMultiResp(reqstruct, "RpbMapRedReq")
+	response, err := self.ReqMultiResp(reqstruct, "RpbMapRedReq")
 	if err != nil {
 		return nil, err
 	}
@@ -23,7 +23,7 @@ func (node *Node) MapReduce(request, contentType string) ([]byte, error) {
 // Index requests a set of keys that match a secondary index query.
 //
 //     qtype - an IndexQueryType of either 0 (eq) or 1 (range)
-func (node *Node) Index(bucket, index, key, start, end string) (*RpbIndexResp, error) {
+func (self *Node) Index(bucket, index, key, start, end string) (*RpbIndexResp, error) {
 	reqstruct := &RpbIndexReq{}
 	reqstruct.Bucket = []byte(bucket)
 	reqstruct.Index = []byte(index)
@@ -40,7 +40,7 @@ func (node *Node) Index(bucket, index, key, start, end string) (*RpbIndexResp, e
 		reqstruct.RangeMax = []byte(end)
 	}
 
-	response, err := node.ReqResp(reqstruct, "RpbIndexReq", false)
+	response, err := self.ReqResp(reqstruct, "RpbIndexReq", false)
 	if err != nil {
 		if err.Error() == "object not found" {
 			return &RpbIndexResp{}, nil
@@ -54,15 +54,15 @@ func (node *Node) Index(bucket, index, key, start, end string) (*RpbIndexResp, e
 // Search scans bucket for query string q and searches index for the match.
 //
 // Pass RpbSearchQueryReq to SetOpts for optional parameters.
-func (node *Node) Search(index, q string) (*RpbSearchQueryResp, error) {
+func (self *Node) Search(index, q string) (*RpbSearchQueryResp, error) {
 	reqstruct := &RpbSearchQueryReq{}
-	if opts := node.Opts(); opts != nil {
+	if opts := self.Opts(); opts != nil {
 		reqstruct = opts.(*RpbSearchQueryReq)
 	}
 	reqstruct.Q = []byte(q)
 	reqstruct.Index = []byte(index)
 
-	response, err := node.ReqResp(reqstruct, "RpbSearchQueryReq", false)
+	response, err := self.ReqResp(reqstruct, "RpbSearchQueryReq", false)
 	if err != nil {
 		return nil, err
 	}

@@ -6,7 +6,7 @@ import (
 
 func BenchmarkReadSync(b *testing.B) {
 	b.StopTimer()
-	client := NewClient([]string{"127.0.0.1:8087", "127.0.0.1:8088"})
+	client := NewClient([]string{"127.0.0.1:8087", "127.0.0.1:8088"}, nil)
 	client.Dial()
 	session := client.Session()
 	session.StoreObject("bucket", "key", &Data{Data: "rules"})
@@ -20,7 +20,7 @@ func BenchmarkReadSync(b *testing.B) {
 
 func BenchmarkReadAsync(b *testing.B) {
 	b.StopTimer()
-	client := NewClient([]string{"127.0.0.1:8087", "127.0.0.1:8088"})
+	client := NewClient([]string{"127.0.0.1:8087", "127.0.0.1:8088"}, nil)
 	client.Dial()
 	session := client.Session()
 	session.StoreObject("bucket", "key", &Data{Data: "rules"})
@@ -31,7 +31,9 @@ func BenchmarkReadAsync(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		go func(node *Node) {
+			session := client.Session()
 			_, _ = node.FetchObject("bucket", "key")
+			client.Free(session)
 			select {
 			case ch <- true:
 			default:
@@ -46,7 +48,7 @@ func BenchmarkReadAsync(b *testing.B) {
 
 func BenchmarkStoreStruct(b *testing.B) {
 	b.StopTimer()
-	client := NewClient([]string{"127.0.0.1:8087", "127.0.0.1:8088"})
+	client := NewClient([]string{"127.0.0.1:8087", "127.0.0.1:8088"}, nil)
 	client.Dial()
 	session := client.Session()
 	session.StoreObject("bucket", "key", &Data{Data: "rules"})
@@ -60,7 +62,7 @@ func BenchmarkStoreStruct(b *testing.B) {
 
 func BenchmarkStoreRpbContent(b *testing.B) {
 	b.StopTimer()
-	client := NewClient([]string{"127.0.0.1:8087", "127.0.0.1:8088"})
+	client := NewClient([]string{"127.0.0.1:8087", "127.0.0.1:8088"}, nil)
 	client.Dial()
 	session := client.Session()
 

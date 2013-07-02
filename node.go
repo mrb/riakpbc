@@ -6,12 +6,11 @@ import (
 	"encoding/binary"
 	"io"
 	"net"
-	"sync"
 	"time"
 )
 
 type Node struct {
-	Coder        *Coder
+	coder        *Coder
 	addr         string
 	tcpAddr      *net.TCPAddr
 	conn         *net.TCPConn
@@ -19,11 +18,10 @@ type Node struct {
 	writeTimeout time.Duration
 	errorRate    *Decaying
 	ok           bool
-	opts         chan interface{} // potential Rpb...Req opts
-	sync.Mutex
+	opts         interface{} // potential Rpb...Req opts
 }
 
-// Returns a new Node.
+// Returns a new self.
 func NewNode(addr string, readTimeout, writeTimeout time.Duration) (*Node, error) {
 	tcpaddr, err := net.ResolveTCPAddr("tcp", addr)
 	if err != nil {
@@ -37,75 +35,67 @@ func NewNode(addr string, readTimeout, writeTimeout time.Duration) (*Node, error
 		writeTimeout: writeTimeout,
 		errorRate:    NewDecaying(),
 		ok:           true,
-		opts:         make(chan interface{}, 1),
 	}
 
 	return node, nil
 }
 
-// Dialaconnects to a single riak node.
-func (node *Node) Dial() (err error) {
-	node.conn, err = net.DialTCP("tcp", nil, node.tcpAddr)
+// Dial connects to a single riak node.
+func (self *Node) Dial() (err error) {
+	self.conn, err = net.DialTCP("tcp", nil, self.tcpAddr)
 	if err != nil {
 		return err
 	}
 
-	node.conn.SetKeepAlive(true)
+	self.conn.SetKeepAlive(true)
 
 	return nil
 }
 
 // ErrorRate safely returns the current Node's error rate
-func (node *Node) ErrorRate() float64 {
-	return node.errorRate.Value()
+func (self *Node) ErrorRate() float64 {
+	return self.errorRate.Value()
 }
 
 // RecordErrror increments the current error value - see decaying.go
-func (node *Node) RecordError(amount float64) {
-	node.ok = false
-	node.errorRate.Add(amount)
+func (self *Node) RecordError(amount float64) {
+	self.ok = false
+	self.errorRate.Add(amount)
 }
 
 // Opts returns the set options, and resets them internally to nil.
-func (node *Node) Opts() interface{} {
-	select {
-	case opts := <-node.opts:
-		return opts
-	default:
-		return nil
-	}
+func (self *Node) Opts() interface{} {
+	opts := self.opts
+	self.opts = nil
+	return opts
 }
 
-// SetOpts allows Rpb...Req options to be set for the currently selected Node.
-func (node *Node) SetOpts(opts interface{}) {
-	node.opts <- opts
+// SetOpts allows Rpb...Req options to be set for the currently selected self.
+func (self *Node) SetOpts(opts interface{}) {
+	self.opts = opts
 }
 
-func (node *Node) ReqResp(reqstruct interface{}, structname string, raw bool) (response interface{}, err error) {
-	node.Lock()
+func (self *Node) ReqResp(reqstruct interface{}, structname string, raw bool) (response interface{}, err error) {
 	if raw == true {
-		err = node.rawRequest(reqstruct.([]byte), structname)
+		err = self.rawRequest(reqstruct.([]byte), structname)
 	} else {
-		err = node.request(reqstruct, structname)
+		err = self.request(reqstruct, structname)
 	}
 
 	if err != nil {
-		node.Unlock()
 		return nil, err
 	}
 
-	response, err = node.response()
+	response, err = self.response()
 	if err != nil {
-		node.Unlock()
 		return nil, err
 	}
 
-	node.Unlock()
 	return
 }
 
-func (node *Node) ReqMultiResp(reqstruct interface{}, structname string) (response interface{}, err error) {
-	response, err = node.ReqResp(reqstruct, structname, false)
+func (self *Node) ReqMultiResp(reqstruct interface{}, structname string) (response interface{}, err error) {
+	response, err = self.ReqResp(reqstruct, structname, false)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +104,7 @@ func (node *Node) ReqMultiResp(reqstruct interface{}, structname string) (respon
 		keys := response.(*RpbListKeysResp).GetKeys()
 		done := response.(*RpbListKeysResp).GetDone()
 		for done != true {
-			response, err := node.response()
+			response, err := self.response()
 			if err != nil {
 				return nil, err
 			}
@@ -126,7 +116,7 @@ func (node *Node) ReqMultiResp(reqstruct interface{}, structname string) (respon
 		mapResponse := response.(*RpbMapRedResp).GetResponse()
 		done := response.(*RpbMapRedResp).GetDone()
 		for done != true {
-			response, err := node.response()
+			response, err := self.response()
 			if err != nil {
 				return nil, err
 			}
@@ -138,8 +128,8 @@ func (node *Node) ReqMultiResp(reqstruct interface{}, structname string) (respon
 	return nil, nil
 }
 
-func (node *Node) DoPing() bool {
-	resp, err := node.ReqResp([]byte{}, "RpbPingReq", true)
+func (self *Node) DoPing() bool {
+	resp, err := self.ReqResp([]byte{}, "RpbPingReq", true)
 	if resp == nil || string(resp.([]byte)) != "Pong" || err != nil {
 		return false
 	}
@@ -147,14 +137,14 @@ func (node *Node) DoPing() bool {
 }
 
 // Close the connection
-func (node *Node) Close() {
-	node.conn.Close()
-	node.conn = nil
+func (self *Node) Close() {
+	self.conn.Close()
+	self.conn = nil
 }
 
-func (node *Node) write(formattedRequest []byte) (err error) {
-	node.conn.SetWriteDeadline(time.Now().Add(node.readTimeout))
-	_, err = node.conn.Write(formattedRequest)
+func (self *Node) write(formattedRequest []byte) (err error) {
+	self.conn.SetWriteDeadline(time.Now().Add(self.readTimeout))
+	_, err = self.conn.Write(formattedRequest)
 	if err != nil {
 		return err
 	}
@@ -162,13 +152,13 @@ func (node *Node) write(formattedRequest []byte) (err error) {
 	return nil
 }
 
-func (node *Node) read() (respraw []byte, err error) {
-	node.conn.SetWriteDeadline(time.Now().Add(node.readTimeout))
+func (self *Node) read() (respraw []byte, err error) {
+	self.conn.SetWriteDeadline(time.Now().Add(self.readTimeout))
 
 	buf := make([]byte, 4)
 	var size int32
 	// First 4 bytes are always size of message.
-	n, err := io.ReadFull(node.conn, buf)
+	n, err := io.ReadFull(self.conn, buf)
 
 	if err != nil {
 		return nil, err
@@ -178,9 +168,9 @@ func (node *Node) read() (respraw []byte, err error) {
 		binary.Read(sbuf, binary.BigEndian, &size)
 		data := make([]byte, size)
 		// read rest of message
-		m, err := io.ReadFull(node.conn, data)
+		m, err := io.ReadFull(self.conn, data)
 		if err != nil {
-			node.RecordError(1.0)
+			self.RecordError(1.0)
 			return nil, err
 		}
 		if m == int(size) {
@@ -190,54 +180,54 @@ func (node *Node) read() (respraw []byte, err error) {
 	return nil, nil
 }
 
-func (node *Node) response() (response interface{}, err error) {
-	rawresp, err := node.read()
+func (self *Node) response() (response interface{}, err error) {
+	rawresp, err := self.read()
 	if err != nil {
-		node.RecordError(1.0)
+		self.RecordError(1.0)
 		return nil, err
 	}
 
 	err = validateResponseHeader(rawresp)
 	if err != nil {
-		node.RecordError(1.0)
+		self.RecordError(1.0)
 		return nil, err
 	}
 
 	response, err = unmarshalResponse(rawresp)
 	if err != nil || response == nil {
-		node.RecordError(1.0)
+		self.RecordError(1.0)
 		return nil, err
 	}
 
 	return response, nil
 }
 
-func (node *Node) request(reqstruct interface{}, structname string) (err error) {
+func (self *Node) request(reqstruct interface{}, structname string) (err error) {
 	marshaledRequest, err := proto.Marshal(reqstruct.(proto.Message))
 	if err != nil {
-		node.RecordError(1.0)
+		self.RecordError(1.0)
 		return err
 	}
 
-	err = node.rawRequest(marshaledRequest, structname)
+	err = self.rawRequest(marshaledRequest, structname)
 	if err != nil {
-		node.RecordError(1.0)
+		self.RecordError(1.0)
 		return err
 	}
 
 	return
 }
 
-func (node *Node) rawRequest(marshaledRequest []byte, structname string) (err error) {
+func (self *Node) rawRequest(marshaledRequest []byte, structname string) (err error) {
 	formattedRequest, err := prependRequestHeader(structname, marshaledRequest)
 	if err != nil {
-		node.RecordError(1.0)
+		self.RecordError(1.0)
 		return err
 	}
 
-	err = node.write(formattedRequest)
+	err = self.write(formattedRequest)
 	if err != nil {
-		node.RecordError(1.0)
+		self.RecordError(1.0)
 		return err
 	}
 	return

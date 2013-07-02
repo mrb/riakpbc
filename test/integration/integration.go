@@ -13,8 +13,8 @@ type Data struct {
 
 func main() {
 	runtime.GOMAXPROCS(7)
-	cluster := []string{"127.0.0.1:8087", "127.0.0.1:8088", "127.0.0.1:8089", "127.0.0.1:8090"}
-	client := riakpbc.NewClient(cluster)
+	cluster := []string{"127.0.0.1:8086", "127.0.0.1:8087", "127.0.0.1:8088", "127.0.0.1:8089", "127.0.0.1:8090"}
+	client := riakpbc.NewClient(cluster, nil)
 
 	err := client.Dial()
 	if err != nil {
@@ -43,7 +43,6 @@ func main() {
 					ReturnBody: z,
 				}
 
-				riak = client.Session()
 				riak.SetOpts(opts1)
 				_, err := riak.StoreObject("bucket", "data", "{'ok':'ok'}")
 				if err != nil {
@@ -79,7 +78,6 @@ func main() {
 					Head: z,
 				}
 
-				riak = client.Session()
 				riak.SetOpts(opts2)
 				_, err = riak.FetchObject("bucket", "moreData")
 				if err != nil {
@@ -88,6 +86,8 @@ func main() {
 
 				actionDuration := time.Now().Sub(actionBegin)
 				log.Print("<", which, "> @", times, " ", client.Pool(), "!<", errs, "> ", actionDuration)
+
+				client.Free(riak)
 			}
 		}(g)
 	}

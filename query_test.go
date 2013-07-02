@@ -19,72 +19,75 @@ func setupIndexing(t *testing.T) {
 
 func TestMapReduce(t *testing.T) {
 	client := setupConnection(t)
-	riak := client.Session()
+	session := client.Session()
 	setupData(t, client)
 
 	twoLevelQuery := "{\"inputs\":[[\"riakpbctestbucket\",\"testkey\"]],\"query\":[{\"map\":{\"language\":\"javascript\",\"keep\":false,\"name\":\"Riak.mapValuesJson\"}},{\"reduce\":{\"language\":\"javascript\",\"keep\":true,\"name\":\"Riak.reduceMax\"}}]}"
-	reduced, err := riak.MapReduce(twoLevelQuery, "application/json")
+	reduced, err := session.MapReduce(twoLevelQuery, "application/json")
 	if err != nil {
 		t.Error(err.Error())
 	}
 	assert.T(t, string(reduced) == "[{\"data\":\"is awesome!\"}]")
 
 	teardownData(t, client)
+	client.Free(session)
 }
 
 func TestIndex(t *testing.T) {
 	client := setupConnection(t)
-	riak := client.Session()
-	if _, err := riak.StoreStruct("farm", "chicken", &Farm{Animal: "chicken"}); err != nil {
+	session := client.Session()
+	if _, err := session.StoreStruct("farm", "chicken", &Farm{Animal: "chicken"}); err != nil {
 		t.Error(err.Error())
 	}
-	if _, err := riak.StoreStruct("farm", "hen", &Farm{Animal: "hen"}); err != nil {
+	if _, err := session.StoreStruct("farm", "hen", &Farm{Animal: "hen"}); err != nil {
 		t.Error(err.Error())
 	}
-	if _, err := riak.StoreStruct("farm", "rooster", &Farm{Animal: "rooster"}); err != nil {
+	if _, err := session.StoreStruct("farm", "rooster", &Farm{Animal: "rooster"}); err != nil {
 		t.Error(err.Error())
 	}
 
-	data, err := riak.Index("farm", "animal_bin", "chicken", "", "")
+	data, err := session.Index("farm", "animal_bin", "chicken", "", "")
 	if err != nil {
 		t.Log("In order for this test to pass storage_backend must be set to riak_kv_eleveldb_backend in app.config")
 		t.Error(err.Error())
 	}
 	assert.T(t, len(data.GetKeys()) > 0)
 
-	if _, err := riak.DeleteObject("farm", "chicken"); err != nil {
+	if _, err := session.DeleteObject("farm", "chicken"); err != nil {
 		t.Error(err.Error())
 	}
-	if _, err := riak.DeleteObject("farm", "hen"); err != nil {
+	if _, err := session.DeleteObject("farm", "hen"); err != nil {
 		t.Error(err.Error())
 	}
-	if _, err := riak.DeleteObject("farm", "rooster"); err != nil {
+	if _, err := session.DeleteObject("farm", "rooster"); err != nil {
 		t.Error(err.Error())
 	}
 
 	// Search against a non-existent key should return empty, not error
-	check, err := riak.Index("farm", "animal_bin", "chicken", "", "")
+	check, err := session.Index("farm", "animal_bin", "chicken", "", "")
 	if len(check.GetKeys()) > 0 {
 		t.Error("non-existent index search should return 0 results")
 	}
+	client.Free(session)
 }
 
 func TestSearch(t *testing.T) {
 	client := setupConnection(t)
-	riak := client.Session()
+	session := client.Session()
 	setupIndexing(t)
-	if _, err := riak.StoreStruct("farm", "chicken", &Farm{Animal: "chicken"}); err != nil {
+	if _, err := session.StoreStruct("farm", "chicken", &Farm{Animal: "chicken"}); err != nil {
 		t.Error(err.Error())
 	}
 
-	data, err := riak.Search("farm", "animal:chicken")
+	data, err := session.Search("farm", "animal:chicken")
 	if err != nil {
 		t.Log("In order for this test to pass riak_search may need to be enabled in app.config")
 		t.Error(err.Error())
 	}
 	assert.T(t, data.GetNumFound() > 0)
 
-	if _, err := riak.DeleteObject("farm", "chicken"); err != nil {
+	if _, err := session.DeleteObject("farm", "chicken"); err != nil {
 		t.Error(err.Error())
 	}
+	client.Free(session)
 }

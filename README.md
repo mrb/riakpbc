@@ -14,13 +14,12 @@ As of June 21, 2013 the API is deemed relatively stable.  The library should be 
     	Field2 int    `json:"field2"`
     }
     
-    // Initialize riakpbc against a 3 node cluster
-    riak := NewClient([]string{"127.0.0.1:8087", "127.0.0.0:9089", "127.0.0.0:9090"})
-
     // Add optional coder for storing JSON data to/from structs
     // Alternative marshallers can be built from this interface
-    Coder := NewCoder("json", JsonMarshaller, JsonUnmarshaller)
-    riak.SetCoder(Coder)
+    coder := NewCoder("json", JsonMarshaller, JsonUnmarshaller)
+
+    // Initialize riakpbc against a 3 node cluster
+    riak := NewClient([]string{"127.0.0.1:8087", "127.0.0.0:9089", "127.0.0.0:9090"}, coder)
 
     // Dial all the nodes.
     if err := riak.Dial(); err != nil {
@@ -60,6 +59,9 @@ As of June 21, 2013 the API is deemed relatively stable.  The library should be 
     if err != nil {
         log.Println(err.Error())
     }
+
+    // All sessions must be Free'ed
+    riak.Free(session)
 
     // Close the connections if completely finished
     riak.Close()
