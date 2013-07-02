@@ -5,7 +5,9 @@ import (
 	"code.google.com/p/goprotobuf/proto"
 	"encoding/binary"
 	"io"
+	"log"
 	"net"
+	"sync"
 	"time"
 )
 
@@ -17,8 +19,9 @@ type Node struct {
 	readTimeout  time.Duration
 	writeTimeout time.Duration
 	errorRate    *Decaying
-	ok           bool
 	opts         interface{} // potential Rpb...Req opts
+	okLock       *sync.Mutex
+	ok           bool
 }
 
 // Returns a new self.
@@ -35,6 +38,7 @@ func NewNode(addr string, readTimeout, writeTimeout time.Duration) (*Node, error
 		writeTimeout: writeTimeout,
 		errorRate:    NewDecaying(),
 		ok:           true,
+		okLock:       &sync.Mutex{},
 	}
 
 	return node, nil
@@ -59,7 +63,7 @@ func (self *Node) ErrorRate() float64 {
 
 // RecordErrror increments the current error value - see decaying.go
 func (self *Node) RecordError(amount float64) {
-	self.ok = false
+	self.SetOk(false)
 	self.errorRate.Add(amount)
 }
 
@@ -68,6 +72,19 @@ func (self *Node) Opts() interface{} {
 	opts := self.opts
 	self.opts = nil
 	return opts
+}
+
+func (self *Node) Ok() bool {
+	self.okLock.Lock()
+	ok := self.ok
+	self.okLock.Unlock()
+	return ok
+}
+
+func (self *Node) SetOk(ok bool) {
+	self.okLock.Lock()
+	self.ok = ok
+	self.okLock.Unlock()
 }
 
 // SetOpts allows Rpb...Req options to be set for the currently selected self.
@@ -129,6 +146,7 @@ func (self *Node) ReqMultiResp(reqstruct interface{}, structname string) (respon
 }
 
 func (self *Node) DoPing() bool {
+	log.Print("Pinging ", self)
 	resp, err := self.ReqResp([]byte{}, "RpbPingReq", true)
 	if resp == nil || string(resp.([]byte)) != "Pong" || err != nil {
 		return false

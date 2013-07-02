@@ -49,30 +49,11 @@ func (pool *Pool) SelectNode() *Node {
 	for {
 		// Pull a node off the pool and check it's health
 		node := <-pool.nodePool
-		if node.ok && node.ErrorRate() < NODE_ERROR_THRESHOLD {
+		if node.Ok() && node.ErrorRate() < NODE_ERROR_THRESHOLD {
 			return node
 		}
 		// Node is not ok
-		go func(p *Pool, n *Node) {
-			// Loop until we are alive again
-			for {
-				// If the node is back below the threshold try to ping/reconnect again
-				if n.ErrorRate() < NODE_ERROR_THRESHOLD {
-					if n.DoPing() == false {
-						// Still down, set back to max error
-						n.RecordError(NODE_ERROR_MAX)
-					} else {
-						// Attempt to redial the node
-						n.Close()
-						if err := n.Dial(); err == nil {
-							n.ok = true
-							p.nodePool <- n // push it back to the pool
-							return
-						}
-					}
-				}
-			}
-		}(pool, node)
+		go retryNode(pool, node)
 	}
 }
 
@@ -97,8 +78,29 @@ func (pool *Pool) Size() int {
 func (pool *Pool) String() string {
 	var outString string
 	for _, node := range pool.nodes {
-		nodeString := fmt.Sprintf(" [%s %f <%t>] ", node.addr, node.ErrorRate(), node.ok)
+		nodeString := fmt.Sprintf(" [%s %f <%t>] ", node.addr, node.ErrorRate(), node.Ok())
 		outString += nodeString
 	}
 	return outString
+}
+
+func retryNode(p *Pool, n *Node) {
+	// Loop until we are alive again
+	for {
+		// If the node is back below the threshold try to ping/reconnect again
+		if n.ErrorRate() < NODE_ERROR_THRESHOLD {
+			if n.DoPing() == false {
+				// Still down, set back to max error
+				n.RecordError(NODE_ERROR_MAX)
+			} else {
+				// Attempt to redial the node
+				n.Close()
+				if err := n.Dial(); err == nil {
+					n.SetOk(true)
+					p.nodePool <- n // push it back to the pool
+					return
+				}
+			}
+		}
+	}
 }
