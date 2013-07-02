@@ -13,10 +13,10 @@ type Data struct {
 
 func main() {
 	runtime.GOMAXPROCS(7)
-	cluster := []string{"127.0.0.1:8087", "127.0.0.1:8088", "127.0.0.1:8089", "127.0.0.1:8090"}
-	riak := riakpbc.NewClient(cluster)
+	cluster := []string{"127.0.0.1:8086", "127.0.0.1:8087", "127.0.0.1:8088", "127.0.0.1:8089", "127.0.0.1:8090"}
+	client := riakpbc.NewClient(cluster, nil)
 
-	err := riak.Dial()
+	err := client.Dial()
 	if err != nil {
 		log.Print(err)
 	}
@@ -26,15 +26,24 @@ func main() {
 
 	c := make(chan int)
 
-	for g := 0; g < 7; g++ {
+	for g := 0; g < 20; g++ {
 		go func(which int) {
 			log.Print("<", which, "> Loaded")
 			var times int
 			var errs int
 			for {
 				actionBegin := time.Now()
+				riak := client.Session()
 
 				times = times + 1
+
+				z := new(bool)
+				*z = true
+				opts1 := &riakpbc.RpbPutReq{
+					ReturnBody: z,
+				}
+
+				riak.SetOpts(opts1)
 				_, err := riak.StoreObject("bucket", "data", "{'ok':'ok'}")
 				if err != nil {
 					errs = errs + 1
@@ -63,13 +72,22 @@ func main() {
 					errs = errs + 1
 				}
 
+				z = new(bool)
+				*z = true
+				opts2 := &riakpbc.RpbGetReq{
+					Head: z,
+				}
+
+				riak.SetOpts(opts2)
 				_, err = riak.FetchObject("bucket", "moreData")
 				if err != nil {
 					errs = errs + 1
 				}
 
 				actionDuration := time.Now().Sub(actionBegin)
-				log.Print("<", which, "> @", times, " ", riak.Pool(), "!<",errs, "> ", actionDuration)
+				log.Print("<", which, "> @", times, " ", client.Pool(), "!<", errs, "> ", actionDuration)
+
+				client.Free(riak)
 			}
 		}(g)
 	}
@@ -78,5 +96,5 @@ func main() {
 	actionDuration := actionEnd.Sub(actionBegin)
 	log.Print("Ran for ", actionDuration)
 
-	riak.Close()
+	client.Close()
 }
