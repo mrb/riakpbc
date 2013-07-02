@@ -48,13 +48,14 @@ func (c *Client) Dial() error {
 // Session requests a new Node to temporarily work with.
 func (c *Client) Session() *Node {
 	node := c.pool.SelectNode()
-	node.Coder = c.Coder
 	return node
 }
 
 // SetCoder sets the default Coder for structs.
-func (c *Client) SetCoder(Coder *Coder) {
-	c.Coder = Coder
+func (c *Client) SetCoder(coder *Coder) {
+	for i, _ := range c.pool.nodes {
+		c.pool.nodes[i].Coder = c.Coder
+	}
 }
 
 // Close closes the node TCP connections.

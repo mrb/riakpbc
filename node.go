@@ -19,7 +19,7 @@ type Node struct {
 	writeTimeout time.Duration
 	errorRate    *Decaying
 	ok           bool
-	opts         interface{} // potential Rpb...Req opts
+	opts         chan interface{} // potential Rpb...Req opts
 	sync.Mutex
 }
 
@@ -37,6 +37,7 @@ func NewNode(addr string, readTimeout, writeTimeout time.Duration) (*Node, error
 		writeTimeout: writeTimeout,
 		errorRate:    NewDecaying(),
 		ok:           true,
+		opts:         make(chan interface{}, 1),
 	}
 
 	return node, nil
@@ -67,14 +68,17 @@ func (node *Node) RecordError(amount float64) {
 
 // Opts returns the set options, and resets them internally to nil.
 func (node *Node) Opts() interface{} {
-	opts := node.opts
-	node.opts = nil
-	return opts
+	select {
+	case opts := <-node.opts:
+		return opts
+	default:
+		return nil
+	}
 }
 
 // SetOpts allows Rpb...Req options to be set for the currently selected Node.
 func (node *Node) SetOpts(opts interface{}) {
-	node.opts = opts
+	node.opts <- opts
 }
 
 func (node *Node) ReqResp(reqstruct interface{}, structname string, raw bool) (response interface{}, err error) {
