@@ -27,7 +27,7 @@ As of June 21, 2013 the API is deemed relatively stable.  The library should be 
 
 	func main() {
 		// Initialize riakpbc against a 3 node cluster
-		r := riak.NewClient([]string{"127.0.0.1:8087"})
+		r := riak.NewClient([]string{"127.0.0.1:8087", "127.0.0.0:9089", "127.0.0.0:9090"})
 
 		// Add optional coder for storing JSON data to/from structs
 		// Alternative marshallers can be built from this interface
