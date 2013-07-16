@@ -32,8 +32,6 @@ func main() {
 			var times int
 			var errs int
 			for {
-				actionBegin := time.Now()
-
 				times = times + 1
 				_, err := riak.StoreObject("bucket", "data", "{'ok':'ok'}")
 				if err != nil {
@@ -52,10 +50,11 @@ func main() {
 
 				data, err := riak.FetchObject("bucket", "data")
 				if err != nil {
-					break
-				}
-				if string(data.GetContent()[0].GetValue()) != "{'ok':'ok'}" {
-					log.Fatal("!!!")
+					errs = errs + 1
+				} else {
+					if string(data.GetContent()[0].GetValue()) != "{'ok':'ok'}" {
+						log.Fatal("!!!")
+					}
 				}
 
 				_, err = riak.StoreObject("bucket", "moreData", "stringData")
@@ -68,8 +67,7 @@ func main() {
 					errs = errs + 1
 				}
 
-				actionDuration := time.Now().Sub(actionBegin)
-				log.Print("<", which, "> @", times, " ", riak.Pool(), "!<",errs, "> ", actionDuration)
+				log.Print("<", which, "> @", times, " ", riak.Pool(), "!<", errs, "> ")
 			}
 		}(g)
 	}

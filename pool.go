@@ -38,6 +38,8 @@ func NewPool(cluster []string) *Pool {
 // occurs, and decays over time - 50% each 10 seconds by default.
 func (pool *Pool) SelectNode() *Node {
 	pool.Lock()
+	defer pool.Unlock()
+
 	errorThreshold := 0.1
 	var possibleNodes []*Node
 
@@ -46,21 +48,6 @@ func (pool *Pool) SelectNode() *Node {
 
 		if nodeErrorValue < errorThreshold {
 			possibleNodes = append(possibleNodes, node)
-		} else {
-			if node.ok == false && node.ErrorRate() < 100.0 {
-				go func(iNode *Node) {
-					nodeGood := iNode.Ping()
-					if nodeGood == false {
-						iNode.RecordError(100.0)
-						iNode.Lock()
-						iNode.Close()
-						iNode.Dial()
-						iNode.Unlock()
-					} else {
-						iNode.ok = true
-					}
-				}(node)
-			}
 		}
 	}
 
@@ -74,9 +61,27 @@ func (pool *Pool) SelectNode() *Node {
 	}
 
 	pool.current = chosenNode
-	pool.Unlock()
 
-	return chosenNode
+	return pool.RandomNode()
+}
+
+func (pool *Pool) Ping() {
+	pool.Lock()
+	defer pool.Unlock()
+
+	for _, node := range pool.nodes {
+		nodeGood := node.Ping()
+		if nodeGood == false {
+			node.RecordError(1.0)
+			node.Lock()
+			node.Close()
+			node.Dial()
+			node.Unlock()
+		} else {
+			node.SetOk(true)
+		}
+
+	}
 }
 
 func (pool *Pool) RandomNode() *Node {
@@ -93,7 +98,6 @@ func (pool *Pool) RandomNode() *Node {
 			randVal = throwAwayRand
 		}
 	}
-
 	return randomNode
 }
 
@@ -119,7 +123,7 @@ func (pool *Pool) Size() int {
 func (pool *Pool) String() string {
 	var outString string
 	for _, node := range pool.nodes {
-		nodeString := fmt.Sprintf(" [%s %f <%t>] ", node.addr, node.ErrorRate(), node.ok)
+		nodeString := fmt.Sprintf(" [%s %f <%t>] ", node.addr, node.ErrorRate(), node.GetOk())
 		outString += nodeString
 	}
 	return outString

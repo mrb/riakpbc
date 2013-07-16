@@ -3,24 +3,27 @@ package riakpbc
 import (
 	"log"
 	"sync"
+	"time"
 )
 
 type Client struct {
-	cluster []string
-	pool    *Pool
-	Coder   *Coder // Coder for (un)marshalling data
-	optsMu  *sync.Mutex
-	opts    interface{} // potential Rpb...Req opts
-	logging bool
+	cluster       []string
+	pool          *Pool
+	Coder         *Coder // Coder for (un)marshalling data
+	optsMu        *sync.Mutex
+	opts          interface{} // potential Rpb...Req opts
+	logging       bool
+	pingFrequency int
 }
 
 // NewClient accepts a slice of node address strings and returns a Client object.
 func NewClient(cluster []string) *Client {
 	return &Client{
-		cluster: cluster,
-		pool:    NewPool(cluster),
-		optsMu:  &sync.Mutex{},
-		logging: false,
+		cluster:       cluster,
+		pool:          NewPool(cluster),
+		optsMu:        &sync.Mutex{},
+		logging:       false,
+		pingFrequency: 500,
 	}
 }
 
@@ -46,7 +49,16 @@ func (c *Client) Dial() error {
 		return ErrZeroNodes
 	}
 
+	go c.BackgroundNodePing()
+
 	return nil
+}
+
+func (c *Client) BackgroundNodePing() {
+	for {
+		time.Sleep(time.Duration(c.pingFrequency) * time.Millisecond)
+		c.pool.Ping()
+	}
 }
 
 // Opts returns the set options, and resets them internally to nil.

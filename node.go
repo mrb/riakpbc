@@ -18,6 +18,7 @@ type Node struct {
 	writeTimeout time.Duration
 	errorRate    *Decaying
 	ok           bool
+	oklock       *sync.Mutex
 	sync.Mutex
 }
 
@@ -35,6 +36,7 @@ func NewNode(addr string, readTimeout, writeTimeout time.Duration) (*Node, error
 		writeTimeout: writeTimeout,
 		errorRate:    NewDecaying(),
 		ok:           true,
+		oklock:       &sync.Mutex{},
 	}
 
 	return node, nil
@@ -59,8 +61,22 @@ func (node *Node) ErrorRate() float64 {
 
 // RecordErrror increments the current error value - see decaying.go
 func (node *Node) RecordError(amount float64) {
-	node.ok = false
+	node.SetOk(false)
 	node.errorRate.Add(amount)
+}
+
+func (node *Node) GetOk() bool {
+	var out bool
+	node.oklock.Lock()
+	out = node.ok
+	node.oklock.Unlock()
+	return out
+}
+
+func (node *Node) SetOk(ok bool) {
+	node.oklock.Lock()
+	node.ok = ok
+	node.oklock.Unlock()
 }
 
 func (node *Node) ReqResp(reqstruct interface{}, structname string, raw bool) (response interface{}, err error) {
@@ -122,7 +138,7 @@ func (node *Node) ReqMultiResp(reqstruct interface{}, structname string) (respon
 
 func (node *Node) Ping() bool {
 	resp, err := node.ReqResp([]byte{}, "RpbPingReq", true)
-	if resp == nil || string(resp.([]byte)) != "Pong" || err != nil {
+	if (resp == nil) || (string(resp.([]byte)) != "Pong") || (err != nil) {
 		return false
 	}
 	return true
