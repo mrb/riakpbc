@@ -40,3 +40,20 @@ func TestClientId(t *testing.T) {
 	}
 	assert.T(t, string(clientId.GetClientId()) != "")
 }
+
+func TestClientIdDo(t *testing.T) {
+	riak := setupSingleNodeConnection(t)
+
+	opts := riak.NewSetClientIdRequest("riakpbctestclientid")
+	ok, err := riak.Do(opts)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.T(t, string(ok.([]byte)) == "Success")
+
+	clientId, err := riak.GetClientId()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.T(t, string(clientId.GetClientId()) != "")
+}

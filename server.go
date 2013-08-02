@@ -1,10 +1,10 @@
 package riakpbc
 
-// Get server info
+// GetServerInfo returns the server info.
 func (c *Client) GetServerInfo() (*RpbGetServerInfoResp, error) {
-	reqdata := []byte{}
+	opts := []byte{}
 
-	response, err := c.ReqResp(reqdata, "RpbGetServerInfoReq", true)
+	response, err := c.ReqResp(opts, "RpbGetServerInfoReq", true)
 	if err != nil {
 		return nil, err
 	}
@@ -12,11 +12,11 @@ func (c *Client) GetServerInfo() (*RpbGetServerInfoResp, error) {
 	return response.(*RpbGetServerInfoResp), nil
 }
 
-// Ping the server
+// Ping the server.
 func (c *Client) Ping() ([]byte, error) {
-	reqdata := []byte{}
+	opts := []byte{}
 
-	response, err := c.ReqResp(reqdata, "RpbPingReq", true)
+	response, err := c.ReqResp(opts, "RpbPingReq", true)
 	if err != nil {
 		return nil, err
 	}
@@ -24,11 +24,11 @@ func (c *Client) Ping() ([]byte, error) {
 	return response.([]byte), nil
 }
 
-// Get client ID
+// GetClientId returns the client ID.
 func (c *Client) GetClientId() (*RpbGetClientIdResp, error) {
-	reqdata := []byte{}
+	opts := []byte{}
 
-	response, err := c.ReqResp(reqdata, "RpbGetClientIdReq", true)
+	response, err := c.ReqResp(opts, "RpbGetClientIdReq", true)
 	if err != nil {
 		return nil, err
 	}
@@ -36,16 +36,27 @@ func (c *Client) GetClientId() (*RpbGetClientIdResp, error) {
 	return response.(*RpbGetClientIdResp), nil
 }
 
-// Set client ID
-func (c *Client) SetClientId(clientId string) ([]byte, error) {
-	reqstruct := &RpbSetClientIdReq{
+// NewSetClientIdRequest prepares a new SetClientId request.
+func (c *Client) NewSetClientIdRequest(clientId string) *RpbSetClientIdReq {
+	return &RpbSetClientIdReq{
 		ClientId: []byte(clientId),
 	}
+}
 
-	response, err := c.ReqResp(reqstruct, "RpbSetClientIdReq", false)
+func (c *Client) setClientId(opts *RpbSetClientIdReq, clientId string) ([]byte, error) {
+	if opts == nil {
+		opts = c.NewSetClientIdRequest(clientId)
+	}
+
+	response, err := c.ReqResp(opts, "RpbSetClientIdReq", false)
 	if err != nil {
 		return nil, err
 	}
 
 	return response.([]byte), nil
+}
+
+// SetClientId sets the client ID.
+func (c *Client) SetClientId(clientId string) ([]byte, error) {
+	return c.setClientId(nil, clientId)
 }

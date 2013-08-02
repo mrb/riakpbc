@@ -1,10 +1,10 @@
 package riakpbc
 
-// List all buckets
+// ListBuckets lists all buckets.
 func (c *Client) ListBuckets() (*RpbListBucketsResp, error) {
-	reqdata := []byte{}
+	opts := []byte{}
 
-	response, err := c.ReqResp(reqdata, "RpbListBucketsReq", true)
+	response, err := c.ReqResp(opts, "RpbListBucketsReq", true)
 	if err != nil {
 		return nil, err
 	}
@@ -12,13 +12,19 @@ func (c *Client) ListBuckets() (*RpbListBucketsResp, error) {
 	return response.(*RpbListBucketsResp), nil
 }
 
-// List all keys from bucket
-func (c *Client) ListKeys(bucket string) ([][]byte, error) {
-	reqstruct := &RpbListKeysReq{
+// ListKeysRequest prepares a ListKeys request.
+func (c *Client) NewListKeysRequest(bucket string) *RpbListKeysReq {
+	return &RpbListKeysReq{
 		Bucket: []byte(bucket),
 	}
+}
 
-	response, err := c.ReqMultiResp(reqstruct, "RpbListKeysReq")
+func (c *Client) listKeys(opts *RpbListKeysReq, bucket string) ([][]byte, error) {
+	if opts == nil {
+		opts = c.NewListKeysRequest(bucket)
+	}
+
+	response, err := c.ReqMultiResp(opts, "RpbListKeysReq")
 	if err != nil {
 		return nil, err
 	}
@@ -28,13 +34,24 @@ func (c *Client) ListKeys(bucket string) ([][]byte, error) {
 	return keys, nil
 }
 
-// Get bucket info
-func (c *Client) GetBucket(bucket string) (*RpbGetBucketResp, error) {
-	reqstruct := &RpbGetBucketReq{
+// ListKeys lists all keys from bucket.
+func (c *Client) ListKeys(bucket string) ([][]byte, error) {
+	return c.listKeys(nil, bucket)
+}
+
+// NewGetBucketRequest prepares a GetBucket request.
+func (c *Client) NewGetBucketRequest(bucket string) *RpbGetBucketReq {
+	return &RpbGetBucketReq{
 		Bucket: []byte(bucket),
 	}
+}
 
-	response, err := c.ReqResp(reqstruct, "RpbGetBucketReq", false)
+func (c *Client) getBucket(opts *RpbGetBucketReq, bucket string) (*RpbGetBucketResp, error) {
+	if opts == nil {
+		opts = c.NewGetBucketRequest(bucket)
+	}
+
+	response, err := c.ReqResp(opts, "RpbGetBucketReq", false)
 	if err != nil {
 		return nil, err
 	}
@@ -42,23 +59,36 @@ func (c *Client) GetBucket(bucket string) (*RpbGetBucketResp, error) {
 	return response.(*RpbGetBucketResp), nil
 }
 
-// Create bucket
-func (c *Client) SetBucket(bucket string, nval *uint32, allowmult *bool) ([]byte, error) {
-	reqstruct := &RpbSetBucketReq{}
-	if opts := c.Opts(); opts != nil {
-		reqstruct = opts.(*RpbSetBucketReq)
+// GetBucket gets the bucket info.
+func (c *Client) GetBucket(bucket string) (*RpbGetBucketResp, error) {
+	return c.getBucket(nil, bucket)
+}
+
+// NewSetBucketRequest prepares a SetBucket request.
+func (c *Client) NewSetBucketRequest(bucket string, nval *uint32, allowmult *bool) *RpbSetBucketReq {
+	return &RpbSetBucketReq{
+		Bucket: []byte(bucket),
+		Props: &RpbBucketProps{
+			NVal:      nval,
+			AllowMult: allowmult,
+		},
 	}
-	reqstruct.Bucket = []byte(bucket)
-	if reqstruct.Props == nil {
-		reqstruct.Props = &RpbBucketProps{}
-		reqstruct.Props.NVal = nval
-		reqstruct.Props.AllowMult = allowmult
+}
+
+func (c *Client) setBucket(opts *RpbSetBucketReq, bucket string, nval *uint32, allowmult *bool) ([]byte, error) {
+	if opts == nil {
+		opts = c.NewSetBucketRequest(bucket, nval, allowmult)
 	}
 
-	response, err := c.ReqResp(reqstruct, "RpbSetBucketReq", false)
+	response, err := c.ReqResp(opts, "RpbSetBucketReq", false)
 	if err != nil {
 		return nil, err
 	}
 
 	return response.([]byte), nil
+}
+
+// SetBucket sets the bucket info.
+func (c *Client) SetBucket(bucket string, nval *uint32, allowmult *bool) ([]byte, error) {
+	return c.setBucket(nil, bucket, nval, allowmult)
 }
