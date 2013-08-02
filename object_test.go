@@ -71,11 +71,10 @@ func TestHead(t *testing.T) {
 	}
 	tB := new(bool)
 	*tB = true
-	opts := &RpbGetReq{
-		Head: tB,
-	}
-	obj, err := riak.fetchObject(opts, "riakpbctestbucket", "testkey_rpbcontent") // TODO: TEMPORARY UNTIL DO() METHOD IS BUILT
-	oObj := obj.GetContent()
+	opts := riak.NewFetchObjectRequest("riakpbctestbucket", "testkey_rpbcontent")
+	opts.Head = tB
+	obj, err := riak.Do(opts)
+	oObj := obj.(*RpbGetResp).GetContent()
 	assert.T(t, len(oObj) == 1)
 	content := oObj[0]
 	assert.T(t, len(content.GetValue()) == 0)
