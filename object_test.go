@@ -176,6 +176,39 @@ func TestStoreObjectWithOpts(t *testing.T) {
 	}
 }
 
+func TestStoreStructFullTypes(t *testing.T) {
+	riak := setupConnection(t)
+
+	// Test struct from coder.go
+	data := EncodeData{
+		Email:   "riak@example.com",
+		Twitter: "riak-twitter",
+		Data:    []byte("riak-data"),
+		AnInt:   1,
+		AnInt8:  127,
+		AnInt16: 32767,
+		AnInt32: 2147483647,
+		AnInt64: 9223372036854775807,
+		AUInt:   1,
+		AUInt8:  255,
+		AUInt16: 65535,
+		AUInt32: 4294967295,
+		AUInt64: 18446744073709551615,
+		Byte:    255,
+		Rune:    2147483647,
+	}
+
+	_, err := riak.StoreStruct("riakpbctestbucket", "testfulltypes", &data)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	_, err = riak.DeleteObject("riakpbctestbucket", "testfulltypes")
+	if err != nil {
+		t.Error(err.Error())
+	}
+}
+
 func TestFetchObject(t *testing.T) {
 	riak := setupConnection(t)
 	setupData(t, riak)
