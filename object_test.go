@@ -179,6 +179,7 @@ func TestStoreObjectWithOpts(t *testing.T) {
 func TestStoreStructFullTypes(t *testing.T) {
 	riak := setupConnection(t)
 
+	// Test struct from coder.go
 	data := EncodeData{
 		Email:   "riak@example.com",
 		Twitter: "riak-twitter",
