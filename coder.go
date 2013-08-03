@@ -1,11 +1,12 @@
 package riakpbc
 
 import (
-	"encoding/binary"
+	//"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -76,6 +77,9 @@ func NewCoder(tag string, marshaller MarshalMethod, unmarshaller UnmarshalMethod
 //
 // TODO: The PBC int interface doesn't seem to work directly with byte data, even though the API specification is byte data.
 // Needs to be investigated further.
+//
+// Update: August 3, 2013
+// Apparently the only way to get this to work is to treat _int index values as strings.
 func (self *Coder) Marshal(data interface{}) (*RpbContent, error) {
 	t := reflect.ValueOf(data)
 	if t.Kind() != reflect.Ptr {
@@ -117,29 +121,34 @@ func (self *Coder) Marshal(data interface{}) (*RpbContent, error) {
 							key = fld.Name + "_int"
 							switch knd {
 							case reflect.Int:
-								buf := make([]byte, 10)
-								binary.PutVarint(buf, int64(val.(int)))
-								index.Value = buf
+								//buf := make([]byte, 10)
+								//binary.PutVarint(buf, int64(val.(int)))
+								//index.Value = buf
+								index.Value = []byte(strconv.Itoa(int(val.(int))))
 								break
 							case reflect.Int8:
-								buf := make([]byte, 2)
-								binary.PutVarint(buf, int64(val.(int8)))
-								index.Value = buf
+								//buf := make([]byte, 2)
+								//binary.PutVarint(buf, int64(val.(int8)))
+								//index.Value = buf
+								index.Value = []byte(strconv.Itoa(int(val.(int8))))
 								break
 							case reflect.Int16:
-								buf := make([]byte, 3)
-								binary.PutVarint(buf, int64(val.(int16)))
-								index.Value = buf
+								//buf := make([]byte, 3)
+								//binary.PutVarint(buf, int64(val.(int16)))
+								//index.Value = buf
+								index.Value = []byte(strconv.Itoa(int(val.(int16))))
 								break
 							case reflect.Int32:
-								buf := make([]byte, 5)
-								binary.PutVarint(buf, int64(val.(int32)))
-								index.Value = buf
+								//buf := make([]byte, 5)
+								//binary.PutVarint(buf, int64(val.(int32)))
+								//index.Value = buf
+								index.Value = []byte(strconv.Itoa(int(val.(int32))))
 								break
 							case reflect.Int64:
-								buf := make([]byte, 10)
-								binary.PutVarint(buf, int64(val.(int64)))
-								index.Value = buf
+								//buf := make([]byte, 10)
+								//binary.PutVarint(buf, int64(val.(int64)))
+								//index.Value = buf
+								index.Value = []byte(strconv.Itoa(int(val.(int64))))
 								break
 							}
 							index.Key = []byte(strings.ToLower(key))
@@ -148,29 +157,34 @@ func (self *Coder) Marshal(data interface{}) (*RpbContent, error) {
 							key = fld.Name + "_int"
 							switch knd {
 							case reflect.Uint:
-								buf := make([]byte, 10)
-								binary.PutUvarint(buf, uint64(val.(uint)))
-								index.Value = buf
+								//buf := make([]byte, 10)
+								//binary.PutUvarint(buf, uint64(val.(uint)))
+								//index.Value = buf
+								index.Value = []byte(strconv.Itoa(int(val.(uint))))
 								break
 							case reflect.Uint8:
-								buf := make([]byte, 2)
-								binary.PutUvarint(buf, uint64(val.(uint8)))
-								index.Value = buf
+								//buf := make([]byte, 2)
+								//binary.PutUvarint(buf, uint64(val.(uint8)))
+								//index.Value = buf
+								index.Value = []byte(strconv.Itoa(int(val.(uint8))))
 								break
 							case reflect.Uint16:
-								buf := make([]byte, 3)
-								binary.PutUvarint(buf, uint64(val.(uint16)))
-								index.Value = buf
+								//buf := make([]byte, 3)
+								//binary.PutUvarint(buf, uint64(val.(uint16)))
+								//index.Value = buf
+								index.Value = []byte(strconv.Itoa(int(val.(uint16))))
 								break
 							case reflect.Uint32:
-								buf := make([]byte, 5)
-								binary.PutUvarint(buf, uint64(val.(uint32)))
-								index.Value = buf
+								//buf := make([]byte, 5)
+								//binary.PutUvarint(buf, uint64(val.(uint32)))
+								//index.Value = buf
+								index.Value = []byte(strconv.Itoa(int(val.(uint32))))
 								break
 							case reflect.Uint64:
-								buf := make([]byte, 10)
-								binary.PutUvarint(buf, uint64(val.(uint64)))
-								index.Value = buf
+								//buf := make([]byte, 10)
+								//binary.PutUvarint(buf, uint64(val.(uint64)))
+								//index.Value = buf
+								index.Value = []byte(strconv.Itoa(int(val.(uint64))))
 								break
 							}
 							index.Key = []byte(strings.ToLower(key))

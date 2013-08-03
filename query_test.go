@@ -8,10 +8,11 @@ import (
 
 type Farm struct {
 	Animal string `json:"animal" riak:"index"`
+	Number int    `json:"number" riak:"index"`
 }
 
 func setupIndexing(t *testing.T, client *Client) {
-	_, err := exec.Command("curl", "-i", "-XPUT", "http://127.0.0.1:10018/riak/farm", "-H", "Content-Type: application/json", "-d", "{\"props\":{\"search\":true}}").Output()
+	_, err := exec.Command("curl", "-i", "-XPUT", "http://127.0.0.1:8091/riak/farm", "-H", "Content-Type: application/json", "-d", "{\"props\":{\"search\":true}}").Output()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -33,7 +34,7 @@ func TestMapReduce(t *testing.T) {
 
 func TestIndex(t *testing.T) {
 	riak := setupConnection(t)
-	if _, err := riak.StoreStruct("farm", "chicken", &Farm{Animal: "chicken"}); err != nil {
+	if _, err := riak.StoreStruct("farm", "chicken", &Farm{Animal: "chicken", Number: 10}); err != nil {
 		t.Error(err.Error())
 	}
 	if _, err := riak.StoreStruct("farm", "hen", &Farm{Animal: "hen"}); err != nil {
@@ -49,6 +50,13 @@ func TestIndex(t *testing.T) {
 		t.Error(err.Error())
 	}
 	assert.T(t, len(data.GetKeys()) > 0)
+
+	number, err := riak.Index("farm", "number_int", "10", "", "")
+	if err != nil {
+		t.Log("In order for this test to pass storage_backend must be set to riak_kv_eleveldb_backend in app.config")
+		t.Error(err.Error())
+	}
+	assert.T(t, len(number.GetKeys()) > 0)
 
 	if _, err := riak.DeleteObject("farm", "chicken"); err != nil {
 		t.Error(err.Error())
