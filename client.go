@@ -2,7 +2,6 @@ package riakpbc
 
 import (
 	"log"
-	"sync"
 	"time"
 )
 
@@ -10,8 +9,6 @@ type Client struct {
 	cluster       []string
 	pool          *Pool
 	Coder         *Coder // Coder for (un)marshalling data
-	optsMu        *sync.Mutex
-	opts          interface{} // potential Rpb...Req opts
 	logging       bool
 	pingFrequency int
 }
@@ -21,7 +18,17 @@ func NewClient(cluster []string) *Client {
 	return &Client{
 		cluster:       cluster,
 		pool:          NewPool(cluster),
-		optsMu:        &sync.Mutex{},
+		logging:       false,
+		pingFrequency: 500,
+	}
+}
+
+// NewClientWihtCoder accepts a slice of node address strings, a Coder for processing structs into data, and returns a Client object.
+func NewClientWithCoder(cluster []string, coder *Coder) *Client {
+	return &Client{
+		cluster:       cluster,
+		pool:          NewPool(cluster),
+		Coder:         coder,
 		logging:       false,
 		pingFrequency: 500,
 	}
@@ -61,28 +68,9 @@ func (c *Client) BackgroundNodePing() {
 	}
 }
 
-// Opts returns the set options, and resets them internally to nil.
-func (c *Client) Opts() interface{} {
-	c.optsMu.Lock()
-	opts := c.opts
-	c.opts = nil
-	c.optsMu.Unlock()
-	return opts
-}
-
 // Current gets the current Node object from the Pool.
 func (c *Client) Current() *Node {
 	return c.pool.Current()
-}
-
-// SetOpts allows Rpb...Req options to be set.
-func (c *Client) SetOpts(opts interface{}) {
-	c.opts = opts
-}
-
-// SetCoder sets the default Coder for structs.
-func (c *Client) SetCoder(Coder *Coder) {
-	c.Coder = Coder
 }
 
 // Close closes the node TCP connections.
@@ -99,6 +87,69 @@ func (c *Client) SelectNode() *Node {
 // Pool returns the pool associated with the client.
 func (c *Client) Pool() *Pool {
 	return c.pool
+}
+
+// Do executes a prepared query and returns the results.
+func (c *Client) Do(opts interface{}) (interface{}, error) {
+	// Bucket
+	if _, ok := opts.(*RpbListKeysReq); ok {
+		return c.listKeys(opts.(*RpbListKeysReq), string(opts.(*RpbListKeysReq).GetBucket()))
+	}
+	if _, ok := opts.(*RpbGetBucketReq); ok {
+		return c.getBucket(opts.(*RpbGetBucketReq), string(opts.(*RpbGetBucketReq).GetBucket()))
+	}
+	if _, ok := opts.(*RpbSetBucketReq); ok {
+		nval := opts.(*RpbSetBucketReq).Props.GetNVal()
+		allowMulti := opts.(*RpbSetBucketReq).Props.GetAllowMult()
+		return c.setBucket(opts.(*RpbSetBucketReq), string(opts.(*RpbSetBucketReq).GetBucket()), &nval, &allowMulti)
+	}
+
+	// Object
+	if _, ok := opts.(*RpbGetReq); ok {
+		return c.fetchObject(opts.(*RpbGetReq), string(opts.(*RpbGetReq).GetBucket()), string(opts.(*RpbGetReq).GetKey()))
+	}
+	if _, ok := opts.(*RpbDelReq); ok {
+		return c.deleteObject(opts.(*RpbDelReq), string(opts.(*RpbDelReq).GetBucket()), string(opts.(*RpbDelReq).GetKey()))
+	}
+
+	// Query
+	if _, ok := opts.(*RpbMapRedReq); ok {
+		return c.mapReduce(opts.(*RpbMapRedReq), string(opts.(*RpbMapRedReq).GetRequest()), string(opts.(*RpbMapRedReq).GetContentType()))
+	}
+	if _, ok := opts.(*RpbIndexReq); ok {
+		return c.index(opts.(*RpbIndexReq), string(opts.(*RpbIndexReq).GetBucket()), string(opts.(*RpbIndexReq).GetIndex()), string(opts.(*RpbIndexReq).GetKey()), string(opts.(*RpbIndexReq).GetRangeMin()), string(opts.(*RpbIndexReq).GetRangeMax()))
+	}
+	if _, ok := opts.(*RpbSearchQueryReq); ok {
+		return c.search(opts.(*RpbSearchQueryReq), string(opts.(*RpbSearchQueryReq).GetIndex()), string(opts.(*RpbSearchQueryReq).GetQ()))
+	}
+
+	// Server
+	if _, ok := opts.(*RpbSetClientIdReq); ok {
+		return c.setClientId(opts.(*RpbSetClientIdReq), string(opts.(*RpbSetClientIdReq).GetClientId()))
+	}
+
+	return nil, nil
+}
+
+// DoObject executes a prepared query with data and returns the results.
+func (c *Client) DoObject(opts interface{}, in interface{}) (interface{}, error) {
+	if _, ok := opts.(*RpbPutReq); ok {
+		return c.storeObject(opts.(*RpbPutReq), string(opts.(*RpbPutReq).GetBucket()), string(opts.(*RpbPutReq).GetKey()), in)
+	}
+
+	return nil, nil
+}
+
+// DoStruct executes a prepared query on a struct with the coder and returns the results.
+func (c *Client) DoStruct(opts interface{}, in interface{}) (interface{}, error) {
+	if _, ok := opts.(*RpbGetReq); ok {
+		return c.fetchStruct(opts.(*RpbGetReq), string(opts.(*RpbGetReq).GetBucket()), string(opts.(*RpbGetReq).GetKey()), in)
+	}
+	if _, ok := opts.(*RpbPutReq); ok {
+		return c.storeStruct(opts.(*RpbPutReq), string(opts.(*RpbPutReq).GetBucket()), string(opts.(*RpbPutReq).GetKey()), in)
+	}
+
+	return nil, nil
 }
 
 // ReqResp is the top level interface for the client for a bulk of Riak operations
