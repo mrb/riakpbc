@@ -75,6 +75,44 @@ func TestIndex(t *testing.T) {
 	}
 }
 
+func TestIndexDo(t *testing.T) {
+	riak := setupConnection(t)
+	if _, err := riak.StoreStruct("farm", "chicken", &Farm{Animal: "chicken"}); err != nil {
+		t.Error(err.Error())
+	}
+	if _, err := riak.StoreStruct("farm", "hen", &Farm{Animal: "hen"}); err != nil {
+		t.Error(err.Error())
+	}
+	if _, err := riak.StoreStruct("farm", "rooster", &Farm{Animal: "rooster"}); err != nil {
+		t.Error(err.Error())
+	}
+
+	opts := riak.NewIndexRequest("farm", "animal_bin", "chicken", "", "")
+	data, err := riak.Do(opts)
+	if err != nil {
+		t.Log("In order for this test to pass storage_backend must be set to riak_kv_eleveldb_backend in app.config")
+		t.Error(err.Error())
+	}
+	assert.T(t, len(data.(*RpbIndexResp).GetKeys()) > 0)
+
+	if _, err := riak.DeleteObject("farm", "chicken"); err != nil {
+		t.Error(err.Error())
+	}
+	if _, err := riak.DeleteObject("farm", "hen"); err != nil {
+		t.Error(err.Error())
+	}
+	if _, err := riak.DeleteObject("farm", "rooster"); err != nil {
+		t.Error(err.Error())
+	}
+
+	// Search against a non-existent key should return empty, not error
+	opts = riak.NewIndexRequest("farm", "animal_bin", "chicken", "", "")
+	check, err := riak.Do(opts)
+	if len(check.(*RpbIndexResp).GetKeys()) > 0 {
+		t.Error("non-existent index search should return 0 results")
+	}
+}
+
 func TestSearch(t *testing.T) {
 	riak := setupConnection(t)
 	setupIndexing(t, riak)
@@ -88,6 +126,26 @@ func TestSearch(t *testing.T) {
 		t.Error(err.Error())
 	}
 	assert.T(t, data.GetNumFound() > 0)
+
+	if _, err := riak.DeleteObject("farm", "chicken"); err != nil {
+		t.Error(err.Error())
+	}
+}
+
+func TestSearchDo(t *testing.T) {
+	riak := setupConnection(t)
+	setupIndexing(t, riak)
+	if _, err := riak.StoreStruct("farm", "chicken", &Farm{Animal: "chicken"}); err != nil {
+		t.Error(err.Error())
+	}
+
+	opts := riak.NewSearchRequest("farm", "animal:chicken")
+	data, err := riak.Do(opts)
+	if err != nil {
+		t.Log("In order for this test to pass riak_search may need to be enabled in app.config")
+		t.Error(err.Error())
+	}
+	assert.T(t, data.(*RpbSearchQueryResp).GetNumFound() > 0)
 
 	if _, err := riak.DeleteObject("farm", "chicken"); err != nil {
 		t.Error(err.Error())

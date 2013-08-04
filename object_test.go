@@ -1,10 +1,8 @@
 package riakpbc
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/bmizerany/assert"
-	"log"
 	"testing"
 )
 
@@ -19,32 +17,30 @@ type RiakData struct {
 }
 
 func setupConnection(t *testing.T) (client *Client) {
-	client = NewClient([]string{"127.0.0.1:8087",
-		"127.0.0.1:8088",
+	coder := NewCoder("json", JsonMarshaller, JsonUnmarshaller)
+	client = NewClientWithCoder([]string{
+		"127.0.0.1:8086",
 		"127.0.0.1:8087",
-		"127.0.0.1:8088"})
+		"127.0.0.1:8088",
+		"127.0.0.1:8089"},
+		coder)
 	var err error
 	if err = client.Dial(); err != nil {
 		t.Error(err.Error())
 	}
 	assert.T(t, err == nil)
-
-	Coder := NewCoder("json", JsonMarshaller, JsonUnmarshaller)
-	client.SetCoder(Coder)
 
 	return client
 }
 
 func setupSingleNodeConnection(t *testing.T) (client *Client) {
-	client = NewClient([]string{"127.0.0.1:8087"})
+	coder := NewCoder("json", JsonMarshaller, JsonUnmarshaller)
+	client = NewClientWithCoder([]string{"127.0.0.1:8087"}, coder)
 	var err error
 	if err = client.Dial(); err != nil {
 		t.Error(err.Error())
 	}
 	assert.T(t, err == nil)
-
-	Coder := NewCoder("json", JsonMarshaller, JsonUnmarshaller)
-	client.SetCoder(Coder)
 
 	return client
 }
@@ -75,12 +71,10 @@ func TestHead(t *testing.T) {
 	}
 	tB := new(bool)
 	*tB = true
-	opts := &RpbGetReq{
-		Head: tB,
-	}
-	riak.SetOpts(opts)
-	obj, err := riak.FetchObject("riakpbctestbucket", "testkey_rpbcontent")
-	oObj := obj.GetContent()
+	opts := riak.NewFetchObjectRequest("riakpbctestbucket", "testkey_rpbcontent")
+	opts.Head = tB
+	obj, err := riak.Do(opts)
+	oObj := obj.(*RpbGetResp).GetContent()
 	assert.T(t, len(oObj) == 1)
 	content := oObj[0]
 	assert.T(t, len(content.GetValue()) == 0)
@@ -130,6 +124,53 @@ func TestStoreObject(t *testing.T) {
 	}
 }
 
+func TestStoreObjectDo(t *testing.T) {
+	riak := setupConnection(t)
+
+	// Insert
+	userMeta := []*RpbPair{&RpbPair{Key: []byte("meta"), Value: []byte("schmeta")}}
+	rpbObj := &RpbContent{Value: []byte("rpbcontent data"), ContentType: []byte("text/plain"), Usermeta: userMeta}
+
+	opts := riak.NewStoreObjectRequest("riakpbctestbucket", "testkey_rpbcontent")
+	_, err := riak.DoObject(opts, rpbObj)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	opts = riak.NewStoreObjectRequest("riakpbctestbucket", "testkey_string")
+	_, err = riak.DoObject(opts, "string data")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	opts = riak.NewStoreObjectRequest("riakpbctestbucket", "testkey_int")
+	_, err = riak.DoObject(opts, 1000)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	opts = riak.NewStoreObjectRequest("riakpbctestbucket", "testkey_binary")
+	_, err = riak.DoObject(opts, []byte("binary data"))
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	// Cleanup
+	_, err = riak.DeleteObject("riakpbctestbucket", "testkey_rpbcontent")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	_, err = riak.DeleteObject("riakpbctestbucket", "testkey_string")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	_, err = riak.DeleteObject("riakpbctestbucket", "testkey_int")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	_, err = riak.DeleteObject("riakpbctestbucket", "testkey_binary")
+	if err != nil {
+		t.Error(err.Error())
+	}
+}
+
 func TestStoreStruct(t *testing.T) {
 	riak := setupConnection(t)
 
@@ -150,27 +191,22 @@ func TestStoreStruct(t *testing.T) {
 	}
 }
 
-func TestStoreObjectWithOpts(t *testing.T) {
+func TestStoreStructDo(t *testing.T) {
 	riak := setupConnection(t)
 
-	data, err := json.Marshal(&Data{Data: "is awesome!"})
-	if err != nil {
-		log.Println(err.Error())
+	riak_data := &RiakData{
+		Email:   "riak@example.com",
+		Twitter: "riak-twitter",
+		Data:    []byte("riak-data"),
 	}
 
-	z := new(bool)
-	*z = true
-	opts := &RpbPutReq{
-		ReturnBody: z,
-	}
-	riak.SetOpts(opts)
-	object, err := riak.StoreStruct("riakpbctestbucket", "testkeyopts", &Data{Data: "is awesome!"})
+	opts := riak.NewStoreStructRequest("riakpbctestbucket", "testkey_struct")
+	_, err := riak.DoStruct(opts, riak_data)
 	if err != nil {
 		t.Error(err.Error())
 	}
-	assert.T(t, string(object.GetContent()[0].GetValue()) == string(data))
 
-	_, err = riak.DeleteObject("riakpbctestbucket", "testkeyopts")
+	_, err = riak.DeleteObject("riakpbctestbucket", "testkey_struct")
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -228,6 +264,26 @@ func TestFetchObject(t *testing.T) {
 	teardownData(t, riak)
 }
 
+func TestFetchObjectDo(t *testing.T) {
+	riak := setupConnection(t)
+	setupData(t, riak)
+
+	opts := riak.NewFetchObjectRequest("riakpbctestbucket", "testkey")
+	object, err := riak.Do(opts)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	stringObject := string(object.(*RpbGetResp).GetContent()[0].GetValue())
+
+	data := "{\"data\":\"is awesome!\"}"
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.T(t, stringObject == data)
+
+	teardownData(t, riak)
+}
+
 func TestFetchStruct(t *testing.T) {
 	riak := setupConnection(t)
 	setupData(t, riak)
@@ -261,6 +317,40 @@ func TestFetchStruct(t *testing.T) {
 	teardownData(t, riak)
 }
 
+func TestFetchStructDo(t *testing.T) {
+	riak := setupConnection(t)
+	setupData(t, riak)
+
+	riak_data := &RiakData{
+		Email:   "riak@example.com",
+		Twitter: "riak-twitter",
+		Data:    []byte("riak-data"),
+	}
+
+	_, err := riak.StoreStruct("riakpbctestbucket", "testkey_struct", riak_data)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	// Test
+	data := &RiakData{}
+	opts := riak.NewFetchStructRequest("riakpbctestbucket", "testkey_struct")
+	result, err := riak.DoStruct(opts, data)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if len(result.(*RpbGetResp).GetContent()) != 1 {
+		t.Error("expected FetchStruct to also return RpbGetResp content")
+	}
+
+	_, err = riak.DeleteObject("riakpbctestbucket", "testkey_struct")
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	teardownData(t, riak)
+}
+
 func TestDeleteObject(t *testing.T) {
 	riak := setupConnection(t)
 	setupData(t, riak)
@@ -270,6 +360,24 @@ func TestDeleteObject(t *testing.T) {
 		t.Error(err.Error())
 	}
 	assert.T(t, string(object) == "Success")
+
+	_, err = riak.FetchObject("riakpbctestbucket", "testkey")
+
+	assert.T(t, err.Error() == "object not found")
+
+	teardownData(t, riak)
+}
+
+func TestDeleteObjectDo(t *testing.T) {
+	riak := setupConnection(t)
+	setupData(t, riak)
+
+	opts := riak.NewDeleteObjectRequest("riakpbctestbucket", "testkey")
+	object, err := riak.Do(opts)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.T(t, string(string(object.([]byte))) == "Success")
 
 	_, err = riak.FetchObject("riakpbctestbucket", "testkey")
 
