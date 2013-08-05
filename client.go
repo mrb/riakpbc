@@ -68,11 +68,6 @@ func (c *Client) BackgroundNodePing() {
 	}
 }
 
-// Current gets the current Node object from the Pool.
-func (c *Client) Current() *Node {
-	return c.pool.Current()
-}
-
 // Close closes the node TCP connections.
 func (c *Client) Close() {
 	c.pool.Close()

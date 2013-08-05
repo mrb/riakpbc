@@ -8,8 +8,7 @@ import (
 )
 
 type Pool struct {
-	nodes   map[string]*Node // index the node with its address string
-	current *Node
+	nodes map[string]*Node // index the node with its address string
 	sync.Mutex
 }
 
@@ -53,16 +52,11 @@ func (pool *Pool) SelectNode() *Node {
 
 	numPossibleNodes := len(possibleNodes)
 
-	var chosenNode *Node
 	if numPossibleNodes > 0 {
-		chosenNode = possibleNodes[rand.Int31n(int32(numPossibleNodes))]
+		return possibleNodes[rand.Int31n(int32(numPossibleNodes))]
 	} else {
-		chosenNode = pool.RandomNode()
+		return pool.RandomNode()
 	}
-
-	pool.current = chosenNode
-
-	return pool.RandomNode()
 }
 
 func (pool *Pool) Ping() {
@@ -109,11 +103,6 @@ func (pool *Pool) Close() {
 	for _, node := range pool.nodes {
 		node.Close()
 	}
-}
-
-func (pool *Pool) Current() *Node {
-	node := pool.current
-	return node
 }
 
 func (pool *Pool) Size() int {
