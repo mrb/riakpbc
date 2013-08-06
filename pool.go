@@ -7,6 +7,14 @@ import (
 	"time"
 )
 
+const (
+	NODE_WRITE_RETRY         time.Duration = time.Second * 5 // 5s
+	NODE_READ_RETRY          time.Duration = time.Second * 5 // 5s
+	NODE_DOWN_RETRY          time.Duration = time.Second / 2 // 0.5s
+	NODE_DOWN_MAX_RETRY      time.Duration = time.Second * 5 // 5s
+	NODE_DOWN_RETRY_INCREMET time.Duration = time.Second / 2 // 0.5s
+)
+
 type Pool struct {
 	nodes map[string]*Node // index the node with its address string
 	sync.Mutex
@@ -18,7 +26,7 @@ func NewPool(cluster []string) *Pool {
 	nodeMap := make(map[string]*Node, len(cluster))
 
 	for _, node := range cluster {
-		newNode, err := NewNode(node, 10e8, 10e8)
+		newNode, err := NewNode(node, NODE_READ_RETRY, NODE_WRITE_RETRY, NODE_DOWN_RETRY)
 		if err == nil {
 			nodeMap[node] = newNode
 		}
@@ -31,72 +39,23 @@ func NewPool(cluster []string) *Pool {
 	return pool
 }
 
-// SelectNode returns a node from the pool using weighted error selection.
-//
-// Each node has an assignable error rate, which is incremented when an error
-// occurs, and decays over time - 50% each 10 seconds by default.
-func (pool *Pool) SelectNode() *Node {
+// SelectNode returns a node from the pool.
+func (pool *Pool) SelectNode() (*Node, error) {
 	pool.Lock()
 	defer pool.Unlock()
 
-	errorThreshold := 0.1
 	var possibleNodes []*Node
-
 	for _, node := range pool.nodes {
-		nodeErrorValue := node.ErrorRate()
-
-		if nodeErrorValue < errorThreshold {
+		if node.GetOk() {
 			possibleNodes = append(possibleNodes, node)
 		}
 	}
 
-	numPossibleNodes := len(possibleNodes)
-
-	if numPossibleNodes > 0 {
-		return possibleNodes[rand.Int31n(int32(numPossibleNodes))]
-	} else {
-		return pool.RandomNode()
+	if len(possibleNodes) > 0 {
+		return possibleNodes[rand.Int31n(int32(len(possibleNodes)))], nil
 	}
-}
 
-func (pool *Pool) Ping() {
-	pool.Lock()
-	defer pool.Unlock()
-
-	for _, node := range pool.nodes {
-		nodeGood := node.Ping()
-		if nodeGood == false {
-			node.RecordError(1.0)
-			node.Lock()
-			node.Close()
-			node.Dial()
-			node.Unlock()
-		} else {
-			node.SetOk(true)
-		}
-
-	}
-}
-
-func (pool *Pool) RandomNode() *Node {
-	var randomNode *Node
-
-	var randVal float32
-	randVal = 0
-
-	for _, node := range pool.nodes {
-		throwAwayRand := rand.Float32()
-
-		if throwAwayRand > randVal {
-			randomNode = node
-			randVal = throwAwayRand
-		}
-	}
-	return randomNode
-}
-
-func (pool *Pool) DeleteNode(nodeKey string) {
-	delete(pool.nodes, nodeKey)
+	return nil, ErrAllNodesDown
 }
 
 func (pool *Pool) Close() {
@@ -112,7 +71,7 @@ func (pool *Pool) Size() int {
 func (pool *Pool) String() string {
 	var outString string
 	for _, node := range pool.nodes {
-		nodeString := fmt.Sprintf(" [%s %f <%t>] ", node.addr, node.ErrorRate(), node.GetOk())
+		nodeString := fmt.Sprintf(" [%s %f <%t>] ", node.addr, node.GetOk())
 		outString += nodeString
 	}
 	return outString

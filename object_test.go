@@ -24,6 +24,7 @@ func setupConnection(t *testing.T) (client *Client) {
 		"127.0.0.1:8088",
 		"127.0.0.1:8089"},
 		coder)
+	//client.EnableLogging()
 	var err error
 	if err = client.Dial(); err != nil {
 		t.Error(err.Error())
