@@ -2,6 +2,7 @@ package riakpbc
 
 import (
 	"log"
+	"time"
 )
 
 type Client struct {
@@ -44,6 +45,7 @@ func (c *Client) Dial() error {
 	for _, node := range c.pool.nodes {
 		err := node.Dial()
 		if err != nil {
+			node.RecordError(10.0)
 			if c.LoggingEnabled() {
 				log.Print("[POOL] Error: ", err)
 			}
@@ -58,12 +60,21 @@ func (c *Client) Dial() error {
 		return ErrZeroNodes
 	}
 
+	go c.BackgroundNodePing()
+
 	return nil
 }
 
 // Close closes the node TCP connections.
 func (c *Client) Close() {
 	c.pool.Close()
+}
+
+func (c *Client) BackgroundNodePing() {
+	for {
+		time.Sleep(time.Duration(c.pingFrequency) * time.Millisecond)
+		c.pool.Ping()
+	}
 }
 
 // SelectNode selects a node from the pool, see *Pool.SelectNode()

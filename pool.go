@@ -8,11 +8,9 @@ import (
 )
 
 const (
-	NODE_WRITE_RETRY         time.Duration = time.Second * 5 // 5s
-	NODE_READ_RETRY          time.Duration = time.Second * 5 // 5s
-	NODE_DOWN_RETRY          time.Duration = time.Second / 2 // 0.5s
-	NODE_DOWN_MAX_RETRY      time.Duration = time.Second * 5 // 5s
-	NODE_DOWN_RETRY_INCREMET time.Duration = time.Second / 2 // 0.5s
+	NODE_WRITE_RETRY     time.Duration = time.Second * 10 // 10s
+	NODE_READ_RETRY      time.Duration = time.Second * 10 // 10s
+	NODE_ERROR_THRESHOLD float64       = 0.1
 )
 
 type Pool struct {
@@ -26,7 +24,7 @@ func NewPool(cluster []string) *Pool {
 	nodeMap := make(map[string]*Node, len(cluster))
 
 	for _, node := range cluster {
-		newNode, err := NewNode(node, NODE_READ_RETRY, NODE_WRITE_RETRY, NODE_DOWN_RETRY)
+		newNode, err := NewNode(node, NODE_READ_RETRY, NODE_WRITE_RETRY)
 		if err == nil {
 			nodeMap[node] = newNode
 		}
@@ -46,16 +44,37 @@ func (pool *Pool) SelectNode() (*Node, error) {
 
 	var possibleNodes []*Node
 	for _, node := range pool.nodes {
-		if node.GetOk() {
+		if node.ErrorRate() < NODE_ERROR_THRESHOLD {
 			possibleNodes = append(possibleNodes, node)
 		}
 	}
 
-	if len(possibleNodes) > 0 {
-		return possibleNodes[rand.Int31n(int32(len(possibleNodes)))], nil
+	count := len(possibleNodes)
+
+	if count > 0 {
+		return possibleNodes[rand.Int31n(int32(count))], nil
 	}
 
 	return nil, ErrAllNodesDown
+}
+
+func (pool *Pool) Ping() {
+	pool.Lock()
+	defer pool.Unlock()
+
+	for _, node := range pool.nodes {
+		nodeGood := node.Ping()
+		if nodeGood == false {
+			node.RecordError(1.0)
+			node.Lock()
+			node.Close()
+			node.Dial()
+			node.Unlock()
+		} else {
+			node.SetOk(true)
+		}
+
+	}
 }
 
 func (pool *Pool) Close() {
@@ -71,7 +90,7 @@ func (pool *Pool) Size() int {
 func (pool *Pool) String() string {
 	var outString string
 	for _, node := range pool.nodes {
-		nodeString := fmt.Sprintf(" [%s %f <%t>] ", node.addr, node.GetOk())
+		nodeString := fmt.Sprintf(" [%s %f <%t>] ", node.addr, node.ErrorRate(), node.GetOk())
 		outString += nodeString
 	}
 	return outString
