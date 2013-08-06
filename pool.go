@@ -37,7 +37,10 @@ func NewPool(cluster []string) *Pool {
 	return pool
 }
 
-// SelectNode returns a node from the pool.
+// SelectNode returns a node from the pool using weighted error selection.
+//
+// Each node has an assignable error rate, which is incremented when an error
+// occurs, and decays over time - 50% each 10 seconds by default.
 func (pool *Pool) SelectNode() (*Node, error) {
 	pool.Lock()
 	defer pool.Unlock()

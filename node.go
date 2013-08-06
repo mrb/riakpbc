@@ -59,7 +59,7 @@ func (node *Node) ErrorRate() float64 {
 	return node.errorRate.Value()
 }
 
-// RecordError sets the Node into a state check.  The Node reports itself as unavailable in the interim.
+// RecordError increments the current error value - see decaying.go
 func (node *Node) RecordError(amount float64) {
 	node.SetOk(false)
 	node.errorRate.Add(amount)
