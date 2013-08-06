@@ -42,7 +42,7 @@ func NewNode(addr string, readTimeout, writeTimeout time.Duration) (*Node, error
 	return node, nil
 }
 
-// Dialaconnects to a single riak node.
+// Dial connects to a single riak node.
 func (node *Node) Dial() (err error) {
 	node.conn, err = net.DialTCP("tcp", nil, node.tcpAddr)
 	if err != nil {
@@ -54,12 +54,12 @@ func (node *Node) Dial() (err error) {
 	return nil
 }
 
-// ErrorRate safely returns the current Node's error rate
+// ErrorRate safely returns the current Node's error rate.
 func (node *Node) ErrorRate() float64 {
 	return node.errorRate.Value()
 }
 
-// RecordErrror increments the current error value - see decaying.go
+// RecordError increments the current error value - see decaying.go
 func (node *Node) RecordError(amount float64) {
 	node.SetOk(false)
 	node.errorRate.Add(amount)
@@ -152,6 +152,7 @@ func (node *Node) Close() {
 
 func (node *Node) write(formattedRequest []byte) (err error) {
 	node.conn.SetWriteDeadline(time.Now().Add(node.readTimeout))
+
 	_, err = node.conn.Write(formattedRequest)
 	if err != nil {
 		return err

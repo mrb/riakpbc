@@ -7,6 +7,12 @@ import (
 	"time"
 )
 
+const (
+	NODE_WRITE_RETRY     time.Duration = time.Second * 10 // 10s
+	NODE_READ_RETRY      time.Duration = time.Second * 10 // 10s
+	NODE_ERROR_THRESHOLD float64       = 0.1
+)
+
 type Pool struct {
 	nodes map[string]*Node // index the node with its address string
 	sync.Mutex
@@ -18,7 +24,7 @@ func NewPool(cluster []string) *Pool {
 	nodeMap := make(map[string]*Node, len(cluster))
 
 	for _, node := range cluster {
-		newNode, err := NewNode(node, 10e8, 10e8)
+		newNode, err := NewNode(node, NODE_READ_RETRY, NODE_WRITE_RETRY)
 		if err == nil {
 			nodeMap[node] = newNode
 		}
@@ -35,28 +41,24 @@ func NewPool(cluster []string) *Pool {
 //
 // Each node has an assignable error rate, which is incremented when an error
 // occurs, and decays over time - 50% each 10 seconds by default.
-func (pool *Pool) SelectNode() *Node {
+func (pool *Pool) SelectNode() (*Node, error) {
 	pool.Lock()
 	defer pool.Unlock()
 
-	errorThreshold := 0.1
 	var possibleNodes []*Node
-
 	for _, node := range pool.nodes {
-		nodeErrorValue := node.ErrorRate()
-
-		if nodeErrorValue < errorThreshold {
+		if node.ErrorRate() < NODE_ERROR_THRESHOLD {
 			possibleNodes = append(possibleNodes, node)
 		}
 	}
 
-	numPossibleNodes := len(possibleNodes)
+	count := len(possibleNodes)
 
-	if numPossibleNodes > 0 {
-		return possibleNodes[rand.Int31n(int32(numPossibleNodes))]
-	} else {
-		return pool.RandomNode()
+	if count > 0 {
+		return possibleNodes[rand.Int31n(int32(count))], nil
 	}
+
+	return nil, ErrAllNodesDown
 }
 
 func (pool *Pool) Ping() {
@@ -76,27 +78,6 @@ func (pool *Pool) Ping() {
 		}
 
 	}
-}
-
-func (pool *Pool) RandomNode() *Node {
-	var randomNode *Node
-
-	var randVal float32
-	randVal = 0
-
-	for _, node := range pool.nodes {
-		throwAwayRand := rand.Float32()
-
-		if throwAwayRand > randVal {
-			randomNode = node
-			randVal = throwAwayRand
-		}
-	}
-	return randomNode
-}
-
-func (pool *Pool) DeleteNode(nodeKey string) {
-	delete(pool.nodes, nodeKey)
 }
 
 func (pool *Pool) Close() {

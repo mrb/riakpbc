@@ -14,6 +14,8 @@ type Client struct {
 }
 
 // NewClient accepts a slice of node address strings and returns a Client object.
+//
+// Illegally addressed nodes will be rejected in the NewPool call.
 func NewClient(cluster []string) *Client {
 	return &Client{
 		cluster:       cluster,
@@ -24,6 +26,8 @@ func NewClient(cluster []string) *Client {
 }
 
 // NewClientWihtCoder accepts a slice of node address strings, a Coder for processing structs into data, and returns a Client object.
+//
+// Illegally addressed nodes will be rejected in the NewPool call.
 func NewClientWithCoder(cluster []string, coder *Coder) *Client {
 	return &Client{
 		cluster:       cluster,
@@ -36,15 +40,15 @@ func NewClientWithCoder(cluster []string, coder *Coder) *Client {
 
 // Dial connects all nodes in the pool to their addresses via TCP.
 //
-// Illegally addressed nodes will be rejected here.
+// Nodes which are down get set to redial in the background.
 func (c *Client) Dial() error {
-	for k, node := range c.pool.nodes {
+	for _, node := range c.pool.nodes {
 		err := node.Dial()
 		if err != nil {
+			node.RecordError(10.0)
 			if c.LoggingEnabled() {
 				log.Print("[POOL] Error: ", err)
 			}
-			c.pool.DeleteNode(k)
 		}
 	}
 
@@ -61,6 +65,11 @@ func (c *Client) Dial() error {
 	return nil
 }
 
+// Close closes the node TCP connections.
+func (c *Client) Close() {
+	c.pool.Close()
+}
+
 func (c *Client) BackgroundNodePing() {
 	for {
 		time.Sleep(time.Duration(c.pingFrequency) * time.Millisecond)
@@ -68,15 +77,9 @@ func (c *Client) BackgroundNodePing() {
 	}
 }
 
-// Close closes the node TCP connections.
-func (c *Client) Close() {
-	c.pool.Close()
-}
-
 // SelectNode selects a node from the pool, see *Pool.SelectNode()
-func (c *Client) SelectNode() *Node {
-	node := c.pool.SelectNode()
-	return node
+func (c *Client) SelectNode() (*Node, error) {
+	return c.pool.SelectNode()
 }
 
 // Pool returns the pool associated with the client.
@@ -149,14 +152,22 @@ func (c *Client) DoStruct(opts interface{}, in interface{}) (interface{}, error)
 
 // ReqResp is the top level interface for the client for a bulk of Riak operations
 func (c *Client) ReqResp(reqstruct interface{}, structname string, raw bool) (response interface{}, err error) {
-	return c.SelectNode().ReqResp(reqstruct, structname, raw)
+	node, err := c.SelectNode()
+	if err != nil {
+		return nil, err
+	}
+	return node.ReqResp(reqstruct, structname, raw)
 }
 
 // ReqMultiResp is the top level interface for the client for the few
 // operations which have to hit the server multiple times to guarantee
 // a complete response: List keys, Map Reduce, etc.
 func (c *Client) ReqMultiResp(reqstruct interface{}, structname string) (response interface{}, err error) {
-	return c.SelectNode().ReqMultiResp(reqstruct, structname)
+	node, err := c.SelectNode()
+	if err != nil {
+		return nil, err
+	}
+	return node.ReqMultiResp(reqstruct, structname)
 }
 
 func (c *Client) EnableLogging() {
