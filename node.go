@@ -151,7 +151,7 @@ func (node *Node) Close() {
 }
 
 func (node *Node) write(formattedRequest []byte) (err error) {
-	node.conn.SetWriteDeadline(time.Now().Add(node.readTimeout))
+	node.conn.SetWriteDeadline(time.Now().Add(node.writeTimeout))
 
 	_, err = node.conn.Write(formattedRequest)
 	if err != nil {
@@ -162,7 +162,7 @@ func (node *Node) write(formattedRequest []byte) (err error) {
 }
 
 func (node *Node) read() (respraw []byte, err error) {
-	node.conn.SetWriteDeadline(time.Now().Add(node.readTimeout))
+	node.conn.SetReadDeadline(time.Now().Add(node.readTimeout))
 
 	buf := make([]byte, 4)
 	var size int32
