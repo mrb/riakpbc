@@ -18,12 +18,12 @@ package main
 import (
 	"fmt"
 	"log"
-	riak "github.com/mrb/riakpbc"
+	"github.com/mrb/riakpbc"
 )
 
 func main() {
 	// Initialize riakpbc against a 3 node cluster
-	riak := NewClient([]string{"127.0.0.1:8087", "127.0.0.0:9089", "127.0.0.0:9090"})
+	riak := riakpbc.NewClient([]string{"127.0.0.1:8087", "127.0.0.0:9089", "127.0.0.0:9090"})
 
 	// Dial all the nodes.
 	if err := riak.Dial(); err != nil {
@@ -71,7 +71,7 @@ func main() {
 	if err != nil {
 		log.Println(err.Error())
 	}
-	fmt.Println(string(objDo.(*RpbGetResp).GetContent()[0].GetValue()))
+	fmt.Println(string(objDo.(*riakpbc.RpbGetResp).GetContent()[0].GetValue()))
 	// Output:
 	// direct data
 
@@ -87,12 +87,12 @@ package main
 import (
 	"fmt"
 	"log"
-	riak "github.com/mrb/riakpbc"
+	"github.com/mrb/riakpbc"
 )
 
 // Note that structures use the special 'riak' tag to identify if they are an index or not.
 // The correct _bin or _int index name gets appended based on the field type.
-type Data struct {
+type ExampleData struct {
 	Field1 string `riak:"index" json:"field1"`
 	Field2 int    `json:"field2"`
 }
@@ -101,8 +101,8 @@ func main() {
 	// Initialize riakpbc against a 3 node cluster and with a JSON struct coder.
 	//
 	// Alternative marshallers can be built from this interface.
-	coder := NewCoder("json", JsonMarshaller, JsonUnmarshaller)
-	riakCoder := NewClientWithCoder([]string{"127.0.0.1:8087", "127.0.0.0:9089", "127.0.0.0:9090"}, coder)
+	coder := riakpbc.NewCoder("json", riakpbc.JsonMarshaller, riakpbc.JsonUnmarshaller)
+	riakCoder := riakpbc.NewClientWithCoder([]string{"127.0.0.1:8087", "127.0.0.0:9089", "127.0.0.0:9090"}, coder)
 
 	// Dial all the nodes.
 	if err := riakCoder.Dial(); err != nil {
