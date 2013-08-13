@@ -125,7 +125,7 @@ func main() {
 
 	// Fetch Struct (uses coder)
 	out := &ExampleData{}
-	if _, err := riakCoder.FetchStruct("bucket", "other", &out); err != nil {
+	if _, err := riakCoder.FetchStruct("bucket", "other", out); err != nil {
 		log.Println(err.Error())
 	}
 	fmt.Println(out.Field1)
@@ -145,7 +145,7 @@ func main() {
 	// Fetch Struct (uses coder)
 	outDo := &ExampleData{}
 	opts2 := riakCoder.NewFetchStructRequest("bucket", "other")
-	if _, err := riakCoder.DoStruct(opts2, &outDo); err != nil {
+	if _, err := riakCoder.DoStruct(opts2, outDo); err != nil {
 		log.Println(err.Error())
 	}
 	fmt.Println(outDo.Field1)
