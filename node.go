@@ -203,7 +203,10 @@ func (node *Node) response() (response interface{}, err error) {
 	}
 
 	response, err = unmarshalResponse(rawresp)
-	if err != nil || response == nil {
+	if response == nil || err != nil {
+		if err.Error() == "object not found" {
+			return nil, err
+		}
 		node.RecordError(1.0)
 		return nil, err
 	}

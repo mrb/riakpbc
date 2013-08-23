@@ -10,7 +10,7 @@ import (
 const (
 	NODE_WRITE_RETRY     time.Duration = time.Second * 10 // 10s
 	NODE_READ_RETRY      time.Duration = time.Second * 10 // 10s
-	NODE_ERROR_THRESHOLD float64       = 0.1
+	NODE_ERROR_THRESHOLD float64       = 0.5
 )
 
 type Pool struct {
@@ -68,7 +68,7 @@ func (pool *Pool) Ping() {
 	for _, node := range pool.nodes {
 		nodeGood := node.Ping()
 		if nodeGood == false {
-			node.RecordError(1.0)
+			node.RecordError(0.1)
 			node.Lock()
 			node.Close()
 			node.Dial()

@@ -21,7 +21,7 @@ func NewClient(cluster []string) *Client {
 		cluster:       cluster,
 		pool:          NewPool(cluster),
 		logging:       false,
-		pingFrequency: 500,
+		pingFrequency: 1000,
 	}
 }
 
@@ -34,7 +34,7 @@ func NewClientWithCoder(cluster []string, coder *Coder) *Client {
 		pool:          NewPool(cluster),
 		Coder:         coder,
 		logging:       false,
-		pingFrequency: 500,
+		pingFrequency: 1000,
 	}
 }
 
