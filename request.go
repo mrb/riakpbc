@@ -37,10 +37,6 @@ var commandToNum = map[string]byte{
 	"RbpSearchQueryResp":   28,
 }
 
-var (
-	maxWriteRetries = 3
-)
-
 func prependRequestHeader(commandName string, marshaledReqData []byte) (formattedData []byte, e error) {
 	msgbuf := []byte{}
 	formattedData = []byte{}

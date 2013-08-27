@@ -150,28 +150,19 @@ func (node *Node) Close() {
 	node.conn = nil
 }
 
-func (node *Node) write(formattedRequest []byte) (err error) {
-	node.conn.SetWriteDeadline(time.Now().Add(node.writeTimeout))
-
-	_, err = node.conn.Write(formattedRequest)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (node *Node) read() (respraw []byte, err error) {
 	node.conn.SetReadDeadline(time.Now().Add(node.readTimeout))
 
 	buf := make([]byte, 4)
 	var size int32
+
 	// First 4 bytes are always size of message.
 	n, err := io.ReadFull(node.conn, buf)
-
 	if err != nil {
+		node.RecordError(1.0)
 		return nil, err
 	}
+
 	if n == 4 {
 		sbuf := bytes.NewBuffer(buf)
 		binary.Read(sbuf, binary.BigEndian, &size)
@@ -186,13 +177,14 @@ func (node *Node) read() (respraw []byte, err error) {
 			return data, nil // return message
 		}
 	}
+
+	node.RecordError(1.0)
 	return nil, nil
 }
 
 func (node *Node) response() (response interface{}, err error) {
 	rawresp, err := node.read()
 	if err != nil {
-		node.RecordError(1.0)
 		return nil, err
 	}
 
@@ -207,23 +199,32 @@ func (node *Node) response() (response interface{}, err error) {
 		if err.Error() == "object not found" {
 			return nil, err
 		}
-		node.RecordError(1.0)
 		return nil, err
 	}
 
 	return response, nil
 }
 
-func (node *Node) request(reqstruct interface{}, structname string) (err error) {
-	marshaledRequest, err := proto.Marshal(reqstruct.(proto.Message))
+func (node *Node) write(formattedRequest []byte) (err error) {
+	node.conn.SetWriteDeadline(time.Now().Add(node.writeTimeout))
+
+	_, err = node.conn.Write(formattedRequest)
 	if err != nil {
 		node.RecordError(1.0)
 		return err
 	}
 
+	return nil
+}
+
+func (node *Node) request(reqstruct interface{}, structname string) (err error) {
+	marshaledRequest, err := proto.Marshal(reqstruct.(proto.Message))
+	if err != nil {
+		return err
+	}
+
 	err = node.rawRequest(marshaledRequest, structname)
 	if err != nil {
-		node.RecordError(1.0)
 		return err
 	}
 
@@ -233,13 +234,11 @@ func (node *Node) request(reqstruct interface{}, structname string) (err error) 
 func (node *Node) rawRequest(marshaledRequest []byte, structname string) (err error) {
 	formattedRequest, err := prependRequestHeader(structname, marshaledRequest)
 	if err != nil {
-		node.RecordError(1.0)
 		return err
 	}
 
 	err = node.write(formattedRequest)
 	if err != nil {
-		node.RecordError(1.0)
 		return err
 	}
 	return
