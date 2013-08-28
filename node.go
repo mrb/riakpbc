@@ -17,13 +17,14 @@ type Node struct {
 	readTimeout  time.Duration
 	writeTimeout time.Duration
 	errorRate    *Decaying
+	retryPolicy  RetryPolicy
 	ok           bool
 	oklock       *sync.Mutex
 	sync.Mutex
 }
 
 // Returns a new Node.
-func NewNode(addr string, readTimeout, writeTimeout time.Duration) (*Node, error) {
+func NewNode(addr string, readTimeout, writeTimeout time.Duration, retryPolicy RetryPolicy) (*Node, error) {
 	tcpaddr, err := net.ResolveTCPAddr("tcp", addr)
 	if err != nil {
 		return nil, err
@@ -37,6 +38,7 @@ func NewNode(addr string, readTimeout, writeTimeout time.Duration) (*Node, error
 		errorRate:    NewDecaying(),
 		ok:           true,
 		oklock:       &sync.Mutex{},
+		retryPolicy:  retryPolicy,
 	}
 
 	return node, nil
@@ -153,10 +155,10 @@ func (node *Node) Close() {
 func (node *Node) read() (respraw []byte, err error) {
 	node.conn.SetReadDeadline(time.Now().Add(node.readTimeout))
 
+	// First 4 bytes are always size of message. Read these in first.
 	buf := make([]byte, 4)
 	var size int32
 
-	// First 4 bytes are always size of message.
 	n, err := io.ReadFull(node.conn, buf)
 	if err != nil {
 		node.RecordError(1.0)
@@ -183,7 +185,7 @@ func (node *Node) read() (respraw []byte, err error) {
 }
 
 func (node *Node) response() (response interface{}, err error) {
-	rawresp, err := node.read()
+	rawresp, err := node.retryPolicy.Read(node.read)
 	if err != nil {
 		return nil, err
 	}
@@ -237,7 +239,7 @@ func (node *Node) rawRequest(marshaledRequest []byte, structname string) (err er
 		return err
 	}
 
-	err = node.write(formattedRequest)
+	err = node.retryPolicy.Write(node.write, formattedRequest)
 	if err != nil {
 		return err
 	}

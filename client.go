@@ -11,7 +11,16 @@ type Client struct {
 	Coder         *Coder // Coder for (un)marshalling data
 	logging       bool
 	pingFrequency int
+	NodeSelector  NodeSelector
+	NodeDirectory NodeDirectory
+	RetryPolicy   RetryPolicy
 }
+
+const (
+	DEFAULT_PING_FREQUENCY int  = 1000
+	DEFAULT_LOGGING        bool = false
+	DEFAULT_RETRIES        int  = 3
+)
 
 // NewClient accepts a slice of node address strings and returns a Client object.
 //
@@ -19,9 +28,9 @@ type Client struct {
 func NewClient(cluster []string) *Client {
 	return &Client{
 		cluster:       cluster,
-		pool:          NewPool(cluster),
-		logging:       false,
-		pingFrequency: 1000,
+		pool:          NewPool(cluster, &SimpleRetrier{DEFAULT_RETRIES}),
+		logging:       DEFAULT_LOGGING,
+		pingFrequency: DEFAULT_PING_FREQUENCY,
 	}
 }
 
@@ -31,10 +40,10 @@ func NewClient(cluster []string) *Client {
 func NewClientWithCoder(cluster []string, coder *Coder) *Client {
 	return &Client{
 		cluster:       cluster,
-		pool:          NewPool(cluster),
+		pool:          NewPool(cluster, &SimpleRetrier{DEFAULT_RETRIES}),
 		Coder:         coder,
-		logging:       false,
-		pingFrequency: 1000,
+		logging:       DEFAULT_LOGGING,
+		pingFrequency: DEFAULT_PING_FREQUENCY,
 	}
 }
 
