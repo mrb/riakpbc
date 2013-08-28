@@ -3,6 +3,7 @@ package riakpbc
 import (
 	"fmt"
 	"github.com/bmizerany/assert"
+	"os"
 	"testing"
 )
 
@@ -24,9 +25,10 @@ func setupConnection(t *testing.T) (client *Client) {
 		"127.0.0.1:8088",
 		"127.0.0.1:8089"},
 		coder)
-	//client.EnableLogging()
+	client.EnableLogging()
 	var err error
 	if err = client.Dial(); err != nil {
+		os.Exit(1)
 		t.Error(err.Error())
 	}
 	assert.T(t, err == nil)
@@ -39,6 +41,7 @@ func setupSingleNodeConnection(t *testing.T) (client *Client) {
 	client = NewClientWithCoder([]string{"127.0.0.1:8087"}, coder)
 	var err error
 	if err = client.Dial(); err != nil {
+		os.Exit(1)
 		t.Error(err.Error())
 	}
 	assert.T(t, err == nil)
@@ -253,14 +256,17 @@ func TestFetchObject(t *testing.T) {
 	object, err := riak.FetchObject("riakpbctestbucket", "testkey")
 	if err != nil {
 		t.Error(err.Error())
-	}
-	stringObject := string(object.GetContent()[0].GetValue())
+	} else {
 
-	data := "{\"data\":\"is awesome!\"}"
-	if err != nil {
-		t.Error(err.Error())
+		stringObject := string(object.GetContent()[0].GetValue())
+
+		data := "{\"data\":\"is awesome!\"}"
+		if err != nil {
+			t.Error(err.Error())
+		}
+		assert.T(t, stringObject == data)
+
 	}
-	assert.T(t, stringObject == data)
 
 	teardownData(t, riak)
 }
@@ -273,14 +279,16 @@ func TestFetchObjectDo(t *testing.T) {
 	object, err := riak.Do(opts)
 	if err != nil {
 		t.Error(err.Error())
-	}
-	stringObject := string(object.(*RpbGetResp).GetContent()[0].GetValue())
+	} else {
+		stringObject := string(object.(*RpbGetResp).GetContent()[0].GetValue())
 
-	data := "{\"data\":\"is awesome!\"}"
-	if err != nil {
-		t.Error(err.Error())
+		data := "{\"data\":\"is awesome!\"}"
+		if err != nil {
+			t.Error(err.Error())
+		}
+		assert.T(t, stringObject == data)
+
 	}
-	assert.T(t, stringObject == data)
 
 	teardownData(t, riak)
 }

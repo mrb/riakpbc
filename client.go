@@ -52,10 +52,6 @@ func (c *Client) Dial() error {
 		}
 	}
 
-	if c.LoggingEnabled() {
-		log.Print("[POOL] Riak Dialed. Connected to ", c.pool.Size(), " Riak nodes.")
-	}
-
 	if c.pool.Size() < 1 {
 		return ErrZeroNodes
 	}
