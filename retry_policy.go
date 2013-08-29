@@ -1,6 +1,9 @@
 package riakpbc
 
-import "log"
+import (
+	"log"
+	"time"
+)
 
 type NetworkReadFunc func() (data []byte, err error)
 type NetworkWriteFunc func(data []byte) (err error)
@@ -11,33 +14,46 @@ type RetryPolicy interface {
 }
 
 type SimpleRetrier struct {
-	retries int
+	retries      int
+	retrySleepMS int
 }
 
-func NewSimpleRetryPolicy(retries int) *SimpleRetrier {
+func NewSimpleRetryPolicy(retries, retrySleepMS int) *SimpleRetrier {
 	return &SimpleRetrier{
-		retries: retries,
+		retries:      retries,
+		retrySleepMS: retrySleepMS,
 	}
 }
 
 func (retrier *SimpleRetrier) Read(readfunc NetworkReadFunc) ([]byte, error) {
-	var err error
-	var data []byte
+	data, err := readfunc()
 
-	for try := 0; try < retrier.retries; try++ {
-		data, err = readfunc()
-		log.Print("[RETRY] Attempt ", try, " of ", retrier.retries)
+	if err != nil {
+		for try := 0; try < retrier.retries; try++ {
+			time.Sleep(time.Duration(retrier.retrySleepMS) * time.Millisecond)
+			log.Print("[RETRY] Attempt ", try, " of ", retrier.retries)
+			data, err = readfunc()
+			if err == nil {
+				return data, err
+			}
+		}
 	}
 
 	return data, err
 }
 
 func (retrier *SimpleRetrier) Write(writefunc NetworkWriteFunc, data []byte) error {
-	var err error
+	err := writefunc(data)
 
-	for try := 0; try < retrier.retries; try++ {
-		err = writefunc(data)
-		log.Print("[RETRY] Attempt ", try, " of ", retrier.retries)
+	if err != nil {
+		for try := 0; try < retrier.retries; try++ {
+			time.Sleep(time.Duration(retrier.retrySleepMS) * time.Millisecond)
+			log.Print("[RETRY] Attempt ", try, " of ", retrier.retries)
+			err = writefunc(data)
+			if err == nil {
+				return err
+			}
+		}
 	}
 
 	return err

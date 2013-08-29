@@ -20,6 +20,7 @@ const (
 	DEFAULT_PING_FREQUENCY int  = 1000
 	DEFAULT_LOGGING        bool = false
 	DEFAULT_RETRIES        int  = 3
+	DEFAULT_RETRY_SLEEP_MS int  = 250
 )
 
 // NewClient accepts a slice of node address strings and returns a Client object.
@@ -28,7 +29,7 @@ const (
 func NewClient(cluster []string) *Client {
 	return &Client{
 		cluster:       cluster,
-		pool:          NewPool(cluster, &SimpleRetrier{DEFAULT_RETRIES}),
+		pool:          NewPool(cluster, &SimpleRetrier{DEFAULT_RETRIES, DEFAULT_RETRY_SLEEP_MS}),
 		logging:       DEFAULT_LOGGING,
 		pingFrequency: DEFAULT_PING_FREQUENCY,
 	}
@@ -40,7 +41,7 @@ func NewClient(cluster []string) *Client {
 func NewClientWithCoder(cluster []string, coder *Coder) *Client {
 	return &Client{
 		cluster:       cluster,
-		pool:          NewPool(cluster, &SimpleRetrier{DEFAULT_RETRIES}),
+		pool:          NewPool(cluster, &SimpleRetrier{DEFAULT_RETRIES, DEFAULT_RETRY_SLEEP_MS}),
 		Coder:         coder,
 		logging:       DEFAULT_LOGGING,
 		pingFrequency: DEFAULT_PING_FREQUENCY,
