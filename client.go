@@ -187,3 +187,7 @@ func (c *Client) DisableLogging() {
 func (c *Client) LoggingEnabled() bool {
 	return c.logging
 }
+
+func (c *Client) SetRetryPolicy(retryPolicy RetryPolicy) {
+	c.pool = NewPool(c.cluster, retryPolicy)
+}
