@@ -5,7 +5,7 @@ A Riak Protocol Buffer Client in Go.
 
 ### Notes
 
-As of June 21, 2013 the API is deemed relatively stable.  The library should be considered to be at a 0.9 level release, with more minor changes pending.
+As of October 4, 2013 this library is considered to be in a 1.0-RC1 state, with a few documented near-production use cases.
 
 ### Installation
 
@@ -171,8 +171,8 @@ http://godoc.org/github.com/mrb/riakpbc or `go doc`
 
 ### Credits
 
-* Michael R. Bernstein (@mrb)
-* Brian Jones (@boj)
+* Michael R. Bernstein - [mrb](https://github.com/mrb) - [@mrb_bk](https://twitter.com/mrb_bk)
+* Brian Jones - [boj](https://github.com/boj) - [@mojobojo](https://twitter.com/mojobojo)
 
 ### License
 
