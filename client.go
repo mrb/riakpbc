@@ -2,6 +2,7 @@ package riakpbc
 
 import (
 	"log"
+	"sync"
 	"time"
 )
 
@@ -11,6 +12,8 @@ type Client struct {
 	Coder         *Coder // Coder for (un)marshalling data
 	logging       bool
 	pingFrequency int
+	isClosed      bool
+	closeLock     *sync.Mutex
 }
 
 // NewClient accepts a slice of node address strings and returns a Client object.
@@ -22,6 +25,7 @@ func NewClient(cluster []string) *Client {
 		pool:          NewPool(cluster),
 		logging:       false,
 		pingFrequency: 1000,
+		closeLock:     &sync.Mutex{},
 	}
 }
 
@@ -35,6 +39,7 @@ func NewClientWithCoder(cluster []string, coder *Coder) *Client {
 		Coder:         coder,
 		logging:       false,
 		pingFrequency: 1000,
+		closeLock:     &sync.Mutex{},
 	}
 }
 
@@ -63,14 +68,27 @@ func (c *Client) Dial() error {
 
 // Close closes the node TCP connections.
 func (c *Client) Close() {
+	c.closeLock.Lock()
+	defer c.closeLock.Unlock()
+
+	c.isClosed = true
 	c.pool.Close()
 }
 
 func (c *Client) BackgroundNodePing() {
 	for {
 		time.Sleep(time.Duration(c.pingFrequency) * time.Millisecond)
+
+		c.closeLock.Lock()
+		if c.isClosed {
+			c.closeLock.Unlock()
+			break
+		}
+		c.closeLock.Unlock()
+
 		c.pool.Ping()
 	}
+
 }
 
 // SelectNode selects a node from the pool, see *Pool.SelectNode()
