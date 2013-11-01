@@ -16,7 +16,7 @@ func clientTestSetupSingleNodeConnection(t *testing.T) (client *Client) {
 	return client
 }
 
-func TestBackgroundPingDoesNotCausePanicOnClose(t *testing.T) {
+func TestBackgroundPingDoesNotCausePanicWhenClosed(t *testing.T) {
 	defer func() {
 		if err := recover(); err != nil {
 			t.Fatal(err)
@@ -26,4 +26,17 @@ func TestBackgroundPingDoesNotCausePanicOnClose(t *testing.T) {
 	riak := clientTestSetupSingleNodeConnection(t)
 	riak.Close()
 	riak.BackgroundNodePing()
+}
+
+func TestCallingCloseMultipleTimesDoesNotCausePanic(t *testing.T) {
+	defer func() {
+		if err := recover(); err != nil {
+			t.Fatal(err)
+		}
+	}()
+
+	riak := clientTestSetupSingleNodeConnection(t)
+	riak.Close()
+	riak.Close()
+	riak.Close()
 }
