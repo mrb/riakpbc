@@ -20,10 +20,10 @@ type RiakData struct {
 func setupConnection(t *testing.T) (client *Client) {
 	coder := NewCoder("json", JsonMarshaller, JsonUnmarshaller)
 	client = NewClientWithCoder([]string{
-		"127.0.0.1:8086",
 		"127.0.0.1:8087",
 		"127.0.0.1:8088",
-		"127.0.0.1:8089"},
+		"127.0.0.1:8089",
+		"127.0.0.1:8090"},
 		coder)
 	client.EnableLogging()
 	var err error

@@ -19,12 +19,12 @@ type Pool struct {
 }
 
 // NewPool returns an instantiated pool given a slice of node addresses.
-func NewPool(cluster []string) *Pool {
+func NewPool(cluster []string, retryPolicy RetryPolicy) *Pool {
 	rand.Seed(time.Now().UTC().UnixNano())
 	nodeMap := make(map[string]*Node, len(cluster))
 
 	for _, node := range cluster {
-		newNode, err := NewNode(node, NODE_READ_RETRY, NODE_WRITE_RETRY)
+		newNode, err := NewNode(node, NODE_READ_RETRY, NODE_WRITE_RETRY, retryPolicy)
 		if err == nil {
 			nodeMap[node] = newNode
 		}
