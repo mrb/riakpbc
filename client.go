@@ -1,6 +1,7 @@
 package riakpbc
 
 import (
+	"errors"
 	"log"
 	"time"
 )
@@ -48,6 +49,9 @@ func NewClientWithCoder(cluster []string, coder *Coder) *Client {
 //
 // Nodes which are down get set to redial in the background.
 func (c *Client) Dial() error {
+	c.closeChannel = make(chan bool)
+	c.isClosed = false
+
 	for _, node := range c.pool.nodes {
 		err := node.Dial()
 		if err != nil {
@@ -68,25 +72,25 @@ func (c *Client) Dial() error {
 }
 
 // Close closes the node TCP connections.
-func (c *Client) Close() {
+func (c *Client) Close() error {
 	if c.isClosed {
-		return
+		return errors.New("Client has been closed.")
 	}
 
 	c.closeChannel <- true
 	c.isClosed = true
 	c.pool.Close()
 	close(c.closeChannel)
+	return nil
 }
 
 func (c *Client) BackgroundNodePing() {
-	loop := true
-	for loop {
+	for {
 		select {
 		case <-time.After(time.Duration(c.pingFrequency) * time.Millisecond):
 			c.pool.Ping()
 		case <-c.closeChannel:
-			loop = false
+			return
 		}
 	}
 }
