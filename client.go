@@ -1,7 +1,6 @@
 package riakpbc
 
 import (
-	"errors"
 	"log"
 	"time"
 )
@@ -12,8 +11,7 @@ type Client struct {
 	Coder         *Coder // Coder for (un)marshalling data
 	logging       bool
 	pingFrequency int
-	isClosed      bool
-	closeChannel  chan bool
+	closed        chan struct{}
 }
 
 // NewClient accepts a slice of node address strings and returns a Client object.
@@ -25,8 +23,7 @@ func NewClient(cluster []string) *Client {
 		pool:          NewPool(cluster),
 		logging:       false,
 		pingFrequency: 1000,
-		closeChannel:  make(chan bool),
-		isClosed:      false,
+		closed:        make(chan struct{}),
 	}
 }
 
@@ -40,8 +37,7 @@ func NewClientWithCoder(cluster []string, coder *Coder) *Client {
 		Coder:         coder,
 		logging:       false,
 		pingFrequency: 1000,
-		closeChannel:  make(chan bool),
-		isClosed:      false,
+		closed:        make(chan struct{}),
 	}
 }
 
@@ -49,8 +45,7 @@ func NewClientWithCoder(cluster []string, coder *Coder) *Client {
 //
 // Nodes which are down get set to redial in the background.
 func (c *Client) Dial() error {
-	c.closeChannel = make(chan bool)
-	c.isClosed = false
+	c.closed = make(chan struct{})
 
 	for _, node := range c.pool.nodes {
 		err := node.Dial()
@@ -72,24 +67,19 @@ func (c *Client) Dial() error {
 }
 
 // Close closes the node TCP connections.
-func (c *Client) Close() error {
-	if c.isClosed {
-		return errors.New("Client has been closed.")
-	}
-
-	c.closeChannel <- true
-	c.isClosed = true
+func (c *Client) Close() {
+	close(c.closed)
 	c.pool.Close()
-	close(c.closeChannel)
-	return nil
 }
 
 func (c *Client) BackgroundNodePing() {
+	ticker := time.NewTicker(time.Duration(c.pingFrequency) * time.Millisecond)
 	for {
 		select {
-		case <-time.After(time.Duration(c.pingFrequency) * time.Millisecond):
+		case <-ticker.C:
 			c.pool.Ping()
-		case <-c.closeChannel:
+		case <-c.closed:
+			ticker.Stop()
 			return
 		}
 	}

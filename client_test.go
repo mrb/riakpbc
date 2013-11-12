@@ -27,16 +27,3 @@ func TestBackgroundPingDoesNotCausePanicWhenClosed(t *testing.T) {
 	riak.Close()
 	riak.BackgroundNodePing()
 }
-
-func TestCallingCloseOnAClosedClientReturnsAnError(t *testing.T) {
-	defer func() {
-		if err := recover(); err != nil {
-			t.Fatal(err)
-		}
-	}()
-
-	riak := clientTestSetupSingleNodeConnection(t)
-	riak.Close()
-	err := riak.Close()
-	assert.T(t, err != nil)
-}
