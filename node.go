@@ -138,7 +138,10 @@ func (node *Node) ReqMultiResp(reqstruct interface{}, structname string) (respon
 
 func (node *Node) Ping() bool {
 	resp, err := node.ReqResp([]byte{}, "RpbPingReq", true)
-	if (resp == nil) || (string(resp.([]byte)) != "Pong") || (err != nil) {
+	if err != nil {
+		return false
+	}
+	if resp == nil || string(resp.([]byte)) != "Pong" {
 		return false
 	}
 	return true
