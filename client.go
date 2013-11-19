@@ -11,6 +11,7 @@ type Client struct {
 	Coder         *Coder // Coder for (un)marshalling data
 	logging       bool
 	pingFrequency int
+	closed        chan struct{}
 }
 
 // NewClient accepts a slice of node address strings and returns a Client object.
@@ -22,6 +23,7 @@ func NewClient(cluster []string) *Client {
 		pool:          NewPool(cluster),
 		logging:       false,
 		pingFrequency: 1000,
+		closed:        make(chan struct{}),
 	}
 }
 
@@ -35,6 +37,7 @@ func NewClientWithCoder(cluster []string, coder *Coder) *Client {
 		Coder:         coder,
 		logging:       false,
 		pingFrequency: 1000,
+		closed:        make(chan struct{}),
 	}
 }
 
@@ -42,6 +45,8 @@ func NewClientWithCoder(cluster []string, coder *Coder) *Client {
 //
 // Nodes which are down get set to redial in the background.
 func (c *Client) Dial() error {
+	c.closed = make(chan struct{})
+
 	for _, node := range c.pool.nodes {
 		err := node.Dial()
 		if err != nil {
@@ -63,13 +68,20 @@ func (c *Client) Dial() error {
 
 // Close closes the node TCP connections.
 func (c *Client) Close() {
+	close(c.closed)
 	c.pool.Close()
 }
 
 func (c *Client) BackgroundNodePing() {
+	ticker := time.NewTicker(time.Duration(c.pingFrequency) * time.Millisecond)
 	for {
-		time.Sleep(time.Duration(c.pingFrequency) * time.Millisecond)
-		c.pool.Ping()
+		select {
+		case <-ticker.C:
+			c.pool.Ping()
+		case <-c.closed:
+			ticker.Stop()
+			return
+		}
 	}
 }
 
