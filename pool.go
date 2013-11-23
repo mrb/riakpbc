@@ -64,6 +64,11 @@ func (pool *Pool) SelectNode() (*Node, error) {
 func (pool *Pool) Ping() {
 	pool.Lock()
 	defer pool.Unlock()
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Recovered in Ping. Cluster possibly timing out.", r)
+		}
+	}()
 
 	for _, node := range pool.nodes {
 		nodeGood := node.Ping()
