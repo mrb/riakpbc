@@ -79,8 +79,19 @@ func (node *Node) SetOk(ok bool) {
 	node.oklock.Unlock()
 }
 
+func (node *Node) IsConnected() bool {
+	return node.conn != nil
+}
+
 func (node *Node) ReqResp(reqstruct interface{}, structname string, raw bool) (response interface{}, err error) {
 	node.Lock()
+	defer node.Unlock()
+	if node.IsConnected() != true {
+		err = node.Dial()
+		if err != nil {
+			return nil, err
+		}
+	}
 	if raw == true {
 		err = node.rawRequest(reqstruct.([]byte), structname)
 	} else {
@@ -88,17 +99,15 @@ func (node *Node) ReqResp(reqstruct interface{}, structname string, raw bool) (r
 	}
 
 	if err != nil {
-		node.Unlock()
+		node.Close()
 		return nil, err
 	}
 
 	response, err = node.response()
 	if err != nil {
-		node.Unlock()
 		return nil, err
 	}
 
-	node.Unlock()
 	return
 }
 
