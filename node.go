@@ -105,6 +105,7 @@ func (node *Node) ReqResp(reqstruct interface{}, structname string, raw bool) (r
 
 	response, err = node.response()
 	if err != nil {
+		node.Close()
 		return nil, err
 	}
 
