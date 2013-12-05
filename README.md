@@ -27,12 +27,12 @@ func main() {
 
 	// Dial all the nodes.
 	if err := riak.Dial(); err != nil {
-		log.Print(err.Error())
+		log.Fatalf("Dialing failed: %v", err)
 	}
 
 	// Set Client ID
 	if _, err := riak.SetClientId("coolio"); err != nil {
-		log.Println(err.Error())
+		log.Fatalf("Setting client ID failed: %v", err)
 	}
 
 	// Store raw data (int, string, []byte)
@@ -56,7 +56,7 @@ func main() {
 	// Set Client ID
 	opts1 := riak.NewSetClientIdRequest("coolio")
 	if _, err := riak.Do(opts1); err != nil {
-		log.Println(err.Error())
+		log.Fatalf("Setting client ID failed: %v", err)
 	}
 
 	// Store raw data (int, string, []byte)
@@ -106,12 +106,12 @@ func main() {
 
 	// Dial all the nodes.
 	if err := riakCoder.Dial(); err != nil {
-		log.Print(err.Error())
+		log.Fatalf("Dialing failed: %v", err)
 	}
 
 	// Set Client ID
 	if _, err := riakCoder.SetClientId("coolio"); err != nil {
-		log.Println(err.Error())
+		log.Fatalf("Setting client ID failed: %v", err)
 	}
 
 	// Store Struct (uses coder)
