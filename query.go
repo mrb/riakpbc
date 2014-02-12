@@ -8,7 +8,7 @@ func (c *Client) NewMapReduceRequest(request, contentType string) *RpbMapRedReq 
 	}
 }
 
-func (c *Client) mapReduce(opts *RpbMapRedReq, request, contentType string) ([]byte, error) {
+func (c *Client) mapReduce(opts *RpbMapRedReq, request, contentType string) ([][]byte, error) {
 	if opts == nil {
 		opts = c.NewMapReduceRequest(request, contentType)
 	}
@@ -18,7 +18,7 @@ func (c *Client) mapReduce(opts *RpbMapRedReq, request, contentType string) ([]b
 		return nil, err
 	}
 
-	return response.([]byte), nil
+	return response.([][]byte), nil
 }
 
 // MapReduce executes a MapReduce job.
@@ -27,7 +27,7 @@ func (c *Client) mapReduce(opts *RpbMapRedReq, request, contentType string) ([]b
 //
 //    - application/json - JSON-encoded map/reduce job
 //    - application/x-erlang-binary - Erlang external term format
-func (c *Client) MapReduce(request, contentType string) ([]byte, error) {
+func (c *Client) MapReduce(request, contentType string) ([][]byte, error) {
 	return c.mapReduce(nil, request, contentType)
 }
 

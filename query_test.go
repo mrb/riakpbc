@@ -27,7 +27,7 @@ func TestMapReduce(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	assert.T(t, string(reduced) == "[{\"data\":\"is awesome!\"}]")
+	assert.T(t, string(reduced[0]) == "[{\"data\":\"is awesome!\"}]")
 
 	teardownData(t, riak)
 }

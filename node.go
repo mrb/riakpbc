@@ -131,15 +131,15 @@ func (node *Node) ReqMultiResp(reqstruct interface{}, structname string) (respon
 		}
 		return keys, nil
 	} else if structname == "RpbMapRedReq" {
-		mapResponse := response.(*RpbMapRedResp).GetResponse()
-		done := response.(*RpbMapRedResp).GetDone()
-		for done != true {
-			response, err := node.response()
-			if err != nil {
+		mapResponse := make([][]byte, 0)
+		for {
+			mapResponse = append(mapResponse, response.(*RpbMapRedResp).GetResponse())
+			if response.(*RpbMapRedResp).GetDone() {
+				break
+			}
+			if response, err = node.response(); err != nil {
 				return nil, err
 			}
-			mapResponse = append(mapResponse, response.(*RpbMapRedResp).GetResponse()...)
-			done = response.(*RpbMapRedResp).GetDone()
 		}
 		return mapResponse, nil
 	}
