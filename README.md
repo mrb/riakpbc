@@ -1,3 +1,5 @@
+# This library is in dire need of help, and I can no longer maintain it. If you want to help, please open an issue. - mrb, 8/29/2014
+
 riakpbc
 =======
 
