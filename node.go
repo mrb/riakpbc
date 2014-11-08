@@ -159,7 +159,10 @@ func (node *Node) Ping() bool {
 
 // Close the connection
 func (node *Node) Close() {
-	node.conn.Close()
+	if node.conn != nil {
+		node.conn.Close()
+	}
+
 	node.conn = nil
 }
 
