@@ -2,7 +2,7 @@ package riakpbc
 
 import (
 	"bytes"
-	"code.google.com/p/goprotobuf/proto"
+	"github.com/golang/protobuf/proto"
 	"encoding/binary"
 	"io"
 	"net"
