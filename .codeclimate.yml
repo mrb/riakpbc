@@ -6,3 +6,6 @@ engines:
     enabled: true
   golint:
     enabled: true
+ratings:
+  paths:
+    - "**.go"
