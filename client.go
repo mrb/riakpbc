@@ -178,14 +178,17 @@ func (c *Client) ReqMultiResp(reqstruct interface{}, structname string) (respons
 	return node.ReqMultiResp(reqstruct, structname)
 }
 
+// Enables logging for client
 func (c *Client) EnableLogging() {
 	c.logging = true
 }
 
+// Disables logging for client
 func (c *Client) DisableLogging() {
 	c.logging = false
 }
 
+// Tests whether logging is enabled for client
 func (c *Client) LoggingEnabled() bool {
 	return c.logging
 }
