@@ -1,8 +1,8 @@
 package riakpbc
 
 import (
-	"code.google.com/p/goprotobuf/proto"
 	"errors"
+	"github.com/golang/protobuf/proto"
 	"strconv"
 )
 
