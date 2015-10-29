@@ -12,7 +12,7 @@ func (c *Client) ListBuckets() (*RpbListBucketsResp, error) {
 	return response.(*RpbListBucketsResp), nil
 }
 
-// ListKeysRequest prepares a ListKeys request.
+// NewListKeysRequest prepares a ListKeys request.
 func (c *Client) NewListKeysRequest(bucket string) *RpbListKeysReq {
 	return &RpbListKeysReq{
 		Bucket: []byte(bucket),
