@@ -164,7 +164,7 @@ func (c *Client) ReqResp(reqstruct interface{}, structname string, raw bool) (re
 	if err != nil {
 		return nil, err
 	}
-	return node.ReqResp(reqstruct, structname, raw)
+	return node.ReqResp(reqstruct, structname, raw, false)
 }
 
 // ReqMultiResp is the top level interface for the client for the few

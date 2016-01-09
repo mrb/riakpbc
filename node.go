@@ -83,9 +83,12 @@ func (node *Node) IsConnected() bool {
 	return node.conn != nil
 }
 
-func (node *Node) ReqResp(reqstruct interface{}, structname string, raw bool) (response interface{}, err error) {
-	node.Lock()
-	defer node.Unlock()
+func (node *Node) ReqResp(reqstruct interface{}, structname string, raw bool, locked bool) (response interface{}, err error) {
+	if !locked {
+		node.Lock()
+		defer node.Unlock()
+	}
+
 	if node.IsConnected() != true {
 		err = node.Dial()
 		if err != nil {
@@ -113,7 +116,10 @@ func (node *Node) ReqResp(reqstruct interface{}, structname string, raw bool) (r
 }
 
 func (node *Node) ReqMultiResp(reqstruct interface{}, structname string) (response interface{}, err error) {
-	response, err = node.ReqResp(reqstruct, structname, false)
+	node.Lock()
+	defer node.Unlock()
+
+	response, err = node.ReqResp(reqstruct, structname, false, true)
 	if err != nil {
 		return nil, err
 	}
@@ -131,23 +137,24 @@ func (node *Node) ReqMultiResp(reqstruct interface{}, structname string) (respon
 		}
 		return keys, nil
 	} else if structname == "RpbMapRedReq" {
-		mapResponse := response.(*RpbMapRedResp).GetResponse()
-		done := response.(*RpbMapRedResp).GetDone()
-		for done != true {
-			response, err := node.response()
-			if err != nil {
+		mapResponse := make([][]byte, 0)
+		for {
+			mapResponse = append(mapResponse, response.(*RpbMapRedResp).GetResponse())
+			if response.(*RpbMapRedResp).GetDone() {
+				break
+			}
+			if response, err = node.response(); err != nil {
 				return nil, err
 			}
-			mapResponse = append(mapResponse, response.(*RpbMapRedResp).GetResponse()...)
-			done = response.(*RpbMapRedResp).GetDone()
 		}
 		return mapResponse, nil
 	}
+
 	return nil, nil
 }
 
 func (node *Node) Ping() bool {
-	resp, err := node.ReqResp([]byte{}, "RpbPingReq", true)
+	resp, err := node.ReqResp([]byte{}, "RpbPingReq", true, false)
 	if err != nil {
 		return false
 	}
